@@ -3,6 +3,8 @@ package com.piasy.kmp.socketio.engineio.transports
 import com.piasy.kmp.socketio.engineio.BaseTest
 import com.piasy.kmp.socketio.engineio.Transport
 import com.piasy.kmp.socketio.engineio.on
+import io.ktor.client.plugins.websocket.*
+import io.ktor.client.request.*
 import io.ktor.websocket.*
 import io.mockk.*
 import kotlinx.coroutines.*
@@ -18,7 +20,7 @@ class WebSocketTest : BaseTest() {
         scope: CoroutineScope,
         incomingWait: Boolean = true
     ): TestWs {
-        val ws = mockk<WebSocketSession>(relaxed = true)
+        val ws = mockk<DefaultClientWebSocketSession>(relaxed = true)
 
         val incoming = mockk<ReceiveChannel<Frame>>()
         if (incomingWait) {
@@ -31,7 +33,11 @@ class WebSocketTest : BaseTest() {
         coEvery { ws.close(any<CloseReason>()) } just Runs
 
         val factory = mockk<HttpClientFactory>()
-        coEvery { factory.createWs(any(), any()) } returns ws
+        val paramSlot = slot<HttpRequestBuilder.() -> Unit>()
+        coEvery { factory.createWs(any(), capture(paramSlot)) } answers {
+            paramSlot.captured(HttpRequestBuilder())
+            ws
+        }
 
         val socket = WebSocket(
             Transport.Options(), scope,
@@ -56,11 +62,15 @@ class WebSocketTest : BaseTest() {
         val ws = prepareWs(this)
 
         ws.ws.open()
-        advanceUntilIdle()
+        waitExec(this)
 
         coVerify(exactly = 1) { ws.factory.createWs(any(), any()) }
         assertEquals(
-            listOf(Transport.EVENT_OPEN),
+            listOf(
+                Transport.EVENT_REQUEST_HEADERS,
+                Transport.EVENT_RESPONSE_HEADERS,
+                Transport.EVENT_OPEN,
+            ),
             ws.events
         )
     }
@@ -78,7 +88,7 @@ class WebSocketTest : BaseTest() {
         advanceUntilIdle()
 
         withContext(Dispatchers.Default) {
-            delay(10)
+            delay(100)
         }
 
         assertEquals("Transport not open", exceptionMessage)
@@ -89,15 +99,18 @@ class WebSocketTest : BaseTest() {
         val ws = prepareWs(this)
 
         ws.ws.open()
+        waitExec(this)
         ws.ws.send(listOf(EngineIOPacket.Pong(null)))
-        advanceUntilIdle()
-        withContext(Dispatchers.Default) {
-            delay(10)
-        }
+        waitExec(this)
 
         coVerify(exactly = 1) { ws.inWs.send("3") }
         assertEquals(
-            listOf(Transport.EVENT_OPEN, Transport.EVENT_DRAIN),
+            listOf(
+                Transport.EVENT_REQUEST_HEADERS,
+                Transport.EVENT_RESPONSE_HEADERS,
+                Transport.EVENT_OPEN,
+                Transport.EVENT_DRAIN,
+            ),
             ws.events
         )
         assertEquals(
@@ -110,20 +123,20 @@ class WebSocketTest : BaseTest() {
     fun close() = runTest {
         val ws = prepareWs(this, false)
         coEvery { ws.incoming.receive() } coAnswers {
-            delay(100)
-            Frame.Close(CloseReason(CloseReason.Codes.NORMAL, ""))
+            delay(400)
+            Frame.Close()
         }
 
         ws.ws.open()
+        waitExec(this)
         ws.ws.close()
-        advanceUntilIdle()
-        withContext(Dispatchers.Default) {
-            delay(200)
-        }
+        waitExec(this)
 
         coVerify(exactly = 1) { ws.inWs.close(any<CloseReason>()) }
         assertEquals(
             listOf(
+                Transport.EVENT_REQUEST_HEADERS,
+                Transport.EVENT_RESPONSE_HEADERS,
                 Transport.EVENT_OPEN,
                 Transport.EVENT_CLOSE
             ),
@@ -147,6 +160,8 @@ class WebSocketTest : BaseTest() {
 
         assertEquals(
             listOf(
+                Transport.EVENT_REQUEST_HEADERS,
+                Transport.EVENT_RESPONSE_HEADERS,
                 Transport.EVENT_OPEN,
                 Transport.EVENT_PACKET
             ),

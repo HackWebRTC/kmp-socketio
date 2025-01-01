@@ -362,7 +362,7 @@ class SocketTest : BaseTest() {
             emit(EVENT_DRAIN, packets.size)
         }
 
-        override suspend fun doClose() {
+        override suspend fun doClose(fromOpenState: Boolean) {
             onClose()
         }
 
@@ -371,11 +371,7 @@ class SocketTest : BaseTest() {
             pingInterval: Int = 25000,
             pingTimeout: Int = 20000
         ) {
-            val jsonHandshake = """{"sid":"lv_VI97HAXpY6yYWAAAC",
-            |"upgrades":${Json.encodeToString(upgrades)},"pingInterval":$pingInterval,
-            |"pingTimeout":$pingTimeout,"maxPayload":1000000}"""
-                .trimMargin()
-            onData("0$jsonHandshake")
+            onData(mockOpen(upgrades, pingInterval, pingTimeout))
         }
 
         fun mockPing() {

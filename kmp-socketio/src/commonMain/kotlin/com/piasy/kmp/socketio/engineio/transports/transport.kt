@@ -7,10 +7,22 @@ import io.ktor.client.HttpClient
 import io.ktor.client.plugins.logging.*
 import io.ktor.client.plugins.websocket.*
 import io.ktor.client.request.*
-import io.ktor.websocket.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
 import kotlinx.coroutines.CoroutineScope
 
 expect fun httpClient(config: HttpClientConfig<*>.() -> Unit = {}): HttpClient
+
+internal fun putHeaders(
+    builder: HeadersBuilder,
+    headers: Map<String, List<String>>
+) {
+    headers.forEach {
+        it.value.forEach { v ->
+            builder.append(it.key, v)
+        }
+    }
+}
 
 interface TransportFactory {
     fun create(
@@ -36,7 +48,12 @@ interface HttpClientFactory {
     suspend fun createWs(
         url: String,
         block: HttpRequestBuilder.() -> Unit
-    ): WebSocketSession
+    ): DefaultClientWebSocketSession
+
+    suspend fun httpRequest(
+        url: String,
+        block: HttpRequestBuilder.() -> Unit
+    ): HttpResponse
 }
 
 object DefaultHttpClientFactory : HttpClientFactory {
@@ -58,4 +75,9 @@ object DefaultHttpClientFactory : HttpClientFactory {
         url: String,
         block: HttpRequestBuilder.() -> Unit
     ) = client.webSocketSession(url, block)
+
+    override suspend fun httpRequest(
+        url: String,
+        block: HttpRequestBuilder.() -> Unit
+    ) = client.request(url, block)
 }

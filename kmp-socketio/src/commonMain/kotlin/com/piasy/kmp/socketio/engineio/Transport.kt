@@ -74,7 +74,9 @@ abstract class Transport(
         Logger.info(TAG, "$name close")
         scope.launch {
             if (state == State.OPENING || state == State.OPEN) {
-                doClose()
+                val fromOpenState = state == State.OPEN
+                state = State.CLOSING
+                doClose(fromOpenState)
             }
         }
         return this
@@ -82,10 +84,12 @@ abstract class Transport(
 
     @WorkThread
     protected fun onOpen() {
-        Logger.info(TAG, "$name onOpen")
-        state = State.OPEN
-        writable = true
-        emit(EVENT_OPEN)
+        Logger.info(TAG, "$name onOpen, state $state")
+        if (state == State.OPENING || state == State.CLOSING) {
+            state = State.OPEN
+            writable = true
+            emit(EVENT_OPEN)
+        }
     }
 
     @WorkThread
@@ -106,6 +110,12 @@ abstract class Transport(
     }
 
     @WorkThread
+    protected fun onError(msg: String) {
+        Logger.error(TAG, "onError `$msg`")
+        emit(EVENT_ERROR, msg)
+    }
+
+    @WorkThread
     protected fun onClose() {
         Logger.info(TAG, "$name onClose")
         state = State.CLOSED
@@ -119,7 +129,7 @@ abstract class Transport(
     abstract suspend fun doSend(packets: List<EngineIOPacket<*>>)
 
     @WorkThread
-    abstract suspend fun doClose()
+    abstract suspend fun doClose(fromOpenState: Boolean)
 
     @WorkThread
     protected fun uri(secureSchema: String, insecureSchema: String): String {

@@ -5,8 +5,13 @@ import com.piasy.kmp.socketio.logging.Logger
 import com.piasy.kmp.socketio.logging.LoggerInterface
 import io.ktor.util.date.*
 import io.mockk.verify
-import kotlinx.coroutines.CoroutineScope
-import kotlin.coroutines.CoroutineContext
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.withContext
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import kotlin.test.BeforeTest
 
 fun verifyOn(emitter: Emitter, event: String) {
@@ -32,6 +37,18 @@ fun on(
     emitter.on(event, listener)
 }
 
+fun mockOpen(
+    upgrades: List<String> = emptyList(),
+    pingInterval: Int = 25000,
+    pingTimeout: Int = 20000
+): String {
+    val jsonHandshake = """{"sid":"lv_VI97HAXpY6yYWAAAC",
+            |"upgrades":${Json.encodeToString(upgrades)},"pingInterval":$pingInterval,
+            |"pingTimeout":$pingTimeout,"maxPayload":1000000}"""
+        .trimMargin()
+    return "0$jsonHandshake"
+}
+
 open class BaseTest {
     @BeforeTest
     fun setUp() {
@@ -48,5 +65,13 @@ open class BaseTest {
                 println("${GMTDate().timestamp} E $tag $log")
             }
         }
+    }
+
+    protected suspend fun waitExec(scope: TestScope, millis: Long = 300) {
+        scope.advanceUntilIdle()
+        withContext(Dispatchers.Default) {
+            delay(millis)
+        }
+        scope.advanceUntilIdle()
     }
 }
