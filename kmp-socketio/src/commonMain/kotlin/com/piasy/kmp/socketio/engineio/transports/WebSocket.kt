@@ -7,7 +7,6 @@ import com.piasy.kmp.socketio.engineio.WorkThread
 import com.piasy.kmp.socketio.logging.Logger
 import io.ktor.client.plugins.websocket.*
 import io.ktor.client.request.*
-import io.ktor.http.*
 import io.ktor.util.*
 import io.ktor.websocket.*
 import kotlinx.coroutines.CoroutineScope
@@ -26,7 +25,12 @@ open class WebSocket(
     private var ws: DefaultClientWebSocketSession? = null
 
     @WorkThread
-    override suspend fun doOpen() {
+    override fun pause(onPause: () -> Unit) {
+        // ws don't need to pause
+    }
+
+    @WorkThread
+    override fun doOpen() {
         val uri = uri()
         Logger.info(TAG, "doOpen $uri")
 
@@ -35,21 +39,20 @@ open class WebSocket(
         emit(EVENT_REQUEST_HEADERS, requestHeaders)
 
         ioScope.launch {
-            ws = factory.createWs(uri) {
+            factory.createWs(uri, {
                 headers {
                     putHeaders(this, requestHeaders)
                 }
-            }
-
-            val respHeaders = ws?.call?.response?.headers?.toMap()
-            scope.launch {
-                if (respHeaders != null) {
+            }) {
+                ws = this
+                val respHeaders = call.response.headers.toMap()
+                scope.launch {
                     emit(EVENT_RESPONSE_HEADERS, respHeaders)
+                    onOpen()
                 }
-                onOpen()
-            }
 
-            listen()
+                listen()
+            }
         }
     }
 
@@ -61,14 +64,14 @@ open class WebSocket(
         while (true) {
             try {
                 val frame = ws?.incoming?.receive() ?: break
-                Logger.debug(TAG, "Receive frame: ${frame.frameType}")
+                Logger.debug(TAG, "Receive frame: $frame")
                 when (frame) {
                     is Frame.Text -> {
-                        scope.launch { onData(frame.readText()) }
+                        scope.launch { onWsData(frame.readText()) }
                     }
 
                     is Frame.Binary -> {
-                        scope.launch { onData(frame.readBytes()) }
+                        scope.launch { onWsData(frame.readBytes()) }
                     }
 
                     is Frame.Close -> {
@@ -89,7 +92,7 @@ open class WebSocket(
     }
 
     @WorkThread
-    override suspend fun doSend(packets: List<EngineIOPacket<*>>) {
+    override fun doSend(packets: List<EngineIOPacket<*>>) {
         Logger.debug(TAG, "doSend ${packets.size} packets start")
         writable = false
 
@@ -103,9 +106,13 @@ open class WebSocket(
                 try {
                     // TODO: binary
                     @Suppress("UNCHECKED_CAST")
-                    val data = EngineIO.encodeSocketIO(
-                        pkt as EngineIOPacket<SocketIOPacket>
-                    )
+                    val data = if (stringMessagePayloadForTesting) {
+                        EngineIO.encodeWsFrame(pkt as EngineIOPacket<String>, serializePayload = { it })
+                    } else {
+                        EngineIO.encodeSocketIO(
+                            pkt as EngineIOPacket<SocketIOPacket>
+                        )
+                    }
                     Logger.debug(TAG, "doSend: `$data`")
                     ws?.send(data)
                 } catch (e: Exception) {
@@ -123,7 +130,7 @@ open class WebSocket(
     }
 
     @WorkThread
-    override suspend fun doClose(fromOpenState: Boolean) {
+    override fun doClose(fromOpenState: Boolean) {
         Logger.info(TAG, "doClose")
         ioScope.launch {
             ws?.close()

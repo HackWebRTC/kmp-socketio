@@ -47,8 +47,9 @@ object DefaultTransportFactory : TransportFactory {
 interface HttpClientFactory {
     suspend fun createWs(
         url: String,
-        block: HttpRequestBuilder.() -> Unit
-    ): DefaultClientWebSocketSession
+        request: HttpRequestBuilder.() -> Unit,
+        block: suspend DefaultClientWebSocketSession.() -> Unit,
+    )
 
     suspend fun httpRequest(
         url: String,
@@ -73,8 +74,9 @@ object DefaultHttpClientFactory : HttpClientFactory {
 
     override suspend fun createWs(
         url: String,
-        block: HttpRequestBuilder.() -> Unit
-    ) = client.webSocketSession(url, block)
+        request: HttpRequestBuilder.() -> Unit,
+        block: suspend DefaultClientWebSocketSession.() -> Unit,
+    ) = client.webSocket(url, request, block)
 
     override suspend fun httpRequest(
         url: String,

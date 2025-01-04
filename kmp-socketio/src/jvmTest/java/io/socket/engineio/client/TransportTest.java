@@ -3,7 +3,7 @@ package io.socket.engineio.client;
 import com.piasy.kmp.socketio.engineio.Transport;
 import com.piasy.kmp.socketio.engineio.transports.PollingXHR;
 import com.piasy.kmp.socketio.engineio.transports.WebSocket;
-import io.socket.global.TestUtil;
+import com.piasy.kmp.socketio.engineio.TestUtil;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;

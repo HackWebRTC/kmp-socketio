@@ -85,7 +85,7 @@ class PollingXHRTest : BaseTest() {
             this, HttpStatusCode.OK, listOf(mockOpen())
         )
         polling.polling.open()
-        waitExec(this)
+        waitExec(this, 2000)
 
         coVerify(exactly = 2) { polling.factory.httpRequest(any(), any()) }
         assertEquals(
@@ -250,7 +250,7 @@ class PollingXHRTest : BaseTest() {
         polling.polling.open()
         waitExec(this)
         polling.polling.close()
-        waitExec(this, 600)
+        waitExec(this, 1000)
 
         coVerify(exactly = 3) { polling.factory.httpRequest(any(), any()) }
         assertEquals(
@@ -260,6 +260,11 @@ class PollingXHRTest : BaseTest() {
                 PollingXHR.EVENT_POLL,
                 Transport.EVENT_RESPONSE_HEADERS,
                 Transport.EVENT_OPEN,
+
+                // onClose triggered by onOpen, prepare headers on work thread
+                Transport.EVENT_REQUEST_HEADERS,
+
+                // open packet
                 Transport.EVENT_PACKET,
                 PollingXHR.EVENT_POLL_COMPLETE,
 
@@ -268,7 +273,6 @@ class PollingXHRTest : BaseTest() {
                 PollingXHR.EVENT_POLL,
 
                 // close
-                Transport.EVENT_REQUEST_HEADERS,
                 Transport.EVENT_RESPONSE_HEADERS,
                 Transport.EVENT_DRAIN,
                 Transport.EVENT_CLOSE,

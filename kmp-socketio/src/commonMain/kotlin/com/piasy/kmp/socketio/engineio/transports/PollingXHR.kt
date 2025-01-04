@@ -26,7 +26,7 @@ open class PollingXHR(
     private var polling = false
 
     @WorkThread
-    fun pause(onPause: () -> Unit) {
+    override fun pause(onPause: () -> Unit) {
         Logger.info(TAG, "pause")
         state = State.PAUSED
         val paused = {
@@ -63,7 +63,7 @@ open class PollingXHR(
     }
 
     @WorkThread
-    override suspend fun doOpen() {
+    override fun doOpen() {
         poll()
     }
 
@@ -134,7 +134,11 @@ open class PollingXHR(
     @WorkThread
     private fun onPollComplete(data: String) {
         Logger.debug(TAG, "onPollComplete: state $state, `$data`")
-        val packets = EngineIO.decodeHttpBatch(data, SocketIO::decode)
+        val packets = if (stringMessagePayloadForTesting) {
+            EngineIO.decodeHttpBatch(data, deserializeTextPayload = { it })
+        } else {
+            EngineIO.decodeHttpBatch(data, SocketIO::decode)
+        }
         for (pkt in packets) {
             if ((state == State.OPENING || state == State.CLOSING) && pkt is EngineIOPacket.Open) {
                 onOpen()
@@ -161,13 +165,20 @@ open class PollingXHR(
     }
 
     @WorkThread
-    override suspend fun doSend(packets: List<EngineIOPacket<*>>) {
+    override fun doSend(packets: List<EngineIOPacket<*>>) {
         writable = false
         @Suppress("UNCHECKED_CAST")
-        val data = EngineIO.encodeHttpBatch(
-            packets as List<EngineIOPacket<SocketIOPacket>>,
-            SocketIO::encode
-        )
+        val data = if (stringMessagePayloadForTesting) {
+            EngineIO.encodeHttpBatch(
+                packets as List<EngineIOPacket<String>>,
+                serializePayload = { it }
+            )
+        } else {
+            EngineIO.encodeHttpBatch(
+                packets as List<EngineIOPacket<SocketIOPacket>>,
+                SocketIO::encode
+            )
+        }
 
         val method = HttpMethod.Post
         val headers = prepareRequestHeaders(method)
@@ -182,8 +193,8 @@ open class PollingXHR(
     }
 
     @WorkThread
-    override suspend fun doClose(fromOpenState: Boolean) {
-        val onClose: suspend () -> Unit = {
+    override fun doClose(fromOpenState: Boolean) {
+        val onClose: () -> Unit = {
             Logger.info(TAG, "doClose writing close packet")
             once(EVENT_DRAIN, object : Listener {
                 override fun call(vararg args: Any) {
@@ -200,7 +211,7 @@ open class PollingXHR(
             Logger.info(TAG, "doClose on OPENING state, deferring close")
             once(EVENT_OPEN, object : Listener {
                 override fun call(vararg args: Any) {
-                    scope.launch { onClose() }
+                    onClose()
                 }
             })
         }

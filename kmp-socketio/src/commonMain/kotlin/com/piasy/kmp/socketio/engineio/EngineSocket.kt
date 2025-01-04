@@ -12,16 +12,15 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.hildan.socketio.EngineIOPacket
-import org.hildan.socketio.SocketIOPacket
 import kotlin.jvm.JvmField
 
-class Socket(
+class EngineSocket(
     uri: String,
-    @JvmField val opt: Options,
+    @JvmField internal val opt: Options,
     private val scope: CoroutineScope,
     private val factory: TransportFactory = DefaultTransportFactory,
 ) : Emitter() {
-    class Options : Transport.Options() {
+    open class Options : Transport.Options() {
         /**
          * List of transport names.
          */
@@ -41,17 +40,16 @@ class Socket(
         var transportOptions: Map<String, Transport.Options> = emptyMap()
     }
 
-    // to help unit test
-    internal var disablePingTimeout = false
+    internal var disablePingTimeout = false // to help unit test
     private var state = State.INIT
     private var id = ""
     private var upgrades = emptyList<String>()
     private var pingInterval = 0
     private var pingTimeout = 0
-    private var transport: Transport? = null
+    internal var transport: Transport? = null
     private var upgrading = false
 
-    private val writeBuffer = ArrayDeque<EngineIOPacket<*>>()
+    internal val writeBuffer = ArrayDeque<EngineIOPacket<*>>()
     private var prevBufferLen = 0
 
     private val heartbeatListener = object : Listener {
@@ -79,6 +77,9 @@ class Socket(
         }
         opt.hostname = hostname
         opt.port = url.port
+        if (opt.path.isEmpty()) {
+            opt.path = "/engine.io/"
+        }
 
         if (opt.timestampParam.isEmpty()) {
             opt.timestampParam = "t"
@@ -103,8 +104,14 @@ class Socket(
      * @return a reference to this object.
      */
     @CallerThread
-    fun open(): Socket {
+    fun open(): EngineSocket {
         scope.launch {
+            Logger.info(TAG, "open: state $state")
+            if (state != State.INIT && state != State.CLOSED) {
+                Logger.error(TAG, "open at wrong state: $state")
+                return@launch
+            }
+
             val name = if (opt.rememberUpgrade && priorWebsocketSuccess
                 && opt.transports.contains(WebSocket.NAME)
             ) {
@@ -129,7 +136,6 @@ class Socket(
      */
     @CallerThread
     fun send(pkt: EngineIOPacket<*>) {
-        Logger.debug(TAG, "send $pkt")
         scope.launch {
             sendPacket(pkt)
         }
@@ -141,11 +147,11 @@ class Socket(
      * @return a reference to this object.
      */
     @CallerThread
-    fun close(): Socket {
+    fun close(): EngineSocket {
         scope.launch {
             Logger.info(TAG, "close: state $state, writeBuffer.size ${writeBuffer.size}, upgrading: $upgrading")
             if (state != State.OPENING && state != State.OPEN) {
-                Logger.info(TAG, "close with wrong state: $state")
+                Logger.info(TAG, "close at wrong state: $state")
                 return@launch
             }
             state = State.CLOSING
@@ -224,7 +230,7 @@ class Socket(
         Logger.info(TAG, "setTransport ${transport.name}")
         val oldTransport = this.transport
         if (oldTransport != null) {
-            Logger.info(TAG, "clearing existing transport ${transport.name}")
+            Logger.info(TAG, "clearing existing transport ${oldTransport.name}")
             oldTransport.off()
         }
 
@@ -243,8 +249,7 @@ class Socket(
                 val packet = args.firstOrNull() ?: return
                 Logger.debug(TAG, "transport on packet $packet")
                 if (packet is EngineIOPacket<*>) {
-                    @Suppress("UNCHECKED_CAST")
-                    onPacket(packet as EngineIOPacket<SocketIOPacket>)
+                    onPacket(packet)
                 }
             }
         }).on(Transport.EVENT_ERROR, object : Listener {
@@ -270,6 +275,7 @@ class Socket(
         prevBufferLen -= len
 
         if (writeBuffer.isEmpty()) {
+            Logger.debug(TAG, "onDrain fire socket drain event")
             emit(EVENT_DRAIN)
         } else if (writeBuffer.size > prevBufferLen) {
             flush()
@@ -279,7 +285,8 @@ class Socket(
     @WorkThread
     private fun sendPacket(pkt: EngineIOPacket<*>) {
         Logger.debug(TAG, "sendPacket: state $state, pkt $pkt")
-        if (state == State.CLOSING || state == State.CLOSED) {
+        if (state != State.OPENING && state != State.OPEN) {
+            Logger.error(TAG, "sendPacket at wrong state: $state")
             return
         }
 
@@ -289,25 +296,18 @@ class Socket(
     }
 
     @WorkThread
-    private fun onPacket(packet: EngineIOPacket<SocketIOPacket>) {
+    private fun onPacket(packet: EngineIOPacket<*>) {
+        Logger.debug(TAG, "onPacket $packet")
         if (inactive()) {
-            Logger.error(TAG, "packet received with wrong state $state, $packet")
+            Logger.error(TAG, "packet received at wrong state: $state")
             return
         }
 
-        Logger.debug(TAG, "onPacket $packet")
         emit(EVENT_PACKET, packet)
         emit(EVENT_HEARTBEAT)
 
         when (packet) {
-            is EngineIOPacket.Open -> {
-                try {
-                    onHandshake(packet)
-                } catch (e: Exception) {
-                    emit(EVENT_ERROR, "Error handling Open packet: ${e.message}")
-                }
-            }
-
+            is EngineIOPacket.Open -> onHandshake(packet)
             is EngineIOPacket.Ping -> {
                 emit(EVENT_PING)
                 sendPacket(EngineIOPacket.Pong(null))
@@ -336,7 +336,8 @@ class Socket(
         onOpen()
 
         // In case open handler closes socket
-        if (state == State.CLOSED) {
+        if (state != State.OPEN) {
+            Logger.info(TAG, "onHandshake skip: state $state")
             return
         }
 
@@ -356,7 +357,7 @@ class Socket(
         emit(EVENT_OPEN)
         flush()
 
-        if (state == State.OPEN && opt.upgrade && transport is PollingXHR) {
+        if (opt.upgrade && transport?.name == PollingXHR.NAME) {
             Logger.info(TAG, "starting upgrade probes")
             for (upgrade in upgrades) {
                 probe(upgrade)
@@ -380,6 +381,11 @@ class Socket(
             prevBufferLen = writeBuffer.size
             transport?.send(ArrayList(packets))
             emit(EVENT_FLUSH)
+        } else {
+            Logger.info(
+                TAG, "flush ignored: state $state, transport.writable ${transport?.writable}, " +
+                        "upgrading $upgrading, writeBuffer.size ${writeBuffer.size}, prevBufferLen $prevBufferLen"
+            )
         }
     }
 
@@ -390,7 +396,120 @@ class Socket(
         var failed = false
         priorWebsocketSuccess = false
 
-        // TODO
+        val cleanUp = ArrayList<() -> Unit>()
+        var cleaned = false
+
+        val onTransportOpen = object : Listener {
+            override fun call(vararg args: Any) {
+                Logger.info(TAG, "probe transport $name opened, failed: $failed")
+                if (failed) {
+                    return
+                }
+
+                val ping = EngineIOPacket.Ping(PROBE)
+                transport.send(listOf(ping))
+                transport.once(Transport.EVENT_PACKET, object : Listener {
+                    override fun call(vararg args: Any) {
+                        if (failed) {
+                            return
+                        }
+                        if (args.isNotEmpty() && args[0] is EngineIOPacket.Pong
+                            && (args[0] as EngineIOPacket.Pong).payload == PROBE
+                        ) {
+                            Logger.info(TAG, "probe transport $name pong")
+                            upgrading = true
+                            emit(EVENT_UPGRADING, transport)
+                            if (cleaned) {
+                                return
+                            }
+
+                            priorWebsocketSuccess = transport.name == WebSocket.NAME
+                            val currentTransport = this@EngineSocket.transport ?: return
+                            Logger.info(TAG, "pausing current transport ${currentTransport.name}")
+                            currentTransport.pause {
+                                if (failed || state == State.CLOSED) {
+                                    return@pause
+                                }
+                                Logger.info(TAG, "changing transport and sending upgrade packet")
+                                cleanUp[0]()
+                                transport.once(EVENT_DRAIN, object : Listener {
+                                    override fun call(vararg args: Any) {
+                                        Logger.info(TAG, "upgrade packet send success")
+                                        emit(EVENT_UPGRADE, transport)
+                                        setTransport(transport)
+                                        cleaned = true
+                                        upgrading = false
+                                        flush()
+                                    }
+                                })
+                                transport.send(listOf(EngineIOPacket.Upgrade))
+                            }
+                        } else {
+                            Logger.error(TAG, "probe transport $name failed")
+                            emit(EVENT_UPGRADE_ERROR, PROBE_ERROR)
+                        }
+                    }
+                })
+            }
+        }
+        val freezeTransport = object : Listener {
+            override fun call(vararg args: Any) {
+                if (failed) {
+                    return
+                }
+                failed = true
+                cleanUp[0]()
+                transport.close()
+                cleaned = true
+            }
+        }
+        // Handle any error that happens while probing
+        val onTransportError = object : Listener {
+            override fun call(vararg args: Any) {
+                freezeTransport.call()
+                Logger.error(TAG, "probe transport $name failed because of error: ${args.joinToString()}")
+                emit(EVENT_UPGRADE_ERROR, PROBE_ERROR)
+            }
+        }
+        val onTransportClose = object : Listener {
+            override fun call(vararg args: Any) {
+                Logger.error(TAG, "probe transport $name, but transport closed")
+                onTransportError.call("transport closed")
+            }
+        }
+        val onClose = object : Listener {
+            override fun call(vararg args: Any) {
+                Logger.error(TAG, "probe transport $name, but socket closed")
+                onTransportError.call("socket closed")
+            }
+        }
+        val onUpgrade = object : Listener {
+            override fun call(vararg args: Any) {
+                if (args.isNotEmpty() && args[0] is Transport) {
+                    val to = args[0] as Transport
+                    if (to.name != transport.name) {
+                        Logger.info(TAG, "probe but ${to.name} works, abort ${transport.name}")
+                        freezeTransport.call()
+                    }
+                }
+            }
+        }
+
+        cleanUp.add {
+            transport.off(Transport.EVENT_OPEN, onTransportOpen)
+            transport.off(Transport.EVENT_ERROR, onTransportError)
+            transport.off(Transport.EVENT_CLOSE, onTransportClose)
+            off(EVENT_CLOSE, onClose)
+            off(EVENT_UPGRADING, onUpgrade)
+        }
+
+        transport.once(Transport.EVENT_OPEN, onTransportOpen)
+        transport.once(Transport.EVENT_ERROR, onTransportError)
+        transport.once(Transport.EVENT_CLOSE, onTransportClose)
+        once(EVENT_CLOSE, onClose)
+        once(EVENT_UPGRADING, onUpgrade)
+
+        transport.open()
     }
 
     @WorkThread
@@ -401,7 +520,7 @@ class Socket(
         pingTimeoutJob?.cancel()
         pingTimeoutJob = scope.launch {
             delay((pingInterval + pingTimeout).toLong())
-            if (state != State.CLOSED) {
+            if (!inactive()) {
                 onClose("ping timeout")
             }
         }
@@ -449,6 +568,8 @@ class Socket(
 
     companion object {
         private const val TAG = "EngineIOSocket"
+        internal const val PROBE = "probe"
+        private const val PROBE_ERROR = "probe error"
         private var priorWebsocketSuccess = false
 
 

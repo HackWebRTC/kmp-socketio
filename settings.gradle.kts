@@ -19,4 +19,3 @@ dependencyResolutionManagement {
 
 rootProject.name = "kmp-socketio"
 include(":kmp-socketio")
-include(":OfficialTests")

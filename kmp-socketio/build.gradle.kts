@@ -3,19 +3,16 @@ import com.vanniktech.maven.publish.SonatypeHost
 plugins {
     alias(libs.plugins.kmp)
     alias(libs.plugins.vanniktech.mavenPublish)
-
-    alias(libs.plugins.android.library)
 }
 
 version = Consts.releaseVersion
 group = Consts.releaseGroup
 
 kotlin {
-    jvm()
-
-    androidTarget {
-        publishLibraryVariants("release")
+    jvm {
+        withJava()
     }
+
     iosArm64()
     iosSimulatorArm64()
     iosX64()
@@ -51,7 +48,9 @@ kotlin {
         }
         jvmMain {
             dependencies {
-                api(libs.ktor.client.java)
+                //api(libs.ktor.client.java) // java engine can't get ws response headers
+                //api(libs.ktor.client.okhttp) // okhttp engine can get ws response headers, but all in lowercase
+                api(libs.ktor.client.cio) // cio engine works fine
             }
         }
         jvmTest {
@@ -64,11 +63,8 @@ kotlin {
                 // but only run tests on JVM seems fine.
                 implementation(libs.mockk)
                 implementation(libs.kotlinx.coroutines.test)
-            }
-        }
-        androidMain {
-            dependencies {
-                api(libs.ktor.client.okhttp)
+                implementation(libs.junit)
+                implementation(libs.hamcrest)
             }
         }
         appleMain {
@@ -89,25 +85,6 @@ kotlin {
     }
 }
 
-android {
-    compileSdk = libs.versions.compileSdk.get().toInt()
-    ndkVersion = libs.versions.ndk.get()
-    namespace = Consts.androidNS
-
-    defaultConfig {
-        minSdk = libs.versions.minSdk.get().toInt()
-    }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.toVersion(libs.versions.jvm.get().toInt())
-        targetCompatibility = JavaVersion.toVersion(libs.versions.jvm.get().toInt())
-    }
-
-    kotlin {
-        jvmToolchain(libs.versions.jvm.get().toInt())
-    }
-}
-
 mavenPublishing {
     publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
 
@@ -118,7 +95,7 @@ mavenPublishing {
     pom {
         name = "kmp-socketio"
         description = "KMP implementation of SocketIO client."
-        inceptionYear = "2022"
+        inceptionYear = "2024"
         url = "https://github.com/HackWebRTC/kmp-socketio"
         licenses {
             license {

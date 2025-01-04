@@ -10,8 +10,6 @@ import io.mockk.verify
 import kotlinx.coroutines.*
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonArray
@@ -27,38 +25,50 @@ class SocketTest : BaseTest() {
         transports: List<String>,
         scope: CoroutineScope,
         disablePingTimeout: Boolean = true,
+        upgrade: Boolean = false,
+        transportsObj: List<Transport> = emptyList(),
     ): TestSocket {
-        val opt = Socket.Options()
+        val opt = EngineSocket.Options()
         opt.transports = transports
+        opt.upgrade = upgrade
 
         val transport = spyk(
             TestTransport(Transport.Options(), scope, transports[0])
         )
 
         val factory = mockk<TransportFactory>()
-        every { factory.create(any(), any(), any()) } returns transport
+        if (!upgrade || transportsObj.isEmpty()) {
+            every { factory.create(any(), any(), any()) } returns transport
+        } else {
+            var count = 0
+            every { factory.create(any(), any(), any()) } answers {
+                val trans = transportsObj[count]
+                count++
+                trans
+            }
+        }
 
-        val socket = Socket("http://localhost", opt, scope, factory)
+        val socket = EngineSocket("http://localhost", opt, scope, factory)
         socket.disablePingTimeout = disablePingTimeout
 
         val events = ArrayList<String>()
         val data = HashMap<String, MutableList<Any>>()
-        on(socket, Socket.EVENT_OPEN, events, data)
-        on(socket, Socket.EVENT_CLOSE, events, data)
-        on(socket, Socket.EVENT_MESSAGE, events, data)
-        on(socket, Socket.EVENT_ERROR, events, data)
-        on(socket, Socket.EVENT_UPGRADE_ERROR, events, data)
-        on(socket, Socket.EVENT_FLUSH, events, data)
-        on(socket, Socket.EVENT_DRAIN, events, data)
-        on(socket, Socket.EVENT_HANDSHAKE, events, data)
-        on(socket, Socket.EVENT_UPGRADING, events, data)
-        on(socket, Socket.EVENT_UPGRADE, events, data)
-        on(socket, Socket.EVENT_PACKET, events, data)
-        on(socket, Socket.EVENT_PACKET_CREATE, events, data)
-        on(socket, Socket.EVENT_HEARTBEAT, events, data)
-        on(socket, Socket.EVENT_DATA, events, data)
-        on(socket, Socket.EVENT_PING, events, data)
-        on(socket, Socket.EVENT_TRANSPORT, events, data)
+        on(socket, EngineSocket.EVENT_OPEN, events, data)
+        on(socket, EngineSocket.EVENT_CLOSE, events, data)
+        on(socket, EngineSocket.EVENT_MESSAGE, events, data)
+        on(socket, EngineSocket.EVENT_ERROR, events, data)
+        on(socket, EngineSocket.EVENT_UPGRADE_ERROR, events, data)
+        on(socket, EngineSocket.EVENT_FLUSH, events, data)
+        on(socket, EngineSocket.EVENT_DRAIN, events, data)
+        on(socket, EngineSocket.EVENT_HANDSHAKE, events, data)
+        on(socket, EngineSocket.EVENT_UPGRADING, events, data)
+        on(socket, EngineSocket.EVENT_UPGRADE, events, data)
+        on(socket, EngineSocket.EVENT_PACKET, events, data)
+        on(socket, EngineSocket.EVENT_PACKET_CREATE, events, data)
+        on(socket, EngineSocket.EVENT_HEARTBEAT, events, data)
+        on(socket, EngineSocket.EVENT_DATA, events, data)
+        on(socket, EngineSocket.EVENT_PING, events, data)
+        on(socket, EngineSocket.EVENT_TRANSPORT, events, data)
 
         return TestSocket(factory, transport, socket, events, data)
     }
@@ -89,7 +99,7 @@ class SocketTest : BaseTest() {
         verifyOn(sock.transport, Transport.EVENT_ERROR)
         verifyOn(sock.transport, Transport.EVENT_CLOSE)
 
-        assertEquals(listOf(Socket.EVENT_TRANSPORT), sock.events)
+        assertEquals(listOf(EngineSocket.EVENT_TRANSPORT), sock.events)
     }
 
     @Test
@@ -98,18 +108,18 @@ class SocketTest : BaseTest() {
         sock.socket.open()
         advanceUntilIdle()
 
-        sock.transport.mockHandshake()
+        sock.transport.mockOnHandshake()
         advanceUntilIdle()
 
         verify(exactly = 1) { sock.transport.open() }
 
         assertEquals(
             listOf(
-                Socket.EVENT_TRANSPORT,
-                Socket.EVENT_PACKET,
-                Socket.EVENT_HEARTBEAT,
-                Socket.EVENT_HANDSHAKE,
-                Socket.EVENT_OPEN,
+                EngineSocket.EVENT_TRANSPORT,
+                EngineSocket.EVENT_PACKET,
+                EngineSocket.EVENT_HEARTBEAT,
+                EngineSocket.EVENT_HANDSHAKE,
+                EngineSocket.EVENT_OPEN,
             ),
             sock.events
         )
@@ -124,27 +134,27 @@ class SocketTest : BaseTest() {
         sock.socket.open()
         delay(10)
 
-        sock.transport.mockHandshake(pingInterval = 500, pingTimeout = 1000)
+        sock.transport.mockOnHandshake(pingInterval = 500, pingTimeout = 1000)
         delay(1000)
-        sock.transport.mockPing()
+        sock.transport.mockOnPing()
         delay(800)
 
         verify(exactly = 1) { sock.transport.open() }
 
         assertEquals(
             listOf(
-                Socket.EVENT_TRANSPORT,
-                Socket.EVENT_PACKET,
-                Socket.EVENT_HEARTBEAT,
-                Socket.EVENT_HANDSHAKE,
-                Socket.EVENT_OPEN,
-                Socket.EVENT_PACKET,
-                Socket.EVENT_HEARTBEAT,
+                EngineSocket.EVENT_TRANSPORT,
+                EngineSocket.EVENT_PACKET,
+                EngineSocket.EVENT_HEARTBEAT,
+                EngineSocket.EVENT_HANDSHAKE,
+                EngineSocket.EVENT_OPEN,
+                EngineSocket.EVENT_PACKET,
+                EngineSocket.EVENT_HEARTBEAT,
 
-                Socket.EVENT_PING,
-                Socket.EVENT_PACKET_CREATE,
-                Socket.EVENT_FLUSH,
-                Socket.EVENT_DRAIN,
+                EngineSocket.EVENT_PING,
+                EngineSocket.EVENT_PACKET_CREATE,
+                EngineSocket.EVENT_FLUSH,
+                EngineSocket.EVENT_DRAIN,
             ),
             sock.events
         )
@@ -156,7 +166,7 @@ class SocketTest : BaseTest() {
         sock.socket.open()
         delay(10)
 
-        sock.transport.mockHandshake(pingInterval = 500, pingTimeout = 1000)
+        sock.transport.mockOnHandshake(pingInterval = 500, pingTimeout = 1000)
         withContext(Dispatchers.Default) { delay(1800) }
 
         verify(exactly = 1) { sock.transport.open() }
@@ -164,12 +174,12 @@ class SocketTest : BaseTest() {
 
         assertEquals(
             listOf(
-                Socket.EVENT_TRANSPORT,
-                Socket.EVENT_PACKET,
-                Socket.EVENT_HEARTBEAT,
-                Socket.EVENT_HANDSHAKE,
-                Socket.EVENT_OPEN,
-                Socket.EVENT_CLOSE,
+                EngineSocket.EVENT_TRANSPORT,
+                EngineSocket.EVENT_PACKET,
+                EngineSocket.EVENT_HEARTBEAT,
+                EngineSocket.EVENT_HANDSHAKE,
+                EngineSocket.EVENT_OPEN,
+                EngineSocket.EVENT_CLOSE,
             ),
             sock.events
         )
@@ -177,26 +187,37 @@ class SocketTest : BaseTest() {
 
     @Test
     fun openUpgrade() = runTest {
-        val sock = prepareSocket(listOf(PollingXHR.NAME, WebSocket.NAME), this)
+        val polling = spyk(TestTransport(Transport.Options(), this, PollingXHR.NAME))
+        val ws = spyk(TestTransport(Transport.Options(), this, WebSocket.NAME))
+
+        val transports = listOf(PollingXHR.NAME, WebSocket.NAME)
+        val sock = prepareSocket(transports, this, upgrade = true, transportsObj = listOf(polling, ws))
         sock.socket.open()
         advanceUntilIdle()
 
         assertEquals(
             listOf(WebSocket.NAME),
-            sock.socket.filterUpgrades(listOf(PollingXHR.NAME, WebSocket.NAME))
+            sock.socket.filterUpgrades(transports)
         )
 
-        sock.transport.mockHandshake(listOf(PollingXHR.NAME, WebSocket.NAME))
+        polling.mockOnHandshake(transports)
         advanceUntilIdle()
 
-        // TODO
+        assertEquals<List<EngineIOPacket<*>>>(listOf(EngineIOPacket.Ping(EngineSocket.PROBE)), ws.packets)
+        ws.mockOnPong(EngineSocket.PROBE)
+        advanceUntilIdle()
+
         assertEquals(
             listOf(
-                Socket.EVENT_TRANSPORT,
-                Socket.EVENT_PACKET,
-                Socket.EVENT_HEARTBEAT,
-                Socket.EVENT_HANDSHAKE,
-                Socket.EVENT_OPEN,
+                EngineSocket.EVENT_TRANSPORT,
+                EngineSocket.EVENT_PACKET,
+                EngineSocket.EVENT_HEARTBEAT,
+                EngineSocket.EVENT_HANDSHAKE,
+                EngineSocket.EVENT_OPEN,
+
+                EngineSocket.EVENT_TRANSPORT,
+                EngineSocket.EVENT_UPGRADING,
+                EngineSocket.EVENT_UPGRADE,
             ),
             sock.events,
         )
@@ -207,20 +228,20 @@ class SocketTest : BaseTest() {
         val sock = prepareSocket(listOf(WebSocket.NAME), this)
         sock.socket.open()
         advanceUntilIdle()
-        sock.transport.mockHandshake()
+        sock.transport.mockOnHandshake()
         sock.socket.close()
         advanceUntilIdle()
 
         assertEquals(
             listOf(
-                Socket.EVENT_TRANSPORT,
+                EngineSocket.EVENT_TRANSPORT,
 
-                Socket.EVENT_PACKET,
-                Socket.EVENT_HEARTBEAT,
-                Socket.EVENT_HANDSHAKE,
-                Socket.EVENT_OPEN,
+                EngineSocket.EVENT_PACKET,
+                EngineSocket.EVENT_HEARTBEAT,
+                EngineSocket.EVENT_HANDSHAKE,
+                EngineSocket.EVENT_OPEN,
 
-                Socket.EVENT_CLOSE,
+                EngineSocket.EVENT_CLOSE,
             ),
             sock.events,
         )
@@ -231,7 +252,7 @@ class SocketTest : BaseTest() {
         val sock = prepareSocket(listOf(WebSocket.NAME), this)
         sock.socket.open()
         advanceUntilIdle()
-        sock.transport.mockHandshake()
+        sock.transport.mockOnHandshake()
         sock.socket.send(event("ev"))
 
         sock.socket.close()
@@ -239,18 +260,18 @@ class SocketTest : BaseTest() {
 
         assertEquals(
             listOf(
-                Socket.EVENT_TRANSPORT,
+                EngineSocket.EVENT_TRANSPORT,
 
-                Socket.EVENT_PACKET,
-                Socket.EVENT_HEARTBEAT,
-                Socket.EVENT_HANDSHAKE,
-                Socket.EVENT_OPEN,
+                EngineSocket.EVENT_PACKET,
+                EngineSocket.EVENT_HEARTBEAT,
+                EngineSocket.EVENT_HANDSHAKE,
+                EngineSocket.EVENT_OPEN,
 
-                Socket.EVENT_PACKET_CREATE,
-                Socket.EVENT_FLUSH,
-                Socket.EVENT_DRAIN,
+                EngineSocket.EVENT_PACKET_CREATE,
+                EngineSocket.EVENT_FLUSH,
+                EngineSocket.EVENT_DRAIN,
 
-                Socket.EVENT_CLOSE,
+                EngineSocket.EVENT_CLOSE,
             ),
             sock.events,
         )
@@ -270,7 +291,7 @@ class SocketTest : BaseTest() {
         events1.forEach { sock.socket.send(event(it)) }
         advanceUntilIdle()
 
-        sock.transport.mockHandshake()
+        sock.transport.mockOnHandshake()
         advanceUntilIdle()
 
         val events2 = listOf("ev4", "ev5", "ev6")
@@ -279,28 +300,28 @@ class SocketTest : BaseTest() {
 
         assertEquals(
             listOf(
-                Socket.EVENT_TRANSPORT,
+                EngineSocket.EVENT_TRANSPORT,
 
-                Socket.EVENT_PACKET_CREATE,
-                Socket.EVENT_FLUSH,
-                Socket.EVENT_PACKET_CREATE,
-                Socket.EVENT_FLUSH,
-                Socket.EVENT_PACKET_CREATE,
-                Socket.EVENT_FLUSH,
-                Socket.EVENT_DRAIN,
+                EngineSocket.EVENT_PACKET_CREATE,
+                EngineSocket.EVENT_FLUSH,
+                EngineSocket.EVENT_PACKET_CREATE,
+                EngineSocket.EVENT_FLUSH,
+                EngineSocket.EVENT_PACKET_CREATE,
+                EngineSocket.EVENT_FLUSH,
+                EngineSocket.EVENT_DRAIN,
 
-                Socket.EVENT_PACKET,
-                Socket.EVENT_HEARTBEAT,
-                Socket.EVENT_HANDSHAKE,
-                Socket.EVENT_OPEN,
+                EngineSocket.EVENT_PACKET,
+                EngineSocket.EVENT_HEARTBEAT,
+                EngineSocket.EVENT_HANDSHAKE,
+                EngineSocket.EVENT_OPEN,
 
-                Socket.EVENT_PACKET_CREATE,
-                Socket.EVENT_FLUSH,
-                Socket.EVENT_PACKET_CREATE,
-                Socket.EVENT_FLUSH,
-                Socket.EVENT_PACKET_CREATE,
-                Socket.EVENT_FLUSH,
-                Socket.EVENT_DRAIN,
+                EngineSocket.EVENT_PACKET_CREATE,
+                EngineSocket.EVENT_FLUSH,
+                EngineSocket.EVENT_PACKET_CREATE,
+                EngineSocket.EVENT_FLUSH,
+                EngineSocket.EVENT_PACKET_CREATE,
+                EngineSocket.EVENT_FLUSH,
+                EngineSocket.EVENT_DRAIN,
             ),
             sock.events,
         )
@@ -321,29 +342,29 @@ class SocketTest : BaseTest() {
         val sock = prepareSocket(listOf(WebSocket.NAME), this)
         sock.socket.open()
         advanceUntilIdle()
-        sock.transport.mockHandshake()
+        sock.transport.mockOnHandshake()
         val pkt = event("ev")
-        sock.transport.mockMessage(EngineIO.encodeSocketIO(pkt))
+        sock.transport.mockOnMessage(EngineIO.encodeSocketIO(pkt))
         advanceUntilIdle()
 
         assertEquals(
             listOf(
-                Socket.EVENT_TRANSPORT,
+                EngineSocket.EVENT_TRANSPORT,
 
-                Socket.EVENT_PACKET,
-                Socket.EVENT_HEARTBEAT,
-                Socket.EVENT_HANDSHAKE,
-                Socket.EVENT_OPEN,
+                EngineSocket.EVENT_PACKET,
+                EngineSocket.EVENT_HEARTBEAT,
+                EngineSocket.EVENT_HANDSHAKE,
+                EngineSocket.EVENT_OPEN,
 
-                Socket.EVENT_PACKET,
-                Socket.EVENT_HEARTBEAT,
-                Socket.EVENT_DATA,
-                Socket.EVENT_MESSAGE,
+                EngineSocket.EVENT_PACKET,
+                EngineSocket.EVENT_HEARTBEAT,
+                EngineSocket.EVENT_DATA,
+                EngineSocket.EVENT_MESSAGE,
             ),
             sock.events,
         )
 
-        assertEquals(listOf(pkt.payload), sock.data[Socket.EVENT_MESSAGE])
+        assertEquals(listOf(pkt.payload), sock.data[EngineSocket.EVENT_MESSAGE])
     }
 
     class TestTransport(
@@ -352,41 +373,50 @@ class SocketTest : BaseTest() {
         name: String,
     ) : Transport(opt, scope, name) {
         val packets = ArrayList<EngineIOPacket<*>>()
-
-        override suspend fun doOpen() {
-            onOpen()
+        override fun pause(onPause: () -> Unit) {
+            if (name == PollingXHR.NAME) {
+                onPause()
+            }
         }
 
-        override suspend fun doSend(packets: List<EngineIOPacket<*>>) {
+        override fun doOpen() {
+            scope.launch { onOpen() }
+        }
+
+        override fun doSend(packets: List<EngineIOPacket<*>>) {
             this.packets.addAll(packets)
-            emit(EVENT_DRAIN, packets.size)
+            scope.launch { emit(EVENT_DRAIN, packets.size) }
         }
 
-        override suspend fun doClose(fromOpenState: Boolean) {
-            onClose()
+        override fun doClose(fromOpenState: Boolean) {
+            scope.launch { onClose() }
         }
 
-        fun mockHandshake(
+        fun mockOnHandshake(
             upgrades: List<String> = emptyList(),
             pingInterval: Int = 25000,
             pingTimeout: Int = 20000
         ) {
-            onData(mockOpen(upgrades, pingInterval, pingTimeout))
+            onWsData(mockOpen(upgrades, pingInterval, pingTimeout))
         }
 
-        fun mockPing() {
-            onData("2")
+        fun mockOnPing() {
+            onWsData("2")
         }
 
-        fun mockMessage(msg: String) {
-            onData(msg)
+        fun mockOnPong(data: String? = null) {
+            onWsData("3${data ?: ""}")
+        }
+
+        fun mockOnMessage(msg: String) {
+            onWsData(msg)
         }
     }
 
     class TestSocket(
         val factory: TransportFactory,
         val transport: TestTransport,
-        val socket: Socket,
+        val socket: EngineSocket,
         val events: List<String>,
         val data: Map<String, List<Any>>,
     )

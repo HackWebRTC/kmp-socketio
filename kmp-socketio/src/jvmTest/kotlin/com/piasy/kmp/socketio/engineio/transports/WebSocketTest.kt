@@ -9,11 +9,11 @@ import io.ktor.websocket.*
 import io.mockk.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.ReceiveChannel
-import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.hildan.socketio.EngineIOPacket
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.fail
 
 class WebSocketTest : BaseTest() {
     private fun prepareWs(
@@ -33,10 +33,11 @@ class WebSocketTest : BaseTest() {
         coEvery { ws.close(any<CloseReason>()) } just Runs
 
         val factory = mockk<HttpClientFactory>()
-        val paramSlot = slot<HttpRequestBuilder.() -> Unit>()
-        coEvery { factory.createWs(any(), capture(paramSlot)) } answers {
-            paramSlot.captured(HttpRequestBuilder())
-            ws
+        val requestBuilder = slot<HttpRequestBuilder.() -> Unit>()
+        val block = slot<suspend DefaultClientWebSocketSession.() -> Unit>()
+        coEvery { factory.createWs(any(), capture(requestBuilder), capture(block)) } coAnswers {
+            requestBuilder.captured(HttpRequestBuilder())
+            block.captured(ws)
         }
 
         val socket = WebSocket(
@@ -64,7 +65,7 @@ class WebSocketTest : BaseTest() {
         ws.ws.open()
         waitExec(this)
 
-        coVerify(exactly = 1) { ws.factory.createWs(any(), any()) }
+        coVerify(exactly = 1) { ws.factory.createWs(any(), any(), any()) }
         assertEquals(
             listOf(
                 Transport.EVENT_REQUEST_HEADERS,
@@ -77,21 +78,14 @@ class WebSocketTest : BaseTest() {
 
     @Test
     fun sendBeforeOpen() = runTest {
-        var exceptionMessage = ""
-        val exceptionHandler = CoroutineExceptionHandler { _, e ->
-            exceptionMessage = e.message ?: ""
+        val ws = prepareWs(this)
+
+        try {
+            ws.ws.send(listOf(EngineIOPacket.Pong(null)))
+            fail()
+        } catch (e: Exception) {
+            assertEquals("Transport not open", e.message)
         }
-        val scope = CoroutineScope(testScheduler + SupervisorJob() + exceptionHandler)
-        val ws = prepareWs(scope)
-
-        ws.ws.send(listOf(EngineIOPacket.Pong(null)))
-        advanceUntilIdle()
-
-        withContext(Dispatchers.Default) {
-            delay(100)
-        }
-
-        assertEquals("Transport not open", exceptionMessage)
     }
 
     @Test
@@ -147,16 +141,19 @@ class WebSocketTest : BaseTest() {
     @Test
     fun packet() = runTest {
         val ws = prepareWs(this, false)
+        var givePacket = false
         coEvery { ws.incoming.receive() } coAnswers {
-            delay(100)
-            Frame.Text("2")
+            if (givePacket) {
+                awaitCancellation()
+            } else {
+                givePacket = true
+                delay(100)
+                Frame.Text("2")
+            }
         }
 
         ws.ws.open()
-        advanceUntilIdle()
-        withContext(Dispatchers.Default) {
-            delay(200)
-        }
+        waitExec(this, 2000)
 
         assertEquals(
             listOf(

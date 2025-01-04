@@ -49,22 +49,26 @@ fun mockOpen(
     return "0$jsonHandshake"
 }
 
+fun setupTestLogger() {
+    Logger.logger = object : LoggerInterface {
+        override fun debug(tag: String, log: String) {
+            println("${GMTDate().timestamp} D $tag $log")
+        }
+
+        override fun info(tag: String, log: String) {
+            println("${GMTDate().timestamp} I $tag $log")
+        }
+
+        override fun error(tag: String, log: String) {
+            println("${GMTDate().timestamp} E $tag $log")
+        }
+    }
+}
+
 open class BaseTest {
     @BeforeTest
     fun setUp() {
-        Logger.logger = object : LoggerInterface {
-            override fun debug(tag: String, log: String) {
-                println("${GMTDate().timestamp} D $tag $log")
-            }
-
-            override fun info(tag: String, log: String) {
-                println("${GMTDate().timestamp} I $tag $log")
-            }
-
-            override fun error(tag: String, log: String) {
-                println("${GMTDate().timestamp} E $tag $log")
-            }
-        }
+        setupTestLogger()
     }
 
     protected suspend fun waitExec(scope: TestScope, millis: Long = 300) {

@@ -5,7 +5,6 @@ import com.piasy.kmp.socketio.logging.Logger
 import com.piasy.kmp.socketio.parseqs.ParseQS
 import io.ktor.util.date.*
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 import org.hildan.socketio.EngineIO
 import org.hildan.socketio.EngineIOPacket
 import kotlin.jvm.JvmField
@@ -45,42 +44,39 @@ abstract class Transport(
     protected var state = State.INIT
     internal var writable = false
 
-    @CallerThread
+    @WorkThread
     fun open(): Transport {
         Logger.info(TAG, "$name open")
-        scope.launch {
-            if (state == State.CLOSED || state == State.INIT) {
-                state = State.OPENING
-                doOpen()
-            }
+        if (state == State.CLOSED || state == State.INIT) {
+            state = State.OPENING
+            doOpen()
         }
         return this
     }
 
-    @CallerThread
+    @WorkThread
     fun send(packets: List<EngineIOPacket<*>>) {
-        scope.launch {
-            Logger.debug(TAG, "$name send: state $state, ${packets.size} packets")
-            if (state == State.OPEN) {
-                doSend(packets)
-            } else {
-                throw RuntimeException("Transport not open")
-            }
+        Logger.debug(TAG, "$name send: state $state, ${packets.size} packets")
+        if (state == State.OPEN) {
+            doSend(packets)
+        } else {
+            throw RuntimeException("Transport not open")
         }
     }
 
-    @CallerThread
+    @WorkThread
     fun close(): Transport {
         Logger.info(TAG, "$name close")
-        scope.launch {
-            if (state == State.OPENING || state == State.OPEN) {
-                val fromOpenState = state == State.OPEN
-                state = State.CLOSING
-                doClose(fromOpenState)
-            }
+        if (state == State.OPENING || state == State.OPEN) {
+            val fromOpenState = state == State.OPEN
+            state = State.CLOSING
+            doClose(fromOpenState)
         }
         return this
     }
+
+    @WorkThread
+    abstract fun pause(onPause: () -> Unit)
 
     @WorkThread
     protected fun onOpen() {
@@ -93,25 +89,29 @@ abstract class Transport(
     }
 
     @WorkThread
-    protected fun onData(data: String) {
-        Logger.debug(TAG, "onData: `$data`")
-        onPacket(EngineIO.decodeSocketIO(data))
+    protected fun onWsData(data: String) {
+        Logger.debug(TAG, "$name onData: `$data`")
+        if (stringMessagePayloadForTesting) {
+            onPacket(EngineIO.decodeWsFrame(data, deserializePayload = { it }))
+        } else {
+            onPacket(EngineIO.decodeSocketIO(data))
+        }
     }
 
     @WorkThread
-    protected fun onData(data: ByteArray) {
+    protected fun onWsData(data: ByteArray) {
         // TODO: binary
     }
 
     @WorkThread
     protected fun onPacket(packet: EngineIOPacket<*>) {
-        Logger.debug(TAG, "onPacket $packet")
+        Logger.debug(TAG, "$name onPacket $packet")
         emit(EVENT_PACKET, packet)
     }
 
     @WorkThread
-    protected fun onError(msg: String) {
-        Logger.error(TAG, "onError `$msg`")
+    internal fun onError(msg: String) {
+        Logger.error(TAG, "$name onError `$msg`")
         emit(EVENT_ERROR, msg)
     }
 
@@ -123,13 +123,13 @@ abstract class Transport(
     }
 
     @WorkThread
-    abstract suspend fun doOpen()
+    protected abstract fun doOpen()
 
     @WorkThread
-    abstract suspend fun doSend(packets: List<EngineIOPacket<*>>)
+    protected abstract fun doSend(packets: List<EngineIOPacket<*>>)
 
     @WorkThread
-    abstract suspend fun doClose(fromOpenState: Boolean)
+    protected abstract fun doClose(fromOpenState: Boolean)
 
     @WorkThread
     protected fun uri(secureSchema: String, insecureSchema: String): String {
@@ -172,6 +172,7 @@ abstract class Transport(
         const val EVENT_REQUEST_HEADERS: String = "requestHeaders"
         const val EVENT_RESPONSE_HEADERS: String = "responseHeaders"
 
+        internal var stringMessagePayloadForTesting = false
         private const val TAG = "Transport"
     }
 }
