@@ -47,6 +47,7 @@ class EngineSocket(
     private var pingInterval = 0
     private var pingTimeout = 0
     internal var transport: Transport? = null
+    private val subs = ArrayList<On.Handle>()
     private var upgrading = false
 
     internal val writeBuffer = ArrayDeque<EngineIOPacket<*>>()
@@ -103,42 +104,37 @@ class EngineSocket(
      *
      * @return a reference to this object.
      */
-    @CallerThread
-    fun open(): EngineSocket {
-        scope.launch {
-            Logger.info(TAG, "open: state $state")
-            if (state != State.INIT && state != State.CLOSED) {
-                Logger.error(TAG, "open at wrong state: $state")
-                return@launch
-            }
-
-            val name = if (opt.rememberUpgrade && priorWebsocketSuccess
-                && opt.transports.contains(WebSocket.NAME)
-            ) {
-                WebSocket.NAME
-            } else {
-                // transports won't be empty
-                opt.transports[0]
-            }
-
-            state = State.OPENING
-            val transport = createTransport(name)
-            setTransport(transport)
-            transport.open()
+    @WorkThread
+    fun open() {
+        Logger.info(TAG, "open: state $state")
+        if (state != State.INIT && state != State.CLOSED) {
+            Logger.error(TAG, "open at wrong state: $state")
+            return
         }
-        return this
+
+        val name = if (opt.rememberUpgrade && priorWebsocketSuccess
+            && opt.transports.contains(WebSocket.NAME)
+        ) {
+            WebSocket.NAME
+        } else {
+            // transports won't be empty
+            opt.transports[0]
+        }
+
+        state = State.OPENING
+        val transport = createTransport(name)
+        setTransport(transport)
+        transport.open()
     }
 
     /**
      * Sends a packet.
      *
-     * @param pkt
+     * @param packet
      */
-    @CallerThread
-    fun send(pkt: EngineIOPacket<*>) {
-        scope.launch {
-            sendPacket(pkt)
-        }
+    @WorkThread
+    fun send(packet: EngineIOPacket<*>) {
+        sendPacket(packet)
     }
 
     /**
@@ -146,56 +142,52 @@ class EngineSocket(
      *
      * @return a reference to this object.
      */
-    @CallerThread
-    fun close(): EngineSocket {
-        scope.launch {
-            Logger.info(TAG, "close: state $state, writeBuffer.size ${writeBuffer.size}, upgrading: $upgrading")
-            if (state != State.OPENING && state != State.OPEN) {
-                Logger.info(TAG, "close at wrong state: $state")
-                return@launch
-            }
-            state = State.CLOSING
+    @WorkThread
+    fun close() {
+        Logger.info(TAG, "close: state $state, writeBuffer.size ${writeBuffer.size}, upgrading: $upgrading")
+        if (state != State.OPENING && state != State.OPEN) {
+            Logger.info(TAG, "close at wrong state: $state")
+            return
+        }
+        state = State.CLOSING
 
-            val closeAction = {
-                Logger.info(TAG, "socket closing - telling transport to close")
-                onClose("force close")
-                transport?.close()
-            }
-            val cleanupAndClose = object : Listener {
-                override fun call(vararg args: Any) {
-                    Logger.info(TAG, "close waiting upgrade success")
-                    off(EVENT_UPGRADE, this)
-                    off(EVENT_UPGRADE_ERROR, this)
-                    closeAction()
-                }
-            }
-            val waitForUpgrade = {
-                Logger.info(TAG, "close waiting upgrade")
-                // wait for upgrade to finish since we can't
-                // send packets while pausing transport.
-                once(EVENT_UPGRADE, cleanupAndClose)
-                once(EVENT_UPGRADE_ERROR, cleanupAndClose)
-            }
-
-            if (writeBuffer.isNotEmpty()) {
-                Logger.info(TAG, "close waiting drain event")
-                once(EVENT_DRAIN, object : Listener {
-                    override fun call(vararg args: Any) {
-                        Logger.info(TAG, "close waiting drain success")
-                        if (upgrading) {
-                            waitForUpgrade()
-                        } else {
-                            closeAction()
-                        }
-                    }
-                })
-            } else if (upgrading) {
-                waitForUpgrade()
-            } else {
+        val closeAction = {
+            Logger.info(TAG, "socket closing - telling transport to close")
+            onClose("force close")
+        }
+        val cleanupAndClose = object : Listener {
+            override fun call(vararg args: Any) {
+                Logger.info(TAG, "close waiting upgrade success")
+                off(EVENT_UPGRADE, this)
+                off(EVENT_UPGRADE_ERROR, this)
                 closeAction()
             }
         }
-        return this
+        val waitForUpgrade = {
+            Logger.info(TAG, "close waiting upgrade")
+            // wait for upgrade to finish since we can't
+            // send packets while pausing transport.
+            once(EVENT_UPGRADE, cleanupAndClose)
+            once(EVENT_UPGRADE_ERROR, cleanupAndClose)
+        }
+
+        if (writeBuffer.isNotEmpty()) {
+            Logger.info(TAG, "close waiting drain event")
+            once(EVENT_DRAIN, object : Listener {
+                override fun call(vararg args: Any) {
+                    Logger.info(TAG, "close waiting drain success")
+                    if (upgrading) {
+                        waitForUpgrade()
+                    } else {
+                        closeAction()
+                    }
+                }
+            })
+        } else if (upgrading) {
+            waitForUpgrade()
+        } else {
+            closeAction()
+        }
     }
 
     @WorkThread
@@ -205,7 +197,7 @@ class EngineSocket(
         query["EIO"] = "4"
         query["transport"] = name
         if (id.isNotEmpty()) {
-            query["sid"] = id
+            query[SID] = id
         }
 
         val options = opt.transportOptions[name]
@@ -231,12 +223,17 @@ class EngineSocket(
         val oldTransport = this.transport
         if (oldTransport != null) {
             Logger.info(TAG, "clearing existing transport ${oldTransport.name}")
-            oldTransport.off()
+            for (sub in subs) {
+                sub.destroy()
+            }
+            subs.clear()
+            // old transport is always Polling, and it's already paused.
+            // so we don't need to close it.
         }
 
         this.transport = transport
 
-        transport.on(Transport.EVENT_DRAIN, object : Listener {
+        subs.add(On.on(transport, Transport.EVENT_DRAIN, object : Listener {
             override fun call(vararg args: Any) {
                 if (args.isNotEmpty() && args[0] is Int) {
                     onDrain(args[0] as Int)
@@ -244,7 +241,8 @@ class EngineSocket(
                     Logger.error(TAG, "onDrain with wrong args: `${args.joinToString()}`")
                 }
             }
-        }).on(Transport.EVENT_PACKET, object : Listener {
+        }))
+        subs.add(On.on(transport, Transport.EVENT_PACKET, object : Listener {
             override fun call(vararg args: Any) {
                 val packet = args.firstOrNull() ?: return
                 Logger.debug(TAG, "transport on packet $packet")
@@ -252,18 +250,20 @@ class EngineSocket(
                     onPacket(packet)
                 }
             }
-        }).on(Transport.EVENT_ERROR, object : Listener {
+        }))
+        subs.add(On.on(transport, Transport.EVENT_ERROR, object : Listener {
             override fun call(vararg args: Any) {
                 val msg = args.firstOrNull() ?: ""
                 if (msg is String) {
                     onError(msg)
                 }
             }
-        }).on(Transport.EVENT_CLOSE, object : Listener {
+        }))
+        subs.add(On.on(transport, Transport.EVENT_CLOSE, object : Listener {
             override fun call(vararg args: Any) {
                 onClose("transport close")
             }
-        })
+        }))
     }
 
     @WorkThread
@@ -283,15 +283,15 @@ class EngineSocket(
     }
 
     @WorkThread
-    private fun sendPacket(pkt: EngineIOPacket<*>) {
-        Logger.debug(TAG, "sendPacket: state $state, pkt $pkt")
+    private fun sendPacket(packet: EngineIOPacket<*>) {
+        Logger.debug(TAG, "sendPacket: state $state, pkt $packet")
         if (state != State.OPENING && state != State.OPEN) {
             Logger.error(TAG, "sendPacket at wrong state: $state")
             return
         }
 
-        emit(EVENT_PACKET_CREATE, pkt)
-        writeBuffer.addLast(pkt)
+        emit(EVENT_PACKET_CREATE, packet)
+        writeBuffer.addLast(packet)
         flush()
     }
 
@@ -329,7 +329,7 @@ class EngineSocket(
     private fun onHandshake(pkt: EngineIOPacket.Open) {
         emit(EVENT_HANDSHAKE, pkt)
         id = pkt.sid
-        transport?.opt?.query?.set("sid", id)
+        transport?.opt?.query?.set(SID, id)
         upgrades = filterUpgrades(pkt.upgrades)
         pingInterval = pkt.pingInterval
         pingTimeout = pkt.pingTimeout
@@ -549,7 +549,11 @@ class EngineSocket(
         // ensure transport won't stay open
         transport?.close()
         // ignore further transport communication
-        transport?.off()
+        // transport?.off() // this will cause missing event
+        for (sub in subs) {
+            sub.destroy()
+        }
+        subs.clear()
 
         state = State.CLOSED
         id = ""
@@ -567,59 +571,60 @@ class EngineSocket(
             && state != State.CLOSING
 
     companion object {
-        private const val TAG = "EngineIOSocket"
-        internal const val PROBE = "probe"
+        private const val TAG = "EngineSocket"
         private const val PROBE_ERROR = "probe error"
         private var priorWebsocketSuccess = false
 
+        internal const val PROBE = "probe"
+        internal const val SID = "sid"
 
         /**
          * Called on successful connection.
          */
-        const val EVENT_OPEN: String = "open"
+        const val EVENT_OPEN = "open"
 
         /**
          * Called on disconnection.
          */
-        const val EVENT_CLOSE: String = "close"
+        const val EVENT_CLOSE = "close"
 
         /**
          * Called when data is received from the server.
          */
-        const val EVENT_MESSAGE: String = "message"
+        const val EVENT_MESSAGE = "message"
 
         /**
          * Called when an error occurs.
          */
-        const val EVENT_ERROR: String = "error"
+        const val EVENT_ERROR = "error"
 
 
-        const val EVENT_UPGRADE_ERROR: String = "upgradeError"
+        const val EVENT_UPGRADE_ERROR = "upgradeError"
 
         /**
          * Called on completing a buffer flush.
          */
-        const val EVENT_FLUSH: String = "flush"
+        const val EVENT_FLUSH = "flush"
 
         /**
          * Called after `drain` event of transport if writeBuffer is empty.
          */
-        const val EVENT_DRAIN: String = "drain"
+        const val EVENT_DRAIN = "drain"
 
 
-        const val EVENT_HANDSHAKE: String = "handshake"
-        const val EVENT_UPGRADING: String = "upgrading"
-        const val EVENT_UPGRADE: String = "upgrade"
-        const val EVENT_PACKET: String = "packet"
-        const val EVENT_PACKET_CREATE: String = "packetCreate"
-        const val EVENT_HEARTBEAT: String = "heartbeat"
-        const val EVENT_DATA: String = "data"
-        const val EVENT_PING: String = "ping"
+        const val EVENT_HANDSHAKE = "handshake"
+        const val EVENT_UPGRADING = "upgrading"
+        const val EVENT_UPGRADE = "upgrade"
+        const val EVENT_PACKET = "packet"
+        const val EVENT_PACKET_CREATE = "packetCreate"
+        const val EVENT_HEARTBEAT = "heartbeat"
+        const val EVENT_DATA = "data"
+        const val EVENT_PING = "ping"
 
         /**
          * Called on new transport is created.
          */
-        const val EVENT_TRANSPORT: String = "transport"
+        const val EVENT_TRANSPORT = "transport"
 
     }
 }

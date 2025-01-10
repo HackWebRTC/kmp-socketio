@@ -46,7 +46,7 @@ abstract class Transport(
 
     @WorkThread
     fun open(): Transport {
-        Logger.info(TAG, "$name open")
+        logD("open")
         if (state == State.CLOSED || state == State.INIT) {
             state = State.OPENING
             doOpen()
@@ -56,7 +56,7 @@ abstract class Transport(
 
     @WorkThread
     fun send(packets: List<EngineIOPacket<*>>) {
-        Logger.debug(TAG, "$name send: state $state, ${packets.size} packets")
+        logD("send: state $state, ${packets.size} packets")
         if (state == State.OPEN) {
             doSend(packets)
         } else {
@@ -66,7 +66,7 @@ abstract class Transport(
 
     @WorkThread
     fun close(): Transport {
-        Logger.info(TAG, "$name close")
+        logI("close, state $state")
         if (state == State.OPENING || state == State.OPEN) {
             val fromOpenState = state == State.OPEN
             state = State.CLOSING
@@ -80,7 +80,7 @@ abstract class Transport(
 
     @WorkThread
     protected fun onOpen() {
-        Logger.info(TAG, "$name onOpen, state $state")
+        logI("onOpen, state $state")
         if (state == State.OPENING || state == State.CLOSING) {
             state = State.OPEN
             writable = true
@@ -90,7 +90,7 @@ abstract class Transport(
 
     @WorkThread
     protected fun onWsData(data: String) {
-        Logger.debug(TAG, "$name onData: `$data`")
+        logD("onData: `$data`")
         if (stringMessagePayloadForTesting) {
             onPacket(EngineIO.decodeWsFrame(data, deserializePayload = { it }))
         } else {
@@ -105,19 +105,19 @@ abstract class Transport(
 
     @WorkThread
     protected fun onPacket(packet: EngineIOPacket<*>) {
-        Logger.debug(TAG, "$name onPacket $packet")
+        logD("onPacket $packet")
         emit(EVENT_PACKET, packet)
     }
 
     @WorkThread
     internal fun onError(msg: String) {
-        Logger.error(TAG, "$name onError `$msg`")
+        logE("onError `$msg`")
         emit(EVENT_ERROR, msg)
     }
 
     @WorkThread
     protected fun onClose() {
-        Logger.info(TAG, "$name onClose")
+        logI("onClose")
         state = State.CLOSED
         emit(EVENT_CLOSE)
     }
@@ -160,6 +160,18 @@ abstract class Transport(
             opt.hostname
         }
         return "$schema://$hostname$port${opt.path}$derivedQuery"
+    }
+
+    protected fun logD(log: String) {
+        Logger.debug(TAG, "$name@${hashCode()} $log")
+    }
+
+    protected fun logI(log: String) {
+        Logger.info(TAG, "$name@${hashCode()} $log")
+    }
+
+    protected fun logE(log: String) {
+        Logger.error(TAG, "$name@${hashCode()} $log")
     }
 
     companion object {

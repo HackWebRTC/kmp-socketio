@@ -36,7 +36,7 @@ public class EmitterTestWithImplDetails {
         emitter.once("tobi", once);
 
         emitter.emit("tobi");
-        assertThat(calledOnce[0], is(false));
+        assertThat(calledOnce[0], is(true));
         assertThat(calledOn[0], is(true));
         calledOnce[0] = false;
         emitter.emit("tobi");
@@ -67,7 +67,7 @@ public class EmitterTestWithImplDetails {
         emitter.on("tobi", on);
 
         emitter.emit("tobi");
-        assertThat(calledOnce[0], is(false));
+        assertThat(calledOnce[0], is(true));
         assertThat(calledOn[0], is(true));
         calledOnce[0] = false;
         emitter.emit("tobi");
@@ -139,19 +139,17 @@ public class EmitterTestWithImplDetails {
     @Test
     public void offSelfFromEvent() {
         final Emitter emitter = new Emitter();
+        final boolean[] exec = new boolean[] {false};
         final Emitter.Listener on = new Emitter.Listener() {
             @Override
             public void call(Object... args) {
                 emitter.off("tobi", this);
+                exec[0] = true;
             }
         };
         emitter.on("tobi", on);
-        try {
-            emitter.emit("tobi");
-            fail();
-        } catch (Exception e) {
-            assertTrue(true);
-        }
+        emitter.emit("tobi");
+        assertTrue(exec[0]);
 
         final boolean[] calledOnce = new boolean[] {false};
         final Emitter.Listener once = new Emitter.Listener() {

@@ -4,7 +4,6 @@ import com.piasy.kmp.socketio.engineio.IoThread
 import com.piasy.kmp.socketio.engineio.State
 import com.piasy.kmp.socketio.engineio.Transport
 import com.piasy.kmp.socketio.engineio.WorkThread
-import com.piasy.kmp.socketio.logging.Logger
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
@@ -27,10 +26,10 @@ open class PollingXHR(
 
     @WorkThread
     override fun pause(onPause: () -> Unit) {
-        Logger.info(TAG, "pause")
+        logI("pause")
         state = State.PAUSED
         val paused = {
-            Logger.info(TAG, "paused")
+            logI("paused")
             state = State.PAUSED
             onPause()
         }
@@ -38,11 +37,11 @@ open class PollingXHR(
         if (polling || !writable) {
             var counter = 0
             val waitJob: (String, String) -> Unit = { event, job ->
-                Logger.info(TAG, "pause: wait $job")
+                logI("pause: wait $job")
                 counter++
                 once(event, object : Listener {
                     override fun call(vararg args: Any) {
-                        Logger.info(TAG, "pause: pre-pause $job complete")
+                        logI("pause: pre-pause $job complete")
                         counter--
                         if (counter == 0) {
                             paused()
@@ -69,7 +68,7 @@ open class PollingXHR(
 
     @WorkThread
     private fun poll() {
-        Logger.debug(TAG, "poll start")
+        logD("poll start")
         polling = true
 
         val method = HttpMethod.Get
@@ -101,20 +100,25 @@ open class PollingXHR(
         onResponse: (String) -> Unit = {},
         onSuccess: () -> Unit = {},
     ) {
-        Logger.debug(TAG, "doRequest ${method.value} $uri, data $data, headers $requestHeaders")
-        val resp = factory.httpRequest(uri) {
-            this.method = method
+        logD("doRequest ${method.value} $uri, data $data, headers $requestHeaders")
+        val resp = try {
+            factory.httpRequest(uri) {
+                this.method = method
 
-            headers {
-                putHeaders(this, requestHeaders)
-            }
+                headers {
+                    putHeaders(this, requestHeaders)
+                }
 
-            if (data != null) {
-                setBody(data)
+                if (data != null) {
+                    setBody(data)
+                }
             }
+        } catch (e: Exception) {
+            scope.launch { onError("http exception: ${e.message}") }
+            return
         }
 
-        Logger.debug(TAG, "doRequest response: ${resp.status}")
+        logD("doRequest response: ${resp.status}")
         scope.launch {
             emit(EVENT_RESPONSE_HEADERS, resp.headers.toMap())
         }
@@ -133,7 +137,7 @@ open class PollingXHR(
 
     @WorkThread
     private fun onPollComplete(data: String) {
-        Logger.debug(TAG, "onPollComplete: state $state, `$data`")
+        logD("onPollComplete: state $state, `$data`")
         val packets = if (stringMessagePayloadForTesting) {
             EngineIO.decodeHttpBatch(data, deserializeTextPayload = { it })
         } else {
@@ -159,7 +163,7 @@ open class PollingXHR(
             if (state == State.OPEN) {
                 poll()
             } else {
-                Logger.info(TAG, "onPollComplete ignore poll, state $state")
+                logI("onPollComplete ignore poll, state $state")
             }
         }
     }
@@ -184,18 +188,16 @@ open class PollingXHR(
         val headers = prepareRequestHeaders(method)
         ioScope.launch {
             doRequest(uri(), method, headers, data) {
-                scope.launch {
-                    writable = true
-                    emit(EVENT_DRAIN, packets.size)
-                }
+                writable = true
+                emit(EVENT_DRAIN, packets.size)
             }
         }
     }
 
     @WorkThread
     override fun doClose(fromOpenState: Boolean) {
-        val onClose: () -> Unit = {
-            Logger.info(TAG, "doClose writing close packet")
+        val doCloseAction: () -> Unit = {
+            logI("doClose writing close packet")
             once(EVENT_DRAIN, object : Listener {
                 override fun call(vararg args: Any) {
                     onClose()
@@ -205,13 +207,13 @@ open class PollingXHR(
         }
 
         if (fromOpenState) {
-            Logger.info(TAG, "doClose on OPEN state, closing")
-            onClose()
+            logI("doClose on OPEN state, closing")
+            doCloseAction()
         } else {
-            Logger.info(TAG, "doClose on OPENING state, deferring close")
+            logI("doClose on OPENING state, deferring close")
             once(EVENT_OPEN, object : Listener {
                 override fun call(vararg args: Any) {
-                    onClose()
+                    doCloseAction()
                 }
             })
         }
@@ -227,7 +229,5 @@ open class PollingXHR(
 
         const val EVENT_POLL = "poll"
         const val EVENT_POLL_COMPLETE = "pollComplete"
-
-        private const val TAG = "PollingXHR"
     }
 }

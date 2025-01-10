@@ -4,7 +4,6 @@ import com.piasy.kmp.socketio.engineio.IoThread
 import com.piasy.kmp.socketio.engineio.State
 import com.piasy.kmp.socketio.engineio.Transport
 import com.piasy.kmp.socketio.engineio.WorkThread
-import com.piasy.kmp.socketio.logging.Logger
 import io.ktor.client.plugins.websocket.*
 import io.ktor.client.request.*
 import io.ktor.util.*
@@ -32,26 +31,30 @@ open class WebSocket(
     @WorkThread
     override fun doOpen() {
         val uri = uri()
-        Logger.info(TAG, "doOpen $uri")
+        logI("doOpen $uri")
 
         val requestHeaders = HashMap<String, List<String>>()
         requestHeaders.putAll(opt.extraHeaders)
         emit(EVENT_REQUEST_HEADERS, requestHeaders)
 
         ioScope.launch {
-            factory.createWs(uri, {
-                headers {
-                    putHeaders(this, requestHeaders)
-                }
-            }) {
-                ws = this
-                val respHeaders = call.response.headers.toMap()
-                scope.launch {
-                    emit(EVENT_RESPONSE_HEADERS, respHeaders)
-                    onOpen()
-                }
+            try {
+                factory.createWs(uri, {
+                    headers {
+                        putHeaders(this, requestHeaders)
+                    }
+                }) {
+                    ws = this
+                    val respHeaders = call.response.headers.toMap()
+                    scope.launch {
+                        emit(EVENT_RESPONSE_HEADERS, respHeaders)
+                        onOpen()
+                    }
 
-                listen()
+                    listen()
+                }
+            } catch (e: Exception) {
+                scope.launch { onError("ws exception: ${e.message}") }
             }
         }
     }
@@ -64,7 +67,7 @@ open class WebSocket(
         while (true) {
             try {
                 val frame = ws?.incoming?.receive() ?: break
-                Logger.debug(TAG, "Receive frame: $frame")
+                logD("Receive frame: $frame")
                 when (frame) {
                     is Frame.Text -> {
                         scope.launch { onWsData(frame.readText()) }
@@ -75,16 +78,16 @@ open class WebSocket(
                     }
 
                     is Frame.Close -> {
-                        Logger.info(TAG, "Received Close frame")
+                        logI("Received Close frame")
                         break
                     }
 
                     else -> {
-                        Logger.info(TAG, "Received unknown frame")
+                        logI("Received unknown frame")
                     }
                 }
             } catch (e: Exception) {
-                Logger.error(TAG, "Receive error while reading websocket frame: `${e.message}`")
+                logE("Receive error while reading websocket frame: `${e.message}`")
                 break
             }
         }
@@ -93,7 +96,7 @@ open class WebSocket(
 
     @WorkThread
     override fun doSend(packets: List<EngineIOPacket<*>>) {
-        Logger.debug(TAG, "doSend ${packets.size} packets start")
+        logD("doSend ${packets.size} packets start")
         writable = false
 
         ioScope.launch {
@@ -113,16 +116,16 @@ open class WebSocket(
                             pkt as EngineIOPacket<SocketIOPacket>
                         )
                     }
-                    Logger.debug(TAG, "doSend: `$data`")
+                    logD("doSend: $pkt, `$data`")
                     ws?.send(data)
                 } catch (e: Exception) {
-                    Logger.error(TAG, "doSend error: `${e.message}`")
+                    logE("doSend error: `${e.message}`")
                     //break
                 }
             }
 
             scope.launch {
-                Logger.debug(TAG, "doSend ${packets.size} packets finish")
+                logD("doSend ${packets.size} packets finish")
                 writable = true
                 emit(EVENT_DRAIN, packets.size)
             }
@@ -131,7 +134,7 @@ open class WebSocket(
 
     @WorkThread
     override fun doClose(fromOpenState: Boolean) {
-        Logger.info(TAG, "doClose")
+        logI("doClose")
         ioScope.launch {
             ws?.close()
         }
@@ -141,7 +144,5 @@ open class WebSocket(
         const val NAME = "websocket"
         const val SECURE_SCHEMA = "wss"
         const val INSECURE_SCHEMA = "ws"
-
-        private const val TAG = "WebSocket"
     }
 }

@@ -104,13 +104,18 @@ open class Emitter {
      * @return a reference to this object.
      */
     @CallerThread
-    fun emit(event: String, vararg args: Any): Emitter {
+    open fun emit(event: String, vararg args: Any): Emitter {
+        val actions = ArrayList<() -> Unit>()
         callbacks[event]?.forEach {
-            it.call(*args)
+            actions.add { it.call(*args) }
         }
 
         onceCallbacks.remove(event)?.forEach {
-            it.call(*args)
+            actions.add { it.call(*args) }
+        }
+
+        for (action in actions) {
+            action()
         }
 
         return this

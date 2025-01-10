@@ -18,8 +18,9 @@ import org.hildan.socketio.EngineIOPacket
 import org.hildan.socketio.SocketIOPacket
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 
-class SocketTest : BaseTest() {
+class EngineSocketTest : BaseTest() {
 
     private fun prepareSocket(
         transports: List<String>,
@@ -71,6 +72,20 @@ class SocketTest : BaseTest() {
         on(socket, EngineSocket.EVENT_TRANSPORT, events, data)
 
         return TestSocket(factory, transport, socket, events, data)
+    }
+
+    @Test
+    fun testCancelDelayJob() = runBlocking {
+        val scope = CoroutineScope(Dispatchers.Default.limitedParallelism(1))
+        var executed = false
+        val job = scope.launch {
+            delay(1000)
+            executed = true
+        }
+        delay(500)
+        job.cancel()
+        delay(1000)
+        assertFalse(executed)
     }
 
     @Test

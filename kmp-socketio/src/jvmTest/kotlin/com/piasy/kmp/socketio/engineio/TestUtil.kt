@@ -2,12 +2,15 @@ package com.piasy.kmp.socketio.engineio
 
 import com.piasy.kmp.socketio.engineio.transports.DefaultHttpClientFactory
 import com.piasy.kmp.socketio.engineio.transports.DefaultTransportFactory
+import com.piasy.kmp.socketio.socketio.Manager
+import com.piasy.kmp.socketio.socketio.Socket
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.serialization.json.*
 
 object TestUtil {
     @JvmStatic
-    fun testScope() = CoroutineScope(Dispatchers.Default.limitedParallelism(1, "test"))
+    fun testScope() = CoroutineScope(Dispatchers.Default.limitedParallelism(1))
 
     @JvmStatic
     fun transportFactory() = DefaultTransportFactory
@@ -38,4 +41,24 @@ object TestUtil {
 
     @JvmStatic
     fun transportName(socket: EngineSocket) = socket.transport?.name
+
+    @JvmStatic
+    fun socket(manager: Manager, nsp: String): Socket {
+        return manager.socket(nsp, emptyMap())
+    }
+
+    @JvmStatic
+    fun closeManager(manager: Manager) {
+        manager.close()
+    }
+
+    @JvmStatic
+    fun closeEngineSocket(socket: Socket) {
+        socket.io.engine?.close()
+    }
+
+    @JvmStatic
+    fun jsonBool(json: JsonObject, key: String): Boolean? {
+        return json[key]?.jsonPrimitive?.boolean
+    }
 }

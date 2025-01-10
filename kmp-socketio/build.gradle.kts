@@ -65,6 +65,7 @@ kotlin {
                 implementation(libs.kotlinx.coroutines.test)
                 implementation(libs.junit)
                 implementation(libs.hamcrest)
+                implementation(libs.json)
             }
         }
         appleMain {
