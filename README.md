@@ -2,6 +2,8 @@
 
 KMP implementation of SocketIO client.
 
+![Main branch status](https://github.com/HackWebRTC/kmp-socketio/actions/workflows/test_and_run_demo.yaml/badge.svg?branch=main)
+
 ## Credit
 
 + [joffrey-bion/socketio-kotlin](https://github.com/joffrey-bion/socketio-kotlin)

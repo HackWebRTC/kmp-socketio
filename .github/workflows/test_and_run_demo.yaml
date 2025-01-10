@@ -1,0 +1,46 @@
+# https://github.com/Kotlin/multiplatform-library-template/blob/main/.github/workflows/gradle.yml
+# https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-gradle
+
+name: kmp-socketio build and test.
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - cmd: "${GITHUB_WORKSPACE}/gradlew :kmp-socketio:jvmTest --info"
+            os: ubuntu-latest
+            dep: "cd ${GITHUB_WORKSPACE}/kmp-socketio/src/jvmTest/resources/ && npm install"
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
+    - uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: 'gradle'
+    - uses: gradle/actions/setup-gradle@v3
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 14
+    - if: ${{ matrix.dep }}
+      run: ${{ matrix.dep }}
+    - if: ${{ matrix.os == 'windows-latest' }}
+      shell: cmd
+      run: ${{ matrix.cmd }}
+    - if: ${{ matrix.os != 'windows-latest' }}
+      run: ${{ matrix.cmd }}
