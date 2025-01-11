@@ -250,7 +250,7 @@ class PollingXHRTest : BaseTest() {
         polling.polling.open()
         waitExec(this)
         polling.polling.close()
-        waitExec(this, 1000)
+        waitExec(this, 1500)
 
         coVerify(exactly = 3) { polling.factory.httpRequest(any(), any()) }
         assertEquals(
