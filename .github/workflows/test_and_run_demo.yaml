@@ -70,10 +70,12 @@ jobs:
         with:
           style: flat
           source: ${{ github.workspace }}/kmp-socketio/build/reports/kover/coverage.json
-          output: coverage/badges.svg
+          output: dist/badges.svg
           jsonPath: totals.instructions.pct
       - name: Deploy
-        uses: peaceiris/actions-gh-pages@v3
+        uses: peaceiris/actions-gh-pages@v4
+        if: ${{ github.ref == 'refs/heads/main' }}
         with:
+          commit_message: ${{ github.event.head_commit.message }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./build
+          publish_dir: ./dist
