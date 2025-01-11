@@ -15,7 +15,7 @@ import kotlinx.serialization.json.Json
 import kotlin.test.BeforeTest
 
 fun verifyOn(emitter: Emitter, event: String) {
-    verify(exactly = 1) { emitter.on(event, any()) }
+    verify(exactly = 1) { emitter.on(event, any<Emitter.Listener>()) }
 }
 
 fun on(

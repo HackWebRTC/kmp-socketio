@@ -1,10 +1,15 @@
 [versions]
 jvm = "17"
+iosDeploymentTarget = "14.0"
+compileSdk = "35"
+minSdk = "21"
+targetSdk = "35"
 agp = "8.7.2"
 kotlin = "2.1.0"
 mockk = "1.13.13"
 ktor = "3.0.3"
 coroutine = "1.10.1"
+compose = "1.7.5"
 
 [libraries]
 junit = "junit:junit:4.13.2"
@@ -27,15 +32,17 @@ ktor-client-js = { module = "io.ktor:ktor-client-js", version.ref = "ktor" }
 ktor-client-java = { module = "io.ktor:ktor-client-java", version.ref = "ktor" }
 ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
 
-kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
-
-kotlin-stdlib-js = { module = "org.jetbrains.kotlin:kotlin-stdlib-js", version.ref = "kotlin" }
+androidx-compose-ui = { module = "androidx.compose.ui:ui", version.ref = "compose" }
+androidx-compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "compose" }
+androidx-compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview", version.ref = "compose" }
+androidx-compose-foundation = { module = "androidx.compose.foundation:foundation", version.ref = "compose" }
+androidx-compose-material = { module = "androidx.compose.material:material", version.ref = "compose" }
+androidx-activity-compose = "androidx.activity:activity-compose:1.9.3"
 
 [plugins]
 android-library = { id = "com.android.library", version.ref = "agp" }
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kmp = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 versions = "com.github.ben-manes.versions:0.51.0"
