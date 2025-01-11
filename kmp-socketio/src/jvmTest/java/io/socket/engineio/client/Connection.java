@@ -27,7 +27,6 @@ public abstract class Connection {
 
     @Before
     public void startServer() throws IOException, InterruptedException {
-        TestUtil.setupLogger();
         TestUtil.stringMessagePayloadForTesting(true);
         logger.fine("Starting server ...");
 
@@ -72,7 +71,6 @@ public abstract class Connection {
 
     @After
     public void stopServer() throws InterruptedException {
-        TestUtil.stringMessagePayloadForTesting(false);
         logger.fine("Stopping server ...");
         serverProcess.destroy();
         serverOutout.cancel(false);

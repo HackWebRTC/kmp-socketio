@@ -197,7 +197,8 @@ class Socket(
             is SocketIOPacket.Disconnect -> onDisconnect()
             is SocketIOPacket.ConnectError -> {
                 destroy()
-                super.emit(EVENT_CONNECT_ERROR, packet.errorData?.toString() ?: "Connect error")
+                val data = packet.errorData ?: JsonObject(emptyMap())
+                super.emit(EVENT_CONNECT_ERROR, data)
             }
 
             is SocketIOPacket.Event -> onEvent(packet)

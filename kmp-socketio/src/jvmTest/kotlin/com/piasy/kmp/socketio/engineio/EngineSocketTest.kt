@@ -56,7 +56,6 @@ class EngineSocketTest : BaseTest() {
         val data = HashMap<String, MutableList<Any>>()
         on(socket, EngineSocket.EVENT_OPEN, events, data)
         on(socket, EngineSocket.EVENT_CLOSE, events, data)
-        on(socket, EngineSocket.EVENT_MESSAGE, events, data)
         on(socket, EngineSocket.EVENT_ERROR, events, data)
         on(socket, EngineSocket.EVENT_UPGRADE_ERROR, events, data)
         on(socket, EngineSocket.EVENT_FLUSH, events, data)
@@ -374,12 +373,11 @@ class EngineSocketTest : BaseTest() {
                 EngineSocket.EVENT_PACKET,
                 EngineSocket.EVENT_HEARTBEAT,
                 EngineSocket.EVENT_DATA,
-                EngineSocket.EVENT_MESSAGE,
             ),
             sock.events,
         )
 
-        assertEquals(listOf(pkt.payload), sock.data[EngineSocket.EVENT_MESSAGE])
+        assertEquals(listOf(pkt.payload), sock.data[EngineSocket.EVENT_DATA])
     }
 
     class TestTransport(
@@ -412,19 +410,19 @@ class EngineSocketTest : BaseTest() {
             pingInterval: Int = 25000,
             pingTimeout: Int = 20000
         ) {
-            onWsData(mockOpen(upgrades, pingInterval, pingTimeout))
+            onWsText(mockOpen(upgrades, pingInterval, pingTimeout))
         }
 
         fun mockOnPing() {
-            onWsData("2")
+            onWsText("2")
         }
 
         fun mockOnPong(data: String? = null) {
-            onWsData("3${data ?: ""}")
+            onWsText("3${data ?: ""}")
         }
 
         fun mockOnMessage(msg: String) {
-            onWsData(msg)
+            onWsText(msg)
         }
     }
 

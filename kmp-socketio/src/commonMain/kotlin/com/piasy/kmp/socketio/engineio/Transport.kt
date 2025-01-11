@@ -7,6 +7,7 @@ import io.ktor.util.date.*
 import kotlinx.coroutines.CoroutineScope
 import org.hildan.socketio.EngineIO
 import org.hildan.socketio.EngineIOPacket
+import org.hildan.socketio.InvalidSocketIOPacketException
 import kotlin.jvm.JvmField
 
 abstract class Transport(
@@ -60,7 +61,7 @@ abstract class Transport(
         if (state == State.OPEN) {
             doSend(packets)
         } else {
-            throw RuntimeException("Transport not open")
+            onError("Transport not open")
         }
     }
 
@@ -89,18 +90,26 @@ abstract class Transport(
     }
 
     @WorkThread
-    protected fun onWsData(data: String) {
-        logD("onData: `$data`")
-        if (stringMessagePayloadForTesting) {
-            onPacket(EngineIO.decodeWsFrame(data, deserializePayload = { it }))
-        } else {
-            onPacket(EngineIO.decodeSocketIO(data))
+    protected fun onWsText(data: String) {
+        logD("onWsText: `$data`")
+        val packet = try {
+            if (stringMessagePayloadForTesting) {
+                EngineIO.decodeWsFrame(data, deserializePayload = { it })
+            } else {
+                EngineIO.decodeSocketIO(data)
+            }
+        } catch (e: InvalidSocketIOPacketException) {
+            val log = "onWsText decode error: ${e.message}"
+            logE(log)
+            onError(log)
+            return
         }
+        onPacket(packet)
     }
 
     @WorkThread
-    protected fun onWsData(data: ByteArray) {
         // TODO: binary
+    protected fun onWsBinary(data: ByteArray) {
     }
 
     @WorkThread

@@ -11,10 +11,7 @@ import io.ktor.util.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import org.hildan.socketio.EngineIO
-import org.hildan.socketio.EngineIOPacket
-import org.hildan.socketio.SocketIO
-import org.hildan.socketio.SocketIOPacket
+import org.hildan.socketio.*
 
 open class PollingXHR(
     opt: Options,
@@ -138,10 +135,17 @@ open class PollingXHR(
     @WorkThread
     private fun onPollComplete(data: String) {
         logD("onPollComplete: state $state, `$data`")
-        val packets = if (stringMessagePayloadForTesting) {
-            EngineIO.decodeHttpBatch(data, deserializeTextPayload = { it })
-        } else {
-            EngineIO.decodeHttpBatch(data, SocketIO::decode)
+        val packets = try {
+            if (stringMessagePayloadForTesting) {
+                EngineIO.decodeHttpBatch(data, deserializeTextPayload = { it })
+            } else {
+                EngineIO.decodeHttpBatch(data, SocketIO::decode)
+            }
+        } catch (e: InvalidSocketIOPacketException) {
+            val log = "onPollComplete decode error: ${e.message}"
+            logE(log)
+            onError(log)
+            return
         }
         for (pkt in packets) {
             if ((state == State.OPENING || state == State.CLOSING) && pkt is EngineIOPacket.Open) {

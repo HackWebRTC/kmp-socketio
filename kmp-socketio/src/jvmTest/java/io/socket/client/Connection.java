@@ -30,7 +30,7 @@ public abstract class Connection {
 
     @Before
     public void startServer() throws IOException, InterruptedException {
-        TestUtil.setupLogger();
+        TestUtil.stringMessagePayloadForTesting(false);
         logger.fine("Starting server ...");
 
         final CountDownLatch latch = new CountDownLatch(1);

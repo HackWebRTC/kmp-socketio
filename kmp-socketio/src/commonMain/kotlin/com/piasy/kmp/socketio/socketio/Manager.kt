@@ -47,6 +47,7 @@ class Manager(
                 }
                 field = value
             }
+        @JvmField
         var auth: Map<String, String> = emptyMap()
 
         /**
@@ -168,8 +169,8 @@ class Manager(
         val socket = engine ?: return
         subs.add(On.on(socket, EngineSocket.EVENT_DATA, object : Listener {
             override fun call(vararg args: Any) {
-                if (args.isNotEmpty() && args[0] is SocketIOPacket) {
-                    Logger.debug(TAG, "on SocketIOPacket ${args[0]}")
+                if (args.isNotEmpty()) {
+                    Logger.debug(TAG, "on EngineSocket data ${args[0]::class}")
                     emit(EVENT_PACKET, args[0])
                 }
             }

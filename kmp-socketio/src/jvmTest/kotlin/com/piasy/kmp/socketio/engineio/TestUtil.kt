@@ -6,7 +6,9 @@ import com.piasy.kmp.socketio.socketio.Manager
 import com.piasy.kmp.socketio.socketio.Socket
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.*
+import org.json.JSONObject
 
 object TestUtil {
     @JvmStatic
@@ -25,9 +27,6 @@ object TestUtil {
     fun stringMessagePayloadForTesting(enable: Boolean) {
         Transport.stringMessagePayloadForTesting = enable
     }
-
-    @JvmStatic
-    fun setupLogger() = setupTestLogger()
 
     @JvmStatic
     fun triggerTransportError(socket: EngineSocket, error: String) {
@@ -58,7 +57,18 @@ object TestUtil {
     }
 
     @JvmStatic
+    fun engineId(socket: Socket) = socket.io.engine?.id
+
+    @JvmStatic
+    fun engineSocket(socket: Socket) = socket.io.engine
+
+    @JvmStatic
     fun jsonBool(json: JsonObject, key: String): Boolean? {
         return json[key]?.jsonPrimitive?.boolean
+    }
+
+    @JvmStatic
+    fun toJSON(obj: Any): JSONObject {
+        return JSONObject(Json.encodeToString<JsonObject>(obj as JsonObject))
     }
 }

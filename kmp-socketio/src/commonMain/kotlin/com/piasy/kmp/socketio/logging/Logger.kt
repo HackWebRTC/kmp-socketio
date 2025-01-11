@@ -1,5 +1,7 @@
 package com.piasy.kmp.socketio.logging
 
+import io.ktor.util.date.*
+
 interface LoggerInterface {
     fun debug(tag: String, log: String)
     fun info(tag: String, log: String)
@@ -7,7 +9,11 @@ interface LoggerInterface {
 }
 
 internal object Logger : LoggerInterface {
-    internal var logger: LoggerInterface = DefaultLogger
+    private var logger: LoggerInterface = DefaultLogger
+
+    fun setLogger(logger: LoggerInterface) {
+        this.logger = logger
+    }
 
     override fun debug(tag: String, log: String) {
         logger.debug(tag, log)
@@ -24,14 +30,14 @@ internal object Logger : LoggerInterface {
 
 private object DefaultLogger : LoggerInterface {
     override fun debug(tag: String, log: String) {
-        println("D $tag $log")
+        println("${GMTDate().timestamp} D $tag $log")
     }
 
     override fun info(tag: String, log: String) {
-        println("I $tag $log")
+        println("${GMTDate().timestamp} I $tag $log")
     }
 
     override fun error(tag: String, log: String) {
-        println("E $tag $log")
+        println("${GMTDate().timestamp} E $tag $log")
     }
 }

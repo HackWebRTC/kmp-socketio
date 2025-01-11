@@ -13,7 +13,6 @@ import kotlinx.coroutines.test.runTest
 import org.hildan.socketio.EngineIOPacket
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.fail
 
 class WebSocketTest : BaseTest() {
     private fun prepareWs(
@@ -80,12 +79,15 @@ class WebSocketTest : BaseTest() {
     fun sendBeforeOpen() = runTest {
         val ws = prepareWs(this)
 
-        try {
-            ws.ws.send(listOf(EngineIOPacket.Pong(null)))
-            fail()
-        } catch (e: Exception) {
-            assertEquals("Transport not open", e.message)
-        }
+        ws.ws.send(listOf(EngineIOPacket.Pong(null)))
+        assertEquals(
+            listOf(Transport.EVENT_ERROR,),
+            ws.events
+        )
+        assertEquals(
+            listOf("Transport not open"),
+            ws.data[Transport.EVENT_ERROR]
+        )
     }
 
     @Test

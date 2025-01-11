@@ -29,7 +29,7 @@ public class ConnectionTest extends Connection {
         socket.on(EngineSocket.EVENT_OPEN, new Emitter.Listener() {
             @Override
             public void call(Object... args) {
-                socket.on(EngineSocket.EVENT_MESSAGE, new Emitter.Listener() {
+                socket.on(EngineSocket.EVENT_DATA, new Emitter.Listener() {
                     @Override
                     public void call(Object... args) {
                         values.offer(args[0]);
@@ -52,7 +52,7 @@ public class ConnectionTest extends Connection {
             @Override
             public void call(Object... args) {
                 socket.send(new EngineIOPacket.Message<String>("cash money €€€"));
-                socket.on(EngineSocket.EVENT_MESSAGE, new Emitter.Listener() {
+                socket.on(EngineSocket.EVENT_DATA, new Emitter.Listener() {
                     @Override
                     public void call(Object... args) {
                         if ("hi".equals(args[0])) return;
@@ -76,7 +76,7 @@ public class ConnectionTest extends Connection {
             @Override
             public void call(Object... args) {
                 socket.send(new EngineIOPacket.Message<String>("\uD800\uDC00-\uDB7F\uDFFF\uDB80\uDC00-\uDBFF\uDFFF\uE000-\uF8FF"));
-                socket.on(EngineSocket.EVENT_MESSAGE, new Emitter.Listener() {
+                socket.on(EngineSocket.EVENT_DATA, new Emitter.Listener() {
                     @Override
                     public void call(Object... args) {
                         if ("hi".equals(args[0])) return;

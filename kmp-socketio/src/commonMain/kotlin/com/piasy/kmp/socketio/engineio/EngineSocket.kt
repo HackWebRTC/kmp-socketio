@@ -42,7 +42,7 @@ class EngineSocket(
 
     internal var disablePingTimeout = false // to help unit test
     private var state = State.INIT
-    private var id = ""
+    internal var id = ""
     private var upgrades = emptyList<String>()
     private var pingInterval = 0
     private var pingTimeout = 0
@@ -317,7 +317,6 @@ class EngineSocket(
                 val data = packet.payload
                 if (data != null) {
                     emit(EVENT_DATA, data)
-                    emit(EVENT_MESSAGE, data)
                 }
             }
 
@@ -591,7 +590,7 @@ class EngineSocket(
         /**
          * Called when data is received from the server.
          */
-        const val EVENT_MESSAGE = "message"
+        const val EVENT_DATA = "data"
 
         /**
          * Called when an error occurs.
@@ -618,7 +617,6 @@ class EngineSocket(
         const val EVENT_PACKET = "packet"
         const val EVENT_PACKET_CREATE = "packetCreate"
         const val EVENT_HEARTBEAT = "heartbeat"
-        const val EVENT_DATA = "data"
         const val EVENT_PING = "ping"
 
         /**

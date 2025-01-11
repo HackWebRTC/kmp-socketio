@@ -62,7 +62,7 @@ public class ServerConnectionTest extends Connection {
             public void call(Object... args) {
                 socket.send(new EngineIOPacket.Message<String>("hello"));
             }
-        }).on(EngineSocket.EVENT_MESSAGE, new Emitter.Listener() {
+        }).on(EngineSocket.EVENT_DATA, new Emitter.Listener() {
             @Override
             public void call(Object... args) {
                 events.offer((String) args[0]);

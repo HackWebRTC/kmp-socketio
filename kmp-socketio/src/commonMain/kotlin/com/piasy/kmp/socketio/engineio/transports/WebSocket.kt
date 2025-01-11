@@ -70,11 +70,11 @@ open class WebSocket(
                 logD("Receive frame: $frame")
                 when (frame) {
                     is Frame.Text -> {
-                        scope.launch { onWsData(frame.readText()) }
+                        scope.launch { onWsText(frame.readText()) }
                     }
 
                     is Frame.Binary -> {
-                        scope.launch { onWsData(frame.readBytes()) }
+                        scope.launch { onWsBinary(frame.readBytes()) }
                     }
 
                     is Frame.Close -> {
