@@ -12,7 +12,7 @@ KMP (pure Kotlin) implementation of SocketIO client.
 | `Browser` (Chrome) |          🚀          |
 |     `Android`      |          🚀          |
 |       `iOS`        |          🚀          |
-|      `MacOS`       |          🚀          |
+|      `macOS`       |          🚀          |
 |   `Windows X64`    |          🚀          |
 |    `Linux X64`     |          🔮          |
 
