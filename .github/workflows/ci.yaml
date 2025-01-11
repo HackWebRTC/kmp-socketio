@@ -1,7 +1,7 @@
 # https://github.com/Kotlin/multiplatform-library-template/blob/main/.github/workflows/gradle.yml
 # https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-gradle
 
-name: kmp-socketio build and test.
+name: CI
 
 on:
   push:
@@ -68,10 +68,9 @@ jobs:
       - name: Create Coverage Badges
         uses: jaywcjlove/coverage-badges-cli@main
         with:
-          style: flat
           source: ${{ github.workspace }}/kmp-socketio/build/reports/kover/coverage.json
           output: dist/badges.svg
-          jsonPath: totals.instructions.pct
+          jsonPath: total.instructions.pct
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v4
         if: ${{ github.ref == 'refs/heads/main' }}

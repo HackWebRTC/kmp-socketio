@@ -2,7 +2,7 @@
 
 KMP (pure Kotlin) implementation of SocketIO client.
 
-![Maven Central Version](https://img.shields.io/maven-central/v/com.piasy/kmp-socketio) ![Main branch status](https://github.com/HackWebRTC/kmp-socketio/actions/workflows/test_and_run_demo.yaml/badge.svg?branch=main)
+![Maven Central Version](https://img.shields.io/maven-central/v/com.piasy/kmp-socketio) ![Main branch status](https://github.com/HackWebRTC/kmp-socketio/actions/workflows/ci.yaml/badge.svg?branch=main) ![Coverage](https://hackwebrtc.github.io/kmp-socketio/badges.svg)
 
 ## Supported platforms
 
