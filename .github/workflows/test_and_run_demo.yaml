@@ -5,9 +5,9 @@ name: kmp-socketio build and test.
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
   workflow_call:
 
 permissions:
@@ -15,32 +15,38 @@ permissions:
 
 jobs:
   build:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - cmd: "${GITHUB_WORKSPACE}/gradlew :kmp-socketio:jvmTest --info"
-            os: ubuntu-latest
-            dep: "cd ${GITHUB_WORKSPACE}/kmp-socketio/src/jvmTest/resources/ && npm install"
-    runs-on: ${{ matrix.os }}
-
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
     steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: 'recursive'
-    - uses: actions/setup-java@v4
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-        cache: 'gradle'
-    - uses: gradle/actions/setup-gradle@v3
-    - uses: actions/setup-node@v4
-      with:
-        node-version: 14
-    - if: ${{ matrix.dep }}
-      run: ${{ matrix.dep }}
-    - if: ${{ matrix.os == 'windows-latest' }}
-      shell: cmd
-      run: ${{ matrix.cmd }}
-    - if: ${{ matrix.os != 'windows-latest' }}
-      run: ${{ matrix.cmd }}
+      - uses: actions/checkout@v4
+        with:
+          submodules: "recursive"
+      - uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
+          cache: "gradle"
+      - uses: gradle/actions/setup-gradle@v3
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 14
+      - name: Setup Test Env
+        run: |
+          cd kmp-socketio/src/jvmTest/resources/
+          npm install
+      - name: Run Jvm tests
+        run: |
+          ./gradlew :kmp-socketio:jvmTest --info
+      - name: Gen coverage
+        run: |
+          ./gradlew koverXmlReport
+      - name: Add coverage to PR
+        id: jacoco
+        uses: madrapps/jacoco-report@v1.7.1
+        with:
+          paths: |
+            ${GITHUB_WORKSPACE}/kmp-socketio/build/reports/kover/report.xml
+          token: ${{ secrets.GITHUB_TOKEN }}
+          min-coverage-overall: 80
+          min-coverage-changed-files: 80
