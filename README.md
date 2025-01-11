@@ -1,26 +1,26 @@
 # kmp-socketio
 
-KMP implementation of SocketIO client.
-This project is built on top of Ktor, with pure Kotlin implementation.
+KMP (pure Kotlin) implementation of SocketIO client.
 
 ![Maven Central Version](https://img.shields.io/maven-central/v/com.piasy/kmp-socketio) ![Main branch status](https://github.com/HackWebRTC/kmp-socketio/actions/workflows/test_and_run_demo.yaml/badge.svg?branch=main)
 
 ## Supported platforms
 
-|      Platform      | 🛠Builds🛠 + 🔬Tests🔬 |  
-|:------------------:|:----------------------:|
-|      `JVM` 17      |           🚀           |
-| `Browser` (Chrome) |           🚀           |
-|     `Android`      |           🚀           |
-|       `iOS`        |           🚀           |
-|      `MacOS`       |           🚀           |
-|   `Windows X64`    |           🚀           |
-|    `Linux X64`     |           🔮           |
+|      Platform      | 🛠Builds🛠 + 🔬Tests🔬 |
+| :----------------: | :------------------: |
+|      `JVM` 17      |          🚀          |
+| `Browser` (Chrome) |          🚀          |
+|     `Android`      |          🚀          |
+|       `iOS`        |          🚀          |
+|      `MacOS`       |          🚀          |
+|   `Windows X64`    |          🚀          |
+|    `Linux X64`     |          🔮          |
 
 About Linux support: Ktor's curl engine doesn't support websockets now,
 although CIO engine supports websockets, but it doesn't support TLS.
 
 Ref:
+
 - [Native Sockets TLS Client/Server support for linux](https://github.com/ktorio/ktor/pull/2939)
 - [Possible websockets support for curl engine](https://github.com/whyoleg/ktor/tree/libcurl-ws)
 
@@ -91,11 +91,33 @@ Use Chrome CORS Unblock extension to workaround with CORS error.
 ./gradlew runKmp_socketioDebugExecutableMacosX64
 ```
 
+## Publish
+
+Maven central portal credentials and signing configs are set in `~/.gradle/gradle.properties`.
+
+```bash
+# on Windows: need manual release on website
+.\gradlew clean publishMingwX64PublicationToMavenCentralRepository --no-configuration-cache
+# on macOS: need manual release on website
+./gradlew clean \
+    publishKotlinMultiplatformPublicationToMavenCentralRepository \
+    publishJvmPublicationToMavenCentralRepository \
+    publishIosArm64PublicationToMavenCentralRepository \
+    publishIosSimulatorArm64PublicationToMavenCentralRepository \
+    publishIosX64PublicationToMavenCentralRepository \
+    publishMacosArm64PublicationToMavenCentralRepository \
+    publishMacosX64PublicationToMavenCentralRepository \
+    publishJsPublicationToMavenCentralRepository \
+    --no-configuration-cache
+```
+
+Login to https://central.sonatype.com/publishing/deployments, and release them manually.
+
 ## Credit
 
-+ [joffrey-bion/socketio-kotlin](https://github.com/joffrey-bion/socketio-kotlin)
-+ [dyte-io/socketio-kotlin](https://github.com/dyte-io/socketio-kotlin)
-+ [socketio/socket.io-client-java](https://github.com/socketio/socket.io-client-java)
-+ [socketio/engine.io-client-java](https://github.com/socketio/engine.io-client-java)
-+ [socketio/socket.io](https://github.com/socketio/socket.io)
-+ [ktorio/ktor](https://github.com/ktorio/ktor)
+- [joffrey-bion/socketio-kotlin](https://github.com/joffrey-bion/socketio-kotlin)
+- [dyte-io/socketio-kotlin](https://github.com/dyte-io/socketio-kotlin)
+- [socketio/socket.io-client-java](https://github.com/socketio/socket.io-client-java)
+- [socketio/engine.io-client-java](https://github.com/socketio/engine.io-client-java)
+- [socketio/socket.io](https://github.com/socketio/socket.io)
+- [ktorio/ktor](https://github.com/ktorio/ktor)
