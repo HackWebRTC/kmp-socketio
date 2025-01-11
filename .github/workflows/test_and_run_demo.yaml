@@ -60,7 +60,7 @@ jobs:
       - name: Create coverage summary json
         uses: jsdaniell/create-json@v1.2.3
         with:
-          dir: ${{ github.workspace }}/kmp-socketio/build/reports/kover/
+          dir: kmp-socketio/build/reports/kover/
           name: "coverage.json"
           json: '{"total":{"instructions":{"pct":${{ steps.jacoco.outputs.coverage-overall }} }}}'
       - name: Create Coverage Badges
