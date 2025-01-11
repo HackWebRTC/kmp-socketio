@@ -52,14 +52,8 @@ jobs:
           pass-emoji: ":white_check_mark:"
           fail-emoji: ":negative_squared_cross_mark:"
       - name: Overall coverage check
-        if: ${{ steps.jacoco.outputs.coverage-overall < 80 }}
+        if: ${{ steps.jacoco.outputs.coverage-overall < 80 || steps.jacoco.outputs.coverage-changed-files < 80 }}
         uses: actions/github-script@v7
         with:
           script: |
-            core.setFailed("Coverage check failed! overall ${{ steps.jacoco.outputs.coverage-overall }} less than 80.")
-      - name: Diff coverage check
-        if: ${{ steps.jacoco.outputs.coverage-changed-files < 80 }}
-        uses: actions/github-script@v7
-        with:
-          script: |
-            core.setFailed("Coverage check failed! diff ${{ steps.jacoco.outputs.coverage-changed-files }} less than 80.")
+            core.setFailed("Coverage check failed! overall ${{ steps.jacoco.outputs.coverage-overall }}, diff ${{ steps.jacoco.outputs.coverage-changed-files }}.")
