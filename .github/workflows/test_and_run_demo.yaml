@@ -57,3 +57,21 @@ jobs:
         with:
           script: |
             core.setFailed("Coverage check failed! overall ${{ steps.jacoco.outputs.coverage-overall }}, diff ${{ steps.jacoco.outputs.coverage-changed-files }}.")
+      - name: Create coverage summary json
+        uses: jsdaniell/create-json@v1.2.3
+        with:
+          dir: ${{ github.workspace }}/kmp-socketio/build/reports/kover/
+          name: "coverage.json"
+          json: '{"total":{"instructions":{"pct":${{ steps.jacoco.outputs.coverage-overall }} }}}'
+      - name: Create Coverage Badges
+        uses: jaywcjlove/coverage-badges-cli@main
+        with:
+          style: flat
+          source: ${{ github.workspace }}/kmp-socketio/build/reports/kover/coverage.json
+          output: coverage/badges.svg
+          jsonPath: totals.instructions.pct
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build
