@@ -12,7 +12,6 @@ if (process.env.SSL) {
 
 var io = require('socket.io')(server, {
   pingInterval: 2000,
-  wsEngine: 'ws'
 });
 var port = process.env.PORT || 3000;
 var nsp = process.argv[2] || '/';

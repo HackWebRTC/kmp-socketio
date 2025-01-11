@@ -32,6 +32,15 @@ open class Emitter {
         return this
     }
 
+    @CallerThread
+    fun on(event: String, block: (Array<out Any>) -> Unit): Emitter {
+        return on(event, object : Listener {
+            override fun call(vararg args: Any) {
+                block(args)
+            }
+        })
+    }
+
     private fun addListener(
         callbacks: MutableMap<String, MutableList<Listener>>,
         event: String,
@@ -55,6 +64,15 @@ open class Emitter {
     fun once(event: String, fn: Listener): Emitter {
         addListener(onceCallbacks, event, fn)
         return this
+    }
+
+    @CallerThread
+    fun once(event: String, block: (Array<out Any>) -> Unit): Emitter {
+        return once(event, object : Listener {
+            override fun call(vararg args: Any) {
+                block(args)
+            }
+        })
     }
 
     /**

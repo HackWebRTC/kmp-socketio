@@ -19,3 +19,8 @@ dependencyResolutionManagement {
 
 rootProject.name = "kmp-socketio"
 include(":kmp-socketio")
+
+include(":example:shared")
+if (System.getProperty("os.name") == "Mac OS X") {
+    include(":example:androidApp")
+}

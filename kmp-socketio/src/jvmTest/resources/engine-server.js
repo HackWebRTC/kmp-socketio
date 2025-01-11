@@ -13,7 +13,6 @@ if (process.env.SSL) {
 
 var server = engine.attach(http, {
   pingInterval: 500,
-  wsEngine: 'ws'
 });
 
 var port = process.env.PORT || 3000
