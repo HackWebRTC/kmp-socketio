@@ -1,5 +1,6 @@
 package io.socket.client;
 
+import com.piasy.kmp.socketio.engineio.transports.WebSocket;
 import io.socket.util.Optional;
 import kotlin.Unit;
 import kotlinx.io.bytestring.ByteString;
@@ -13,10 +14,12 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
+import java.util.Arrays;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.*;
 
+import static java.util.Collections.list;
 import static java.util.Collections.singletonMap;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.assertThat;
@@ -483,6 +486,35 @@ public class SocketTest extends Connection {
         final BlockingQueue<Object> values = new LinkedBlockingQueue<>();
 
         client("/", socket -> {
+            this.socket = socket;
+
+            socket.emit("echo", 1, "2", new ByteString(new byte[]{3}, 0, 1));
+
+            socket.on("echoBack", new Emitter.Listener() {
+                @Override
+                public void call(Object... args) {
+                    for (Object arg : args) {
+                        values.offer(arg);
+                    }
+                }
+            });
+
+            socket.open();
+            return Unit.INSTANCE;
+        });
+
+        assertThat((Integer) values.take(), is(1));
+        assertThat((String) values.take(), is("2"));
+        assertThat(((ByteString) values.take()).getBackingArrayReference(), is(new byte[] { 3 }));
+    }
+
+    @Test(timeout = TIMEOUT)
+    public void wsBinaryTest() throws InterruptedException {
+        final BlockingQueue<Object> values = new LinkedBlockingQueue<>();
+
+        IO.Options opts = new IO.Options();
+        opts.transports = Arrays.asList(WebSocket.NAME);
+        client("/", opts, socket -> {
             this.socket = socket;
 
             socket.emit("echo", 1, "2", new ByteString(new byte[]{3}, 0, 1));
