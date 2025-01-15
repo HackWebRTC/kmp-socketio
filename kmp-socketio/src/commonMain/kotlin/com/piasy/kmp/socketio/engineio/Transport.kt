@@ -5,7 +5,6 @@ import com.piasy.kmp.socketio.logging.Logger
 import com.piasy.kmp.socketio.parseqs.ParseQS
 import io.ktor.util.date.*
 import kotlinx.coroutines.CoroutineScope
-import org.hildan.socketio.EngineIO
 import org.hildan.socketio.EngineIOPacket
 import kotlin.jvm.JvmField
 
@@ -13,6 +12,7 @@ abstract class Transport(
     internal val opt: Options,
     protected val scope: CoroutineScope,
     val name: String,
+    protected val rawMessage: Boolean,
 ) : Emitter() {
     open class Options {
         // @JvmField for jvm test code
@@ -60,7 +60,7 @@ abstract class Transport(
         if (state == State.OPEN) {
             doSend(packets)
         } else {
-            throw RuntimeException("Transport not open")
+            onError("Transport not open")
         }
     }
 
@@ -86,21 +86,6 @@ abstract class Transport(
             writable = true
             emit(EVENT_OPEN)
         }
-    }
-
-    @WorkThread
-    protected fun onWsData(data: String) {
-        logD("onData: `$data`")
-        if (stringMessagePayloadForTesting) {
-            onPacket(EngineIO.decodeWsFrame(data, deserializePayload = { it }))
-        } else {
-            onPacket(EngineIO.decodeSocketIO(data))
-        }
-    }
-
-    @WorkThread
-    protected fun onWsData(data: ByteArray) {
-        // TODO: binary
     }
 
     @WorkThread
@@ -184,7 +169,6 @@ abstract class Transport(
         const val EVENT_REQUEST_HEADERS: String = "requestHeaders"
         const val EVENT_RESPONSE_HEADERS: String = "responseHeaders"
 
-        internal var stringMessagePayloadForTesting = false
         private const val TAG = "Transport"
     }
 }

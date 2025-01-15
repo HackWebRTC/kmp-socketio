@@ -5,8 +5,10 @@ import com.piasy.kmp.socketio.engineio.*
 import com.piasy.kmp.socketio.logging.Logger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.io.bytestring.ByteString
 import kotlinx.serialization.json.*
 import org.hildan.socketio.EngineIOPacket
+import org.hildan.socketio.PayloadElement
 import org.hildan.socketio.SocketIOPacket
 
 class Socket(
@@ -20,8 +22,9 @@ class Socket(
     private val ack = HashMap<Int, Ack>()
     private var ackId = 0
 
-    private val sendBuffer = ArrayList<SocketIOPacket.Event>()
+    private val sendBuffer = ArrayList<EngineIOPacket<*>>()
     private val recvBuffer = ArrayList<ArrayList<Any>>()
+    private var reconstructor: BinaryPacketReconstructor? = null
 
     var id = ""
         private set
@@ -53,7 +56,7 @@ class Socket(
         scope.launch {
             Logger.info(TAG, "close: connected $connected")
             if (connected) {
-                packet(SocketIOPacket.Disconnect(nsp))
+                io.packets(listOf(EngineIOPacket.Message(SocketIOPacket.Disconnect(nsp))))
             }
             destroy()
             if (connected) {
@@ -62,17 +65,24 @@ class Socket(
         }
     }
 
+    /**
+     * Send `message` with args.
+     * @param args only accepts String/Boolean/Number/JsonElement/ByteString
+     */
     @CallerThread
     fun send(vararg args: Any): Socket {
         return emit(EVENT_MESSAGE, *args) as Socket
     }
 
+    /**
+     * emit custom event with args.
+     * @param args only accepts String/Boolean/Number/JsonElement/ByteString
+     */
     @CallerThread
     override fun emit(event: String, vararg args: Any): Emitter {
         if (RESERVED_EVENTS.contains(event)) {
-            val log = "emit reserved event: $event"
-            Logger.error(TAG, log)
-            throw RuntimeException(log)
+            onError("emit reserved event: $event")
+            return this
         }
         scope.launch {
             if (args.isNotEmpty() && args.last() is Ack) {
@@ -91,11 +101,6 @@ class Socket(
     private fun emitWithAck(event: String, args: Array<out Any>, ack: Ack?) {
         Logger.debug(TAG, "emitWithAck: $event, ${args.joinToString()}, ack $ack")
         val ackId = if (ack != null) this.ackId else null
-        val packet = SocketIOPacket.Event(nsp, ackId, buildJsonArray {
-            add(JsonPrimitive(event))
-            args.forEach { addPrimitive(it) }
-        })
-
         if (ack != null && ackId != null) {
             Logger.info(TAG, "emit with ack id $ackId")
             if (ack is AckWithTimeout) {
@@ -105,7 +110,18 @@ class Socket(
                     // remove the packet from the buffer (if applicable)
                     val iterator = sendBuffer.iterator()
                     while (iterator.hasNext()) {
-                        if (iterator.next().ackId == ackId) {
+                        val pktAckId = when (val pkt = iterator.next()) {
+                            is EngineIOPacket.Message<*> -> {
+                                when (val payload = pkt.payload) {
+                                    is SocketIOPacket.Event -> payload.ackId
+                                    is SocketIOPacket.BinaryAck -> payload.ackId
+                                    else -> null
+                                }
+                            }
+
+                            else -> null
+                        }
+                        if (pktAckId == ackId) {
                             iterator.remove()
                             break
                         }
@@ -117,18 +133,57 @@ class Socket(
             this.ackId++
         }
 
-        if (connected) {
-            packet(packet)
+        val packets = if (args.hasBinary()) {
+            binaryPackets(args) { payloads, nAttachments ->
+                SocketIOPacket.BinaryEvent(nsp, ackId, buildList {
+                    add(PayloadElement.Json(JsonPrimitive(event)))
+                    addAll(payloads)
+                }, nAttachments)
+            }
         } else {
-            sendBuffer.add(packet)
+            listOf(EngineIOPacket.Message(SocketIOPacket.Event(nsp, ackId, buildJsonArray {
+                add(JsonPrimitive(event))
+                args.forEach { add(toJson(it)) }
+            })))
+        }
+
+        if (connected) {
+            io.packets(packets)
+        } else {
+            sendBuffer.addAll(packets)
         }
     }
 
     @WorkThread
-    private fun destroy() {
-        for (sub in subs) {
-            sub.destroy()
+    private fun binaryPackets(
+        args: Array<out Any>,
+        creator: (List<PayloadElement>, Int) -> SocketIOPacket
+    ): List<EngineIOPacket<*>> {
+        val payloads = ArrayList<PayloadElement>()
+        val buffers = ArrayList<ByteString>()
+        args.forEach {
+            when (it) {
+                is JsonElement -> payloads.add(PayloadElement.Json(it))
+                is ByteString -> {
+                    payloads.add(PayloadElement.AttachmentRef(buffers.size))
+                    buffers.add(it)
+                }
+
+                else -> payloads.add(PayloadElement.Json(toJson(it)))
+            }
         }
+
+        val packets = ArrayList<EngineIOPacket<*>>()
+        packets.add(EngineIOPacket.Message(creator(payloads, buffers.size)))
+        buffers.forEach {
+            packets.add(EngineIOPacket.BinaryData(it))
+        }
+        return packets
+    }
+
+    @WorkThread
+    private fun destroy() {
+        subs.forEach { it.destroy() }
         subs.clear()
         io.destroy()
     }
@@ -146,8 +201,16 @@ class Socket(
         }))
         subs.add(On.on(io, Manager.EVENT_PACKET, object : Listener {
             override fun call(vararg args: Any) {
-                if (args.isNotEmpty() && args[0] is SocketIOPacket) {
-                    onPacket(args[0] as SocketIOPacket)
+                if (args.isNotEmpty()) {
+                    when (val pkt = args[0]) {
+                        is SocketIOPacket -> onPacket(pkt)
+                        is ByteString -> {
+                            if (reconstructor == null) {
+                                onError("Receive binary buffer while not reconstructing binary packet")
+                            }
+                            reconstructor?.add(pkt)
+                        }
+                    }
                 }
             }
         }))
@@ -171,12 +234,7 @@ class Socket(
         } else {
             Json.encodeToJsonElement(auth) as JsonObject
         }
-        packet(SocketIOPacket.Connect(nsp, auth))
-    }
-
-    @WorkThread
-    private fun packet(packet: SocketIOPacket) {
-        io.packet(EngineIOPacket.Message(packet))
+        io.packets(listOf(EngineIOPacket.Message(SocketIOPacket.Connect(nsp, auth))))
     }
 
     @WorkThread
@@ -197,14 +255,41 @@ class Socket(
             is SocketIOPacket.Disconnect -> onDisconnect()
             is SocketIOPacket.ConnectError -> {
                 destroy()
-                super.emit(EVENT_CONNECT_ERROR, packet.errorData?.toString() ?: "Connect error")
+                val data = packet.errorData ?: JsonObject(emptyMap())
+                super.emit(EVENT_CONNECT_ERROR, data)
             }
 
-            is SocketIOPacket.Event -> onEvent(packet)
-            is SocketIOPacket.Ack -> onAck(packet)
-            is SocketIOPacket.BinaryEvent -> {}
-            is SocketIOPacket.BinaryAck -> {}
+            is SocketIOPacket.Event -> {
+                Logger.debug(TAG, "onEvent $packet")
+                onEvent(packet.ackId, ArrayList(packet.payload))
+            }
+
+            is SocketIOPacket.Ack -> onAck(packet.ackId, ArrayList(packet.payload))
+            is SocketIOPacket.BinaryEvent,
+            is SocketIOPacket.BinaryAck -> {
+                if (reconstructor != null) {
+                    onError("Receive binary event/ack while reconstructing binary packet, $packet")
+                    // let's just reconstruct a new binary packet
+                }
+                Logger.info(TAG, "start reconstructing binary packet, $packet")
+                reconstructor =
+                    BinaryPacketReconstructor(packet as SocketIOPacket.BinaryMessage) { isAck, ackId, data ->
+                        Logger.info(TAG, "finish reconstructing binary packet, isAck $isAck, ackId $ackId")
+                        if (isAck) {
+                            onAck(ackId!!, data)
+                        } else {
+                            onEvent(ackId, data)
+                        }
+                        reconstructor = null
+                    }
+            }
         }
+    }
+
+    @WorkThread
+    private fun onError(msg: String) {
+        Logger.error(TAG, msg)
+        super.emit(EVENT_ERROR, msg)
     }
 
     @WorkThread
@@ -213,13 +298,10 @@ class Socket(
         connected = true
         this.id = id
 
-        for (data in recvBuffer) {
-            fireEvent(data)
-        }
+        recvBuffer.forEach { fireEvent(it) }
+        recvBuffer.clear()
 
-        for (event in sendBuffer) {
-            packet(event)
-        }
+        io.packets(sendBuffer)
         sendBuffer.clear()
 
         super.emit(EVENT_CONNECT)
@@ -233,10 +315,7 @@ class Socket(
     }
 
     @WorkThread
-    private fun onEvent(event: SocketIOPacket.Event) {
-        Logger.debug(TAG, "onEvent $event")
-        val data = ArrayList<Any>(event.payload)
-        val eventId = event.ackId
+    private fun onEvent(eventId: Int?, data: ArrayList<Any>) {
         if (eventId != null) {
             Logger.debug(TAG, "attaching ack callback to event")
             data.add(createAck(eventId))
@@ -256,11 +335,14 @@ class Socket(
         val ev = when (val event = data.removeFirst()) {
             is String -> event
             is JsonPrimitive -> event.content
-            else -> throw RuntimeException("bad event $event")
+            else -> {
+                onError("bad event $event")
+                return
+            }
         }
         val args = Array(data.size) {
             if (data[it] is JsonElement) {
-                (data[it] as JsonElement).getPrimitive()
+                (data[it] as JsonElement).flatPrimitive()
             } else {
                 data[it]
             }
@@ -279,25 +361,35 @@ class Socket(
                 }
                 sent = true
                 Logger.info(TAG, "sending ack: id $ackId ${args.joinToString()}")
-                val packet = SocketIOPacket.Ack(nsp, ackId, buildJsonArray {
-                    args.forEach { addPrimitive(it) }
-                })
-                packet(packet)
+
+                val packets = if (args.hasBinary()) {
+                    binaryPackets(args) { payloads, nAttachments ->
+                        SocketIOPacket.BinaryAck(nsp, ackId, payloads, nAttachments)
+                    }
+                } else {
+                    listOf(EngineIOPacket.Message(SocketIOPacket.Ack(nsp, ackId, buildJsonArray {
+                        args.forEach { add(toJson(it)) }
+                    })))
+                }
+                io.packets(packets)
             }
         }
     }
 
     @WorkThread
-    private fun onAck(ack: SocketIOPacket.Ack) {
-        val fn = this.ack.remove(ack.ackId)
+    private fun onAck(ackId: Int, data: ArrayList<Any>) {
+        val fn = this.ack.remove(ackId)
         if (fn != null) {
-            Logger.info(TAG, "calling ack ${ack.ackId} with ${ack.payload}")
-            val args = Array(ack.payload.size) {
-                ack.payload[it].getPrimitive()
+            Logger.info(TAG, "calling ack $ackId with $data")
+            val args = Array(data.size) {
+                when (val elem = data[it]) {
+                    is JsonElement -> elem.flatPrimitive()
+                    else -> elem
+                }
             }
             fn.call(*args)
         } else {
-            Logger.info(TAG, "bad ack ${ack.ackId}")
+            Logger.info(TAG, "bad ack $ackId")
         }
     }
 
@@ -325,9 +417,9 @@ class Socket(
      */
     @WorkThread
     private fun clearAck() {
-        for (ack in this.ack.values) {
-            if (ack is AckWithTimeout) {
-                ack.onTimeout()
+        ack.values.forEach {
+            if (it is AckWithTimeout) {
+                it.onTimeout()
             }
             // note: basic Ack objects have no way to report an error,
             // so they are simply ignored here
@@ -338,8 +430,16 @@ class Socket(
     @WorkThread
     internal fun active() = subs.isNotEmpty()
 
+    private fun toJson(primitive: Any) = when (primitive) {
+        is String -> JsonPrimitive(primitive)
+        is Boolean -> JsonPrimitive(primitive)
+        is Number -> JsonPrimitive(primitive)
+        is JsonElement -> primitive
+        else -> JsonPrimitive(primitive.toString())
+    }
+
     companion object {
-        private const val TAG = "Socket"
+        internal const val TAG = "Socket"
 
         /**
          * Called on a connection.
@@ -363,6 +463,7 @@ class Socket(
         const val EVENT_CONNECT_ERROR = "connect_error"
 
         const val EVENT_MESSAGE = "message"
+        const val EVENT_ERROR = Manager.EVENT_ERROR
 
         private val RESERVED_EVENTS = setOf(
             EVENT_CONNECT,
@@ -376,29 +477,7 @@ class Socket(
     }
 }
 
-private fun JsonArrayBuilder.addPrimitive(primitive: Any) {
-    when (primitive) {
-        is String -> {
-            add(JsonPrimitive(primitive))
-        }
-
-        is Boolean -> {
-            add(JsonPrimitive(primitive))
-        }
-
-        is Number -> {
-            add(JsonPrimitive(primitive))
-        }
-
-        is JsonElement -> {
-            add(primitive)
-        }
-
-        else -> add(primitive.toString())
-    }
-}
-
-private fun JsonElement.getPrimitive(): Any {
+private fun JsonElement.flatPrimitive(): Any {
     return when (this) {
         is JsonPrimitive -> {
             return when {
@@ -433,4 +512,13 @@ private fun JsonElement.getPrimitive(): Any {
 
         else -> this
     }
+}
+
+private fun <T> Array<T>.hasBinary(): Boolean {
+    forEach {
+        if (it is ByteString) {
+            return true
+        }
+    }
+    return false
 }

@@ -39,10 +39,10 @@ class EngineSocketTest : BaseTest() {
 
         val factory = mockk<TransportFactory>()
         if (!upgrade || transportsObj.isEmpty()) {
-            every { factory.create(any(), any(), any()) } returns transport
+            every { factory.create(any(), any(), any(), any()) } returns transport
         } else {
             var count = 0
-            every { factory.create(any(), any(), any()) } answers {
+            every { factory.create(any(), any(), any(), any()) } answers {
                 val trans = transportsObj[count]
                 count++
                 trans
@@ -56,7 +56,6 @@ class EngineSocketTest : BaseTest() {
         val data = HashMap<String, MutableList<Any>>()
         on(socket, EngineSocket.EVENT_OPEN, events, data)
         on(socket, EngineSocket.EVENT_CLOSE, events, data)
-        on(socket, EngineSocket.EVENT_MESSAGE, events, data)
         on(socket, EngineSocket.EVENT_ERROR, events, data)
         on(socket, EngineSocket.EVENT_UPGRADE_ERROR, events, data)
         on(socket, EngineSocket.EVENT_FLUSH, events, data)
@@ -106,7 +105,7 @@ class EngineSocketTest : BaseTest() {
         sock.socket.open()
         advanceUntilIdle()
 
-        verify(exactly = 1) { sock.factory.create(name, any(), scope) }
+        verify(exactly = 1) { sock.factory.create(name, any(), scope, any()) }
 
         verify(exactly = 1) { sock.transport.open() }
         verifyOn(sock.transport, Transport.EVENT_DRAIN)
@@ -374,19 +373,18 @@ class EngineSocketTest : BaseTest() {
                 EngineSocket.EVENT_PACKET,
                 EngineSocket.EVENT_HEARTBEAT,
                 EngineSocket.EVENT_DATA,
-                EngineSocket.EVENT_MESSAGE,
             ),
             sock.events,
         )
 
-        assertEquals(listOf(pkt.payload), sock.data[EngineSocket.EVENT_MESSAGE])
+        assertEquals(listOf(pkt.payload), sock.data[EngineSocket.EVENT_DATA])
     }
 
     class TestTransport(
         opt: Options,
         scope: CoroutineScope,
         name: String,
-    ) : Transport(opt, scope, name) {
+    ) : Transport(opt, scope, name, false) {
         val packets = ArrayList<EngineIOPacket<*>>()
         override fun pause(onPause: () -> Unit) {
             if (name == PollingXHR.NAME) {
@@ -412,19 +410,19 @@ class EngineSocketTest : BaseTest() {
             pingInterval: Int = 25000,
             pingTimeout: Int = 20000
         ) {
-            onWsData(mockOpen(upgrades, pingInterval, pingTimeout))
+            onPacket(EngineIO.decodeSocketIO(mockOpen(upgrades, pingInterval, pingTimeout)))
         }
 
         fun mockOnPing() {
-            onWsData("2")
+            onPacket(EngineIO.decodeSocketIO("2"))
         }
 
         fun mockOnPong(data: String? = null) {
-            onWsData("3${data ?: ""}")
+            onPacket(EngineIO.decodeSocketIO("3${data ?: ""}"))
         }
 
         fun mockOnMessage(msg: String) {
-            onWsData(msg)
+            onPacket(EngineIO.decodeSocketIO(msg))
         }
     }
 

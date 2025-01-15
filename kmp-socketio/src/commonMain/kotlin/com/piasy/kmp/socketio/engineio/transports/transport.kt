@@ -28,7 +28,8 @@ interface TransportFactory {
     fun create(
         name: String,
         opt: Transport.Options,
-        scope: CoroutineScope
+        scope: CoroutineScope,
+        rawMessage: Boolean,
     ): Transport
 }
 
@@ -36,10 +37,11 @@ object DefaultTransportFactory : TransportFactory {
     override fun create(
         name: String,
         opt: Transport.Options,
-        scope: CoroutineScope
+        scope: CoroutineScope,
+        rawMessage: Boolean,
     ) = when (name) {
-        WebSocket.NAME -> WebSocket(opt, scope)
-        PollingXHR.NAME -> PollingXHR(opt, scope)
+        WebSocket.NAME -> WebSocket(opt, scope, rawMessage = rawMessage)
+        PollingXHR.NAME -> PollingXHR(opt, scope, rawMessage = rawMessage)
         else -> throw RuntimeException("Bad transport name: $name")
     }
 }

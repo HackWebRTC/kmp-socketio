@@ -19,6 +19,7 @@ class EngineSocket(
     @JvmField internal val opt: Options,
     private val scope: CoroutineScope,
     private val factory: TransportFactory = DefaultTransportFactory,
+    private val rawMessage: Boolean = false,
 ) : Emitter() {
     open class Options : Transport.Options() {
         /**
@@ -42,7 +43,7 @@ class EngineSocket(
 
     internal var disablePingTimeout = false // to help unit test
     private var state = State.INIT
-    private var id = ""
+    internal var id = ""
     private var upgrades = emptyList<String>()
     private var pingInterval = 0
     private var pingTimeout = 0
@@ -134,7 +135,12 @@ class EngineSocket(
      */
     @WorkThread
     fun send(packet: EngineIOPacket<*>) {
-        sendPacket(packet)
+        sendPackets(listOf(packet))
+    }
+
+    @WorkThread
+    fun send(packets: List<EngineIOPacket<*>>) {
+        sendPackets(packets)
     }
 
     /**
@@ -212,7 +218,7 @@ class EngineSocket(
         opts.timestampParam = options?.timestampParam ?: opt.timestampParam
         opts.extraHeaders = opt.extraHeaders
 
-        val transport = factory.create(name, opts, scope)
+        val transport = factory.create(name, opts, scope, rawMessage)
         emit(EVENT_TRANSPORT, transport)
         return transport
     }
@@ -283,15 +289,15 @@ class EngineSocket(
     }
 
     @WorkThread
-    private fun sendPacket(packet: EngineIOPacket<*>) {
-        Logger.debug(TAG, "sendPacket: state $state, pkt $packet")
+    private fun sendPackets(packets: List<EngineIOPacket<*>>) {
+        Logger.debug(TAG, "sendPackets: state $state, $packets")
         if (state != State.OPENING && state != State.OPEN) {
-            Logger.error(TAG, "sendPacket at wrong state: $state")
+            Logger.error(TAG, "sendPackets at wrong state: $state")
             return
         }
 
-        emit(EVENT_PACKET_CREATE, packet)
-        writeBuffer.addLast(packet)
+        emit(EVENT_PACKET_CREATE, packets.size)
+        writeBuffer.addAll(packets)
         flush()
     }
 
@@ -310,14 +316,14 @@ class EngineSocket(
             is EngineIOPacket.Open -> onHandshake(packet)
             is EngineIOPacket.Ping -> {
                 emit(EVENT_PING)
-                sendPacket(EngineIOPacket.Pong(null))
+                sendPackets(listOf(EngineIOPacket.Pong(null)))
             }
 
+            is EngineIOPacket.BinaryData -> emit(EVENT_DATA, packet.payload)
             is EngineIOPacket.Message<*> -> {
                 val data = packet.payload
                 if (data != null) {
                     emit(EVENT_DATA, data)
-                    emit(EVENT_MESSAGE, data)
                 }
             }
 
@@ -357,7 +363,7 @@ class EngineSocket(
         emit(EVENT_OPEN)
         flush()
 
-        if (opt.upgrade && transport?.name == PollingXHR.NAME) {
+        if (opt.upgrade && transport?.name == PollingXHR.NAME && upgrades.isNotEmpty()) {
             Logger.info(TAG, "starting upgrade probes")
             for (upgrade in upgrades) {
                 probe(upgrade)
@@ -591,7 +597,7 @@ class EngineSocket(
         /**
          * Called when data is received from the server.
          */
-        const val EVENT_MESSAGE = "message"
+        const val EVENT_DATA = "data"
 
         /**
          * Called when an error occurs.
@@ -618,7 +624,6 @@ class EngineSocket(
         const val EVENT_PACKET = "packet"
         const val EVENT_PACKET_CREATE = "packetCreate"
         const val EVENT_HEARTBEAT = "heartbeat"
-        const val EVENT_DATA = "data"
         const val EVENT_PING = "ping"
 
         /**

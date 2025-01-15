@@ -176,7 +176,7 @@ public class TransportTest {
     class Polling extends PollingXHR {
 
         public Polling(Options opts) {
-            super(opts, TestUtil.testScope(), TestUtil.testScope(), TestUtil.httpFactory());
+            super(opts, TestUtil.testScope(), TestUtil.testScope(), TestUtil.httpFactory(), false);
         }
 
         public String uri() {
@@ -187,7 +187,7 @@ public class TransportTest {
     class WS extends WebSocket {
 
         public WS(Transport.Options opts) {
-            super(opts, TestUtil.testScope(), TestUtil.testScope(), TestUtil.httpFactory());
+            super(opts, TestUtil.testScope(), TestUtil.testScope(), TestUtil.httpFactory(), false);
         }
 
         public String uri() {

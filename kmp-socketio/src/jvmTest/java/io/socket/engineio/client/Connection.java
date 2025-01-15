@@ -1,7 +1,6 @@
 package io.socket.engineio.client;
 
 import com.piasy.kmp.socketio.engineio.EngineSocket;
-import com.piasy.kmp.socketio.engineio.TestUtil;
 import org.junit.After;
 import org.junit.Before;
 
@@ -25,10 +24,11 @@ public abstract class Connection {
     private Future serverOutout;
     private Future serverError;
 
+    protected EngineSocket socket;
+    protected EngineSocket socket2;
+
     @Before
     public void startServer() throws IOException, InterruptedException {
-        TestUtil.setupLogger();
-        TestUtil.stringMessagePayloadForTesting(true);
         logger.fine("Starting server ...");
 
         final CountDownLatch latch = new CountDownLatch(1);
@@ -72,7 +72,13 @@ public abstract class Connection {
 
     @After
     public void stopServer() throws InterruptedException {
-        TestUtil.stringMessagePayloadForTesting(false);
+        if (socket != null) {
+            socket.close();
+        }
+        if (socket2 != null) {
+            socket2.close();
+        }
+
         logger.fine("Stopping server ...");
         serverProcess.destroy();
         serverOutout.cancel(false);

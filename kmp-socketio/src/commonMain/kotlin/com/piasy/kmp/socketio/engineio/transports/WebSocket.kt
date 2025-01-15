@@ -11,8 +11,11 @@ import io.ktor.websocket.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.io.bytestring.unsafe.UnsafeByteStringApi
+import kotlinx.io.bytestring.unsafe.UnsafeByteStringOperations
 import org.hildan.socketio.EngineIO
 import org.hildan.socketio.EngineIOPacket
+import org.hildan.socketio.InvalidSocketIOPacketException
 import org.hildan.socketio.SocketIOPacket
 
 open class WebSocket(
@@ -20,7 +23,8 @@ open class WebSocket(
     scope: CoroutineScope,
     private val ioScope: CoroutineScope = CoroutineScope(Dispatchers.Default),
     private val factory: HttpClientFactory = DefaultHttpClientFactory,
-) : Transport(opt, scope, NAME) {
+    rawMessage: Boolean,
+) : Transport(opt, scope, NAME, rawMessage) {
     private var ws: DefaultClientWebSocketSession? = null
 
     @WorkThread
@@ -70,11 +74,11 @@ open class WebSocket(
                 logD("Receive frame: $frame")
                 when (frame) {
                     is Frame.Text -> {
-                        scope.launch { onWsData(frame.readText()) }
+                        onWsText(frame.readText())
                     }
 
                     is Frame.Binary -> {
-                        scope.launch { onWsData(frame.readBytes()) }
+                        onWsBinary(frame.readBytes())
                     }
 
                     is Frame.Close -> {
@@ -94,6 +98,36 @@ open class WebSocket(
         scope.launch { onClose() }
     }
 
+    @IoThread
+    private fun onWsText(data: String) {
+        scope.launch {
+            logD("onWsText: `$data`")
+            val packet = try {
+                if (rawMessage) {
+                    EngineIO.decodeWsFrame(data, deserializePayload = { it })
+                } else {
+                    EngineIO.decodeSocketIO(data)
+                }
+            } catch (e: InvalidSocketIOPacketException) {
+                val log = "onWsText decode error: ${e.message}"
+                logE(log)
+                onError(log)
+                return@launch
+            }
+            onPacket(packet)
+        }
+    }
+
+    @OptIn(UnsafeByteStringApi::class)
+    @IoThread
+    private fun onWsBinary(data: ByteArray) {
+        scope.launch {
+            logD("onWsBinary ${data.size} bytes")
+            onPacket(EngineIO.decodeWsFrame(UnsafeByteStringOperations.wrapUnsafe(data)))
+        }
+    }
+
+    @OptIn(UnsafeByteStringApi::class)
     @WorkThread
     override fun doSend(packets: List<EngineIOPacket<*>>) {
         logD("doSend ${packets.size} packets start")
@@ -107,17 +141,21 @@ open class WebSocket(
                     break
                 }
                 try {
-                    // TODO: binary
-                    @Suppress("UNCHECKED_CAST")
-                    val data = if (stringMessagePayloadForTesting) {
-                        EngineIO.encodeWsFrame(pkt as EngineIOPacket<String>, serializePayload = { it })
+                    if (pkt is EngineIOPacket.BinaryData) {
+                        UnsafeByteStringOperations.withByteArrayUnsafe(pkt.payload) {
+                            logD("doSend binary: ${it.size} bytes")
+                            ws?.send(it)
+                        }
                     } else {
-                        EngineIO.encodeSocketIO(
-                            pkt as EngineIOPacket<SocketIOPacket>
-                        )
+                        val data = if (rawMessage) {
+                            EngineIO.encodeWsFrame(pkt, serializePayload = { it.toString() })
+                        } else {
+                            @Suppress("UNCHECKED_CAST")
+                            EngineIO.encodeSocketIO(pkt as EngineIOPacket<SocketIOPacket>)
+                        }
+                        logD("doSend: $pkt, `$data`")
+                        ws?.send(data)
                     }
-                    logD("doSend: $pkt, `$data`")
-                    ws?.send(data)
                 } catch (e: Exception) {
                     logE("doSend error: `${e.message}`")
                     //break

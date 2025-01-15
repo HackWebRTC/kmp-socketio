@@ -11,17 +11,15 @@ import io.ktor.util.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import org.hildan.socketio.EngineIO
-import org.hildan.socketio.EngineIOPacket
-import org.hildan.socketio.SocketIO
-import org.hildan.socketio.SocketIOPacket
+import org.hildan.socketio.*
 
 open class PollingXHR(
     opt: Options,
     scope: CoroutineScope,
     private val ioScope: CoroutineScope = CoroutineScope(Dispatchers.Default),
     private val factory: HttpClientFactory = DefaultHttpClientFactory,
-) : Transport(opt, scope, NAME) {
+    rawMessage: Boolean,
+) : Transport(opt, scope, NAME, rawMessage) {
     private var polling = false
 
     @WorkThread
@@ -138,10 +136,17 @@ open class PollingXHR(
     @WorkThread
     private fun onPollComplete(data: String) {
         logD("onPollComplete: state $state, `$data`")
-        val packets = if (stringMessagePayloadForTesting) {
-            EngineIO.decodeHttpBatch(data, deserializeTextPayload = { it })
-        } else {
-            EngineIO.decodeHttpBatch(data, SocketIO::decode)
+        val packets = try {
+            if (rawMessage) {
+                EngineIO.decodeHttpBatch(data, deserializePayload = { it })
+            } else {
+                EngineIO.decodeHttpBatch(data, SocketIO::decode)
+            }
+        } catch (e: InvalidSocketIOPacketException) {
+            val log = "onPollComplete decode error: ${e.message}"
+            logE(log)
+            onError(log)
+            return
         }
         for (pkt in packets) {
             if ((state == State.OPENING || state == State.CLOSING) && pkt is EngineIOPacket.Open) {
@@ -171,17 +176,10 @@ open class PollingXHR(
     @WorkThread
     override fun doSend(packets: List<EngineIOPacket<*>>) {
         writable = false
-        @Suppress("UNCHECKED_CAST")
-        val data = if (stringMessagePayloadForTesting) {
-            EngineIO.encodeHttpBatch(
-                packets as List<EngineIOPacket<String>>,
-                serializePayload = { it }
-            )
+        val data = if (rawMessage) {
+            EngineIO.encodeHttpBatch(packets, serializePayload = { it.toString() })
         } else {
-            EngineIO.encodeHttpBatch(
-                packets as List<EngineIOPacket<SocketIOPacket>>,
-                SocketIO::encode
-            )
+            EngineIO.encodeHttpBatch(packets, serializePayload = { SocketIO.encode(it as SocketIOPacket) })
         }
 
         val method = HttpMethod.Post

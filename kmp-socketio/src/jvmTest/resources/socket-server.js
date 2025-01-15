@@ -90,7 +90,7 @@ io.of(nsp).on('connection', function(socket) {
 
   socket.on('broadcast', function(data) {
     var args = slice.call(arguments);
-    socket.broadcast.emit.apply(socket, ['broadcastBack'].concat(args));
+    io.of(nsp).emit('broadcastBack', ...args);
   });
 
   socket.on('room', (arg) => {

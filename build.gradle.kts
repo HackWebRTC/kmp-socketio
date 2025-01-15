@@ -20,6 +20,7 @@ plugins {
     alias(libs.plugins.versionUpdate)
 }
 
+// ./gradlew versionCatalogUpdate
 versionCatalogUpdate {
     sortByKey = false
     keep {

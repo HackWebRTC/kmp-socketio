@@ -2,13 +2,12 @@ package io.socket.client;
 
 import com.piasy.kmp.socketio.emitter.Emitter;
 import com.piasy.kmp.socketio.engineio.TestUtil;
-import com.piasy.kmp.socketio.logging.Logger;
 import com.piasy.kmp.socketio.socketio.Ack;
 import com.piasy.kmp.socketio.socketio.IO;
 import com.piasy.kmp.socketio.socketio.Manager;
 import com.piasy.kmp.socketio.socketio.Socket;
 import kotlin.Unit;
-import kotlin.jvm.functions.Function1;
+import kotlinx.io.bytestring.ByteString;
 import kotlinx.serialization.json.*;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -17,7 +16,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.util.Date;
@@ -34,8 +32,6 @@ import static org.junit.Assert.assertThat;
 
 @RunWith(JUnit4.class)
 public class ConnectionTest extends Connection {
-
-    private Socket socket;
 
     @Test(timeout = TIMEOUT)
     public void connectToLocalhost() throws InterruptedException {
@@ -59,7 +55,6 @@ public class ConnectionTest extends Connection {
         });
 
         values.take();
-        socket.close();
     }
 
     @Test(timeout = TIMEOUT)
@@ -128,7 +123,6 @@ public class ConnectionTest extends Connection {
         });
 
         values.take();
-        socket.close();
     }
 
     @Test(timeout = TIMEOUT)
@@ -156,66 +150,66 @@ public class ConnectionTest extends Connection {
             return Unit.INSTANCE;
         });
         assertThat(values.take(), instanceOf(String.class));
-        socket.close();
     }
 
-//    @Test(timeout = TIMEOUT)
-//    public void sendBinaryAck() throws InterruptedException {
-//        final BlockingQueue<Object> values = new LinkedBlockingQueue<>();
-//        final byte[] buf = "huehue".getBytes(Charset.forName("UTF-8"));
-//
-//        client("/", socket -> {
-//            this.socket = socket;
-//            socket.on(Socket.EVENT_CONNECT, new Emitter.Listener() {
-//                @Override
-//                public void call(Object... objects) {
-//                    socket.emit("callAckBinary");
-//                    socket.on("ack", new Emitter.Listener() {
-//                        @Override
-//                        public void call(Object... args) {
-//                            Ack fn = (Ack) args[0];
-//                            fn.call(buf);
-//                        }
-//                    });
-//
-//                    socket.on("ackBack", new Emitter.Listener() {
-//                        @Override
-//                        public void call(Object... args) {
-//                            byte[] data = (byte[]) args[0];
-//                            values.offer(data);
-//                        }
-//                    });
-//                }
-//            });
-//            socket.open();
-//            return Unit.INSTANCE;
-//        });
-//        Assert.assertArrayEquals(buf, (byte[])values.take());
-//        socket.close();
-//    }
+    @Test(timeout = TIMEOUT)
+    public void sendBinaryAck() throws InterruptedException {
+        final BlockingQueue<Object> values = new LinkedBlockingQueue<>();
+        final byte[] buf = "huehue".getBytes(Charset.forName("UTF-8"));
 
-//    @Test(timeout = TIMEOUT)
-//    public void receiveBinaryDataWithAck() throws InterruptedException {
-//        final BlockingQueue<Object> values = new LinkedBlockingQueue<>();
-//        final byte[] buf = "huehue".getBytes(Charset.forName("UTF-8"));
-//
-//        socket = client();
-//        socket.on(Socket.EVENT_CONNECT, new Emitter.Listener() {
-//            @Override
-//            public void call(Object... objects) {
-//                socket.emit("getAckBinary", "", new Ack() {
-//
-//                    @Override
-//                    public void call(Object... args) {
-//                       values.offer(args[0]);
-//                    }
-//                });
-//            }
-//        });
-//        socket.open();
-//        Assert.assertArrayEquals(buf, (byte[])values.take());
-//        socket.close();
-//    }
+        client("/", socket -> {
+            this.socket = socket;
+            socket.on(Socket.EVENT_CONNECT, new Emitter.Listener() {
+                @Override
+                public void call(Object... objects) {
+                    socket.emit("callAckBinary");
+                    socket.on("ack", new Emitter.Listener() {
+                        @Override
+                        public void call(Object... args) {
+                            Ack fn = (Ack) args[0];
+                            fn.call(new ByteString(buf, 0, buf.length));
+                        }
+                    });
+
+                    socket.on("ackBack", new Emitter.Listener() {
+                        @Override
+                        public void call(Object... args) {
+                            byte[] data = ((ByteString) args[0]).getBackingArrayReference();
+                            values.offer(data);
+                        }
+                    });
+                }
+            });
+            socket.open();
+            return Unit.INSTANCE;
+        });
+        Assert.assertArrayEquals(buf, (byte[])values.take());
+    }
+
+    @Test(timeout = TIMEOUT)
+    public void receiveBinaryDataWithAck() throws InterruptedException {
+        final BlockingQueue<Object> values = new LinkedBlockingQueue<>();
+        final byte[] buf = "huehue".getBytes(Charset.forName("UTF-8"));
+
+        client("/", socket -> {
+            this.socket = socket;
+            socket.on(Socket.EVENT_CONNECT, new Emitter.Listener() {
+                @Override
+                public void call(Object... objects) {
+                    socket.emit("getAckBinary", "", new Ack() {
+
+                        @Override
+                        public void call(Object... args) {
+                            values.offer(args[0]);
+                        }
+                    });
+                }
+            });
+            socket.open();
+            return Unit.INSTANCE;
+        });
+        Assert.assertArrayEquals(buf, ((ByteString)values.take()).getBackingArrayReference());
+    }
 
     @Test(timeout = TIMEOUT)
     public void workWithFalse() throws InterruptedException {
@@ -238,7 +232,6 @@ public class ConnectionTest extends Connection {
             return Unit.INSTANCE;
         });
         assertThat((Boolean)values.take(), is(false));
-        socket.close();
     }
 
     @Test(timeout = TIMEOUT)
@@ -274,7 +267,6 @@ public class ConnectionTest extends Connection {
         for (String expected : correct) {
             assertThat((String)values.take(), is(expected));
         }
-        socket.close();
     }
 
     @Test(timeout = TIMEOUT)
@@ -285,17 +277,17 @@ public class ConnectionTest extends Connection {
         socket.on(Socket.EVENT_CONNECT, new Emitter.Listener() {
             @Override
             public void call(Object... objects) {
-                final Socket foo = TestUtil.socket(manager, "/foo");
-                foo.on(Socket.EVENT_CONNECT, new Emitter.Listener() {
+                socket2 = TestUtil.socket(manager, "/foo");
+                socket2.on(Socket.EVENT_CONNECT, new Emitter.Listener() {
                     @Override
                     public void call(Object... args) {
-                        foo.close();
+                        socket2.close();
                         socket.close();
                         TestUtil.closeManager(manager);
                         values.offer("done");
                     }
                 });
-                foo.open();
+                socket2.open();
             }
         });
         socket.open();
@@ -315,16 +307,16 @@ public class ConnectionTest extends Connection {
         }).on(Socket.EVENT_DISCONNECT, new Emitter.Listener() {
             @Override
             public void call(Object... objects) {
-                final Socket foo = TestUtil.socket(manager, "/foo");
-                foo.on(Socket.EVENT_CONNECT, new Emitter.Listener() {
+                socket2 = TestUtil.socket(manager, "/foo");
+                socket2.on(Socket.EVENT_CONNECT, new Emitter.Listener() {
                     @Override
                     public void call(Object... args) {
-                        foo.close();
+                        socket2.close();
                         TestUtil.closeManager(manager);
                         values.offer("done");
                     }
                 });
-                foo.open();
+                socket2.open();
             }
         });
         socket.open();
@@ -453,7 +445,6 @@ public class ConnectionTest extends Connection {
         });
         socket.open();
         assertThat((Integer)values.take(), is(2));
-        socket.close();
     }
 
     @Test(timeout = TIMEOUT)
@@ -502,7 +493,6 @@ public class ConnectionTest extends Connection {
         values.take();
         assertThat(reconnects[0], is(3));
         assertThat(increasingDelay[0], is(true));
-        socket.close();
     }
 
     @Test(timeout = TIMEOUT)
@@ -596,20 +586,19 @@ public class ConnectionTest extends Connection {
             return Unit.INSTANCE;
         });
         values.take();
-        socket.close();
     }
 
     @Test(timeout = TIMEOUT)
     public void stopReconnectingOnASocketAndKeepToReconnectOnAnother() throws InterruptedException {
         final BlockingQueue<Object> values = new LinkedBlockingQueue<>();
         final Manager manager = new Manager(uri(), createOptions(), TestUtil.testScope());
-        final Socket socket1 = TestUtil.socket(manager, "/");
-        final Socket socket2 = TestUtil.socket(manager, "/asd");
+        socket = TestUtil.socket(manager, "/");
+        socket2 = TestUtil.socket(manager, "/asd");
 
         manager.on(Manager.EVENT_RECONNECT_ATTEMPT, new Emitter.Listener() {
             @Override
             public void call(Object... args) {
-                socket1.on(Socket.EVENT_CONNECT, new Emitter.Listener() {
+                socket.on(Socket.EVENT_CONNECT, new Emitter.Listener() {
                     @Override
                     public void call(Object... args) {
                         values.offer(false);
@@ -628,17 +617,17 @@ public class ConnectionTest extends Connection {
                         }, 500);
                     }
                 });
-                socket1.close();
+                socket.close();
             }
         });
 
-        socket1.open();
+        socket.open();
         socket2.open();
 
         new Timer().schedule(new TimerTask() {
             @Override
             public void run() {
-                TestUtil.closeEngineSocket(socket1);
+                TestUtil.closeEngineSocket(socket);
             }
         }, 1000);
 
@@ -650,11 +639,11 @@ public class ConnectionTest extends Connection {
         final BlockingQueue<Object> values = new LinkedBlockingQueue<>();
 
         final Manager manager = new Manager(uri(), createOptions(), TestUtil.testScope());
-        final Socket socket1 = TestUtil.socket(manager, "/foo");
-        socket1.on(Socket.EVENT_CONNECT, new Emitter.Listener() {
+        socket = TestUtil.socket(manager, "/foo");
+        socket.on(Socket.EVENT_CONNECT, new Emitter.Listener() {
             @Override
             public void call(Object... args) {
-                final Socket socket2 = TestUtil.socket(manager, "/asd");
+                socket2 = TestUtil.socket(manager, "/asd");
                 socket2.on(Socket.EVENT_CONNECT, new Emitter.Listener() {
                     @Override
                     public void call(Object... args) {
@@ -663,11 +652,11 @@ public class ConnectionTest extends Connection {
                     }
                 });
                 socket2.open();
-                socket1.close();
+                socket.close();
             }
         });
 
-        socket1.open();
+        socket.open();
         values.take();
     }
 
@@ -699,7 +688,6 @@ public class ConnectionTest extends Connection {
 
         socket.open();
         assertThat((Integer)values.take(), is(2));
-        socket.close();
     }
 
     @Test(timeout = TIMEOUT)
@@ -862,124 +850,116 @@ public class ConnectionTest extends Connection {
         assertThat(values.take(), instanceOf(String.class));
     }
 
-//    @Test(timeout = TIMEOUT)
-//    public void emitDateInObject() throws InterruptedException, JSONException {
-//        final BlockingQueue<Object> values = new LinkedBlockingQueue<>();
-//        client("/", socket -> {
-//            this.socket = socket;
-//            socket.on(Socket.EVENT_CONNECT, new Emitter.Listener() {
-//                @Override
-//                public void call(Object... objects) {
-//                    JSONObject data = new JSONObject();
-//                    try {
-//                        data.put("date", new Date());
-//                    } catch (JSONException e) {
-//                        throw new AssertionError(e);
-//                    }
-//                    socket.emit("echo", data);
-//                    socket.on("echoBack", new Emitter.Listener() {
-//                        @Override
-//                        public void call(Object... args) {
-//                            values.offer(args[0]);
-//                        }
-//                    });
-//                }
-//            });
-//            socket.open();
-//            return Unit.INSTANCE;
-//        });
-//        Object data = values.take();
-//        assertThat(data, instanceOf(JSONObject.class));
-//        assertThat(((JSONObject)data).get("date"), instanceOf(String.class));
-//        socket.close();
-//    }
-//
-//    @Test(timeout = TIMEOUT)
-//    public void sendAndGetBinaryData() throws InterruptedException {
-//        final BlockingQueue<Object> values = new LinkedBlockingQueue<>();
-//        final byte[] buf = "asdfasdf".getBytes(Charset.forName("UTF-8"));
-//        client("/", socket -> {
-//            this.socket = socket;
-//            socket.on(Socket.EVENT_CONNECT, new Emitter.Listener() {
-//                @Override
-//                public void call(Object... args) {
-//                    socket.emit("echo", buf);
-//                    socket.on("echoBack", new Emitter.Listener() {
-//                        @Override
-//                        public void call(Object... args) {
-//                            values.offer(args[0]);
-//                        }
-//                    });
-//                }
-//            });
-//            socket.open();
-//            return Unit.INSTANCE;
-//        });
-//        assertThat((byte[])values.take(), is(buf));
-//        socket.close();
-//    }
-//
-//    @Test(timeout = TIMEOUT)
-//    public void sendBinaryDataMixedWithJson() throws InterruptedException, JSONException {
-//        final BlockingQueue<Object> values = new LinkedBlockingQueue<>();
-//        final byte[] buf = "howdy".getBytes(Charset.forName("UTF-8"));
-//        client("/", socket -> {
-//            this.socket = socket;
-//            socket.on(Socket.EVENT_CONNECT, new Emitter.Listener() {
-//                @Override
-//                public void call(Object... args) {
-//                    JSONObject data = new JSONObject();
-//                    try {
-//                        data.put("hello", "lol");
-//                        data.put("message", buf);
-//                        data.put("goodbye", "gotcha");
-//                    } catch (JSONException e) {
-//                        throw new AssertionError(e);
-//                    }
-//                    socket.emit("echo", data);
-//                    socket.on("echoBack", new Emitter.Listener() {
-//                        @Override
-//                        public void call(Object... args) {
-//                            values.offer(args[0]);
-//                        }
-//                    });
-//                }
-//            });
-//            socket.open();
-//            return Unit.INSTANCE;
-//        });
-//        JSONObject a = (JSONObject)values.take();
-//        assertThat(a.getString("hello"), is("lol"));
-//        assertThat((byte[])a.get("message"), is(buf));
-//        assertThat(a.getString("goodbye"), is("gotcha"));
-//        socket.close();
-//    }
-//
-//    @Test(timeout = TIMEOUT)
-//    public void sendEventsWithByteArraysInTheCorrectOrder() throws Exception {
-//        final BlockingQueue<Object> values = new LinkedBlockingQueue<>();
-//        final byte[] buf = "abuff1".getBytes(Charset.forName("UTF-8"));
-//        client("/", socket -> {
-//            this.socket = socket;
-//            socket.on(Socket.EVENT_CONNECT, new Emitter.Listener() {
-//                @Override
-//                public void call(Object... args) {
-//                    socket.emit("echo", buf);
-//                    socket.emit("echo", "please arrive second");
-//
-//                    socket.on("echoBack", new Emitter.Listener() {
-//                        @Override
-//                        public void call(Object... args) {
-//                            values.offer(args[0]);
-//                        }
-//                    });
-//                }
-//            });
-//            socket.open();
-//            return Unit.INSTANCE;
-//        });
-//        assertThat((byte[])values.take(), is(buf));
-//        assertThat((String)values.take(), is("please arrive second"));
-//        socket.close();
-//    }
+    @Test(timeout = TIMEOUT)
+    public void emitDateInObject() throws InterruptedException, JSONException {
+        final BlockingQueue<Object> values = new LinkedBlockingQueue<>();
+        client("/", socket -> {
+            this.socket = socket;
+            socket.on(Socket.EVENT_CONNECT, new Emitter.Listener() {
+                @Override
+                public void call(Object... objects) {
+                    JsonObject data = JsonElementBuildersKt.buildJsonObject(builder -> {
+                        builder.put("date", JsonElementKt.JsonPrimitive(new Date().toString()));
+                        return Unit.INSTANCE;
+                    });
+                    socket.emit("echo", data);
+                    socket.on("echoBack", new Emitter.Listener() {
+                        @Override
+                        public void call(Object... args) {
+                            values.offer(TestUtil.toJSON(args[0]));
+                        }
+                    });
+                }
+            });
+            socket.open();
+            return Unit.INSTANCE;
+        });
+        Object data = values.take();
+        assertThat(data, instanceOf(JSONObject.class));
+        assertThat(((JSONObject)data).get("date"), instanceOf(String.class));
+    }
+
+    @Test(timeout = TIMEOUT)
+    public void sendAndGetBinaryData() throws InterruptedException {
+        final BlockingQueue<Object> values = new LinkedBlockingQueue<>();
+        final byte[] buf = "asdfasdf".getBytes(Charset.forName("UTF-8"));
+        client("/", socket -> {
+            this.socket = socket;
+            socket.on(Socket.EVENT_CONNECT, new Emitter.Listener() {
+                @Override
+                public void call(Object... args) {
+                    socket.emit("echo", new ByteString(buf, 0, buf.length));
+                    socket.on("echoBack", new Emitter.Listener() {
+                        @Override
+                        public void call(Object... args) {
+                            values.offer(args[0]);
+                        }
+                    });
+                }
+            });
+            socket.open();
+            return Unit.INSTANCE;
+        });
+        assertThat(((ByteString)values.take()).getBackingArrayReference(), is(buf));
+    }
+
+    @Test(timeout = TIMEOUT)
+    public void sendBinaryDataMixedWithJson() throws InterruptedException, JSONException {
+        final BlockingQueue<Object> values = new LinkedBlockingQueue<>();
+        final byte[] buf = "howdy".getBytes(Charset.forName("UTF-8"));
+        client("/", socket -> {
+            this.socket = socket;
+            socket.on(Socket.EVENT_CONNECT, new Emitter.Listener() {
+                @Override
+                public void call(Object... args) {
+                    JsonObject data = JsonElementBuildersKt.buildJsonObject(builder -> {
+                        builder.put("hello", JsonElementKt.JsonPrimitive("lol"));
+                        builder.put("goodbye", JsonElementKt.JsonPrimitive("gotcha"));
+                        return Unit.INSTANCE;
+                    });
+                    socket.emit("echo", data, new ByteString(buf, 0, buf.length));
+                    socket.on("echoBack", new Emitter.Listener() {
+                        @Override
+                        public void call(Object... args) {
+                            values.offer(args);
+                        }
+                    });
+                }
+            });
+            socket.open();
+            return Unit.INSTANCE;
+        });
+        Object[] a = (Object[])values.take();
+        JSONObject json = TestUtil.toJSON(a[0]);
+        assertThat(json.getString("hello"), is("lol"));
+        assertThat(json.getString("goodbye"), is("gotcha"));
+        assertThat(((ByteString) a[1]).getBackingArrayReference(), is(buf));
+    }
+
+    @Test(timeout = TIMEOUT)
+    public void sendEventsWithByteArraysInTheCorrectOrder() throws Exception {
+        final BlockingQueue<Object> values = new LinkedBlockingQueue<>();
+        final byte[] buf = "abuff1".getBytes(Charset.forName("UTF-8"));
+        client("/", socket -> {
+            this.socket = socket;
+            socket.on(Socket.EVENT_CONNECT, new Emitter.Listener() {
+                @Override
+                public void call(Object... args) {
+                    socket.emit("echo", new ByteString(buf, 0, buf.length));
+                    socket.emit("echo", "please arrive second");
+
+                    socket.on("echoBack", new Emitter.Listener() {
+                        @Override
+                        public void call(Object... args) {
+                            values.offer(args[0]);
+                        }
+                    });
+                }
+            });
+            socket.open();
+            return Unit.INSTANCE;
+        });
+        assertThat(((ByteString)values.take()).getBackingArrayReference(), is(buf));
+        assertThat((String)values.take(), is("please arrive second"));
+    }
 }

@@ -1,16 +1,12 @@
 package com.piasy.kmp.socketio.engineio
 
 import com.piasy.kmp.socketio.emitter.Emitter
-import com.piasy.kmp.socketio.logging.Logger
-import com.piasy.kmp.socketio.logging.LoggerInterface
-import io.ktor.util.date.*
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlin.test.BeforeTest
 
@@ -49,26 +45,9 @@ fun mockOpen(
     return "0$jsonHandshake"
 }
 
-fun setupTestLogger() {
-    Logger.logger = object : LoggerInterface {
-        override fun debug(tag: String, log: String) {
-            println("${GMTDate().timestamp} D $tag $log")
-        }
-
-        override fun info(tag: String, log: String) {
-            println("${GMTDate().timestamp} I $tag $log")
-        }
-
-        override fun error(tag: String, log: String) {
-            println("${GMTDate().timestamp} E $tag $log")
-        }
-    }
-}
-
 open class BaseTest {
     @BeforeTest
     fun setUp() {
-        setupTestLogger()
     }
 
     protected suspend fun waitExec(scope: TestScope, millis: Long = 300) {
