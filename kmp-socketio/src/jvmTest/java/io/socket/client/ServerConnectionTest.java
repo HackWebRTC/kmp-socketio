@@ -31,9 +31,6 @@ import static org.junit.Assert.assertThat;
 @RunWith(JUnit4.class)
 public class ServerConnectionTest extends Connection {
 
-    private Socket socket;
-    private Socket socket2;
-
     @Test(timeout = TIMEOUT)
     public void openAndClose() throws InterruptedException {
         final BlockingQueue<Object> values = new LinkedBlockingQueue<>();
@@ -85,7 +82,6 @@ public class ServerConnectionTest extends Connection {
 
         assertThat((Object[])values.take(), is(new Object[] {"hello client"}));
         assertThat((Object[])values.take(), is(new Object[] {"foo", "bar"}));
-        socket.close();
     }
 
     @Test(timeout = TIMEOUT)
@@ -119,7 +115,6 @@ public class ServerConnectionTest extends Connection {
         assertThat(args[0].toString(), is(obj.toString()));
         assertThat(args[1], is("null"));
         assertThat((String)args[2], is("bar"));
-        socket.close();
     }
 
     @Test(timeout = TIMEOUT)
@@ -152,7 +147,6 @@ public class ServerConnectionTest extends Connection {
         assertThat(args.length, is(2));
         assertThat(args[0].toString(), is(obj.toString()));
         assertThat((String)args[1], is("bar"));
-        socket.close();
     }
 
     // in KMP definition, args could not be null, so we shouldn't have this case.
@@ -216,7 +210,6 @@ public class ServerConnectionTest extends Connection {
         assertThat(args[0], is(instanceOf(Ack.class)));
         args = (Object[])values.take();
         assertThat(args.length, is(0));
-        socket.close();
     }
 
     @Test(timeout = TIMEOUT)
@@ -254,7 +247,7 @@ public class ServerConnectionTest extends Connection {
                 @Override
                 public void call(Object... objects) {
                     client("/", socket2 -> {
-                        self.socket2 = socket;
+                        self.socket2 = socket2;
 
                         socket2.on(Socket.EVENT_CONNECT, new Emitter.Listener() {
                             @Override
@@ -279,8 +272,6 @@ public class ServerConnectionTest extends Connection {
         Object[] args = (Object[])values.take();
         assertThat(args.length, is(1));
         assertThat((String)args[0], is("hi"));
-        socket.close();
-        socket2.close();
     }
 
     @Test(timeout = TIMEOUT)
@@ -307,7 +298,6 @@ public class ServerConnectionTest extends Connection {
         Object[] args = (Object[])values.take();
         assertThat(args.length, is(1));
         assertThat((String)args[0], is("hi"));
-        socket.close();
     }
 
     @Test(timeout = TIMEOUT)
@@ -345,7 +335,6 @@ public class ServerConnectionTest extends Connection {
         });
 
         assertThat((String)values.take(), is("hi"));
-        socket.close();
     }
 
     @Test(timeout = TIMEOUT)
@@ -383,7 +372,6 @@ public class ServerConnectionTest extends Connection {
         });
 
         assertThat((String)values.take(), is("hi"));
-        socket.close();
     }
 
     @Test(timeout = TIMEOUT)

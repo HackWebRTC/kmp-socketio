@@ -36,8 +36,6 @@ import com.piasy.kmp.socketio.socketio.Socket;
 @RunWith(JUnit4.class)
 public class SocketTest extends Connection {
 
-    private Socket socket;
-
     @Test(timeout = TIMEOUT)
     public void shouldHaveAnAccessibleSocketIdEqualToServerSideSocketId() throws InterruptedException {
         final BlockingQueue<Optional> values = new LinkedBlockingQueue<>();
@@ -57,7 +55,6 @@ public class SocketTest extends Connection {
         Optional<String> id = values.take();
         assertThat(id.isPresent(), is(true));
         assertThat(id.get(), not(TestUtil.engineId(socket))); // distinct ID since Socket.IO v3
-        socket.close();
     }
 
     @Test(timeout = TIMEOUT)
@@ -79,7 +76,6 @@ public class SocketTest extends Connection {
         Optional<String> id = values.take();
         assertThat(id.isPresent(), is(true));
         assertThat(id.get(), is(not(TestUtil.engineId(socket)))); // distinct ID since Socket.IO v3
-        socket.close();
     }
 
     @Test(timeout = TIMEOUT)
@@ -178,8 +174,6 @@ public class SocketTest extends Connection {
         @SuppressWarnings("unchecked")
         Optional<String> id3 = values.take();
         assertThat(id3.get(), is(not(id1.get())));
-
-        socket.close();
     }
 
     @Test(timeout = TIMEOUT)
@@ -200,8 +194,6 @@ public class SocketTest extends Connection {
         @SuppressWarnings("unchecked")
         Optional<JSONObject> handshake = values.take();
         assertThat(handshake.get().getJSONObject("query").getString("c"), is("d"));
-
-        socket.close();
     }
 
     @Test(timeout = TIMEOUT)
@@ -224,8 +216,6 @@ public class SocketTest extends Connection {
         JSONObject query = handshake.get().getJSONObject("query");
         assertThat(query.getString("b"), is("c"));
         assertThat(query.getString("d"), is("e"));
-
-        socket.close();
     }
 
     @Test(timeout = TIMEOUT)
@@ -250,8 +240,6 @@ public class SocketTest extends Connection {
         Optional<JSONObject> handshake = values.take();
         JSONObject query = handshake.get().getJSONObject("auth");
         assertThat(query.getString("token"), is("abcd"));
-
-        socket.close();
     }
 
     @Test(timeout = TIMEOUT)
@@ -275,8 +263,6 @@ public class SocketTest extends Connection {
         assertThat(error.getString("message"), is("auth failed"));
         assertThat(error.getJSONObject("data").getString("a"), is("b"));
         assertThat(error.getJSONObject("data").getInt("c"), is(3));
-
-        socket.close();
     }
 
     @Test(timeout = TIMEOUT)

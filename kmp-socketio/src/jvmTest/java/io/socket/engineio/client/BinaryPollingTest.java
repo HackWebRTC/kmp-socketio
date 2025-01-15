@@ -20,8 +20,6 @@ import static org.junit.Assert.assertThat;
 @RunWith(JUnit4.class)
 public class BinaryPollingTest extends Connection {
 
-    private EngineSocket socket;
-
     @Test(timeout = TIMEOUT)
     public void receiveBinaryData() throws InterruptedException {
         final BlockingQueue<Object> values = new LinkedBlockingQueue<Object>();
@@ -56,7 +54,6 @@ public class BinaryPollingTest extends Connection {
         socket.open();
 
         assertThat((byte[])values.take(), is(binaryData));
-        socket.close();
     }
 
     @Test(timeout = TIMEOUT)
@@ -97,6 +94,5 @@ public class BinaryPollingTest extends Connection {
 
         assertThat((byte[])values.take(), is(binaryData));
         assertThat((String)values.take(), is("cash money €€€"));
-        socket.close();
     }
 }

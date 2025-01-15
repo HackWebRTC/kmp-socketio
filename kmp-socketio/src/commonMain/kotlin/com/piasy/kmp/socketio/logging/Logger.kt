@@ -8,7 +8,7 @@ interface LoggerInterface {
     fun error(tag: String, log: String)
 }
 
-internal object Logger : LoggerInterface {
+object Logger : LoggerInterface {
     private var logger: LoggerInterface = DefaultLogger
 
     fun setLogger(logger: LoggerInterface) {

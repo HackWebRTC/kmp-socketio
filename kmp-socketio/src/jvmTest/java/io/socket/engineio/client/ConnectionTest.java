@@ -19,8 +19,6 @@ import static org.junit.Assert.assertThat;
 @RunWith(JUnit4.class)
 public class ConnectionTest extends Connection {
 
-    private EngineSocket socket;
-
     @Test(timeout = TIMEOUT)
     public void connectToLocalhost() throws InterruptedException {
         final BlockingQueue<Object> values = new LinkedBlockingQueue<Object>();

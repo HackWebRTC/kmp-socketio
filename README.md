@@ -48,7 +48,8 @@ IO.socket("http://localhost:3000", IO.Options()) { socket ->
     socket.on(Socket.EVENT_CONNECT) { args ->
         println("on connect ${args.joinToString()}")
 
-        socket.emit("echo", 1, "2", GMTDate())
+        val bin = UnsafeByteStringOperations.wrapUnsafe(byteArrayOf(0x1, 0x3, 0x1, 0x4))
+        socket.emit("echo", 1, "2", bin, GMTDate())
     }.on("echoBack") { args ->
         println("on echoBack ${args.joinToString()}")
     }
@@ -61,6 +62,24 @@ Most of the APIs are the same as socket.io-client-java, here are some difference
 
 - Create socket is asynchronous, to make it's easier to guarantee thread safety.
 - Binary messages can't be nested, because `emit` only accepts String/Boolean/Number/JsonElement/ByteString, other types will be converted to String using `toString()`, so there is no way to put ByteString in JsonElement.
+
+### Set logging callback
+
+```kotlin
+Logger.setLogger(object : LoggerInterface {
+    override fun debug(tag: String, log: String) {
+        TODO("Not yet implemented")
+    }
+
+    override fun info(tag: String, log: String) {
+        TODO("Not yet implemented")
+    }
+
+    override fun error(tag: String, log: String) {
+        TODO("Not yet implemented")
+    }
+})
+```
 
 ## Example
 

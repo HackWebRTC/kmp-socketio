@@ -1,5 +1,6 @@
 package io.socket.client;
 
+import com.piasy.kmp.socketio.logging.Logger;
 import com.piasy.kmp.socketio.socketio.IO;
 import com.piasy.kmp.socketio.socketio.Socket;
 import kotlin.Unit;
@@ -13,12 +14,10 @@ import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.*;
-import java.util.logging.Logger;
 
 public abstract class Connection {
 
-    private static final Logger logger = Logger.getLogger(Socket.class.getName());
-
+    private static final String TAG = "TestConnection";
     final static int TIMEOUT = 7000;
     final static int PORT = 3000;
 
@@ -27,9 +26,12 @@ public abstract class Connection {
     private Future serverOutput;
     private Future serverError;
 
+    protected Socket socket;
+    protected Socket socket2;
+
     @Before
     public void startServer() throws IOException, InterruptedException {
-        logger.fine("Starting server ...");
+        Logger.INSTANCE.info(TAG, "Starting server ...");
 
         final CountDownLatch latch = new CountDownLatch(1);
         serverProcess = Runtime.getRuntime().exec(
@@ -45,10 +47,10 @@ public abstract class Connection {
                     line = reader.readLine();
                     latch.countDown();
                     do {
-                        logger.fine("SERVER OUT: " + line);
+                        Logger.INSTANCE.info(TAG, "SERVER OUT: " + line);
                     } while ((line = reader.readLine()) != null);
                 } catch (IOException e) {
-                    logger.warning(e.getMessage());
+                    Logger.INSTANCE.error(TAG, "startServer error: " + e.getMessage());
                 }
             }
         });
@@ -60,10 +62,10 @@ public abstract class Connection {
                 String line;
                 try {
                     while ((line = reader.readLine()) != null) {
-                        logger.fine("SERVER ERR: " + line);
+                        Logger.INSTANCE.info(TAG, "SERVER ERR: " + line);
                     }
                 } catch (IOException e) {
-                    logger.warning(e.getMessage());
+                    Logger.INSTANCE.error(TAG, "startServer error: " + e.getMessage());
                 }
             }
         });
@@ -72,7 +74,14 @@ public abstract class Connection {
 
     @After
     public void stopServer() throws InterruptedException {
-        logger.fine("Stopping server ...");
+        if (socket != null) {
+            socket.close();
+        }
+        if (socket2 != null) {
+            socket2.close();
+        }
+
+        Logger.INSTANCE.info(TAG, "Stopping server ...");
         serverProcess.destroy();
         serverOutput.cancel(false);
         serverError.cancel(false);
