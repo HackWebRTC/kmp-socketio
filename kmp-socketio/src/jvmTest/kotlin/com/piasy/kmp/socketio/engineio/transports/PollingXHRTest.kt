@@ -251,6 +251,7 @@ class PollingXHRTest : BaseTest() {
         polling.polling.open()
         waitExec(this)
         polling.polling.close()
+        waitExec(this)
         waitExec(this, 2500)
 
         coVerify(exactly = 3) { polling.factory.httpRequest(any(), any()) }
