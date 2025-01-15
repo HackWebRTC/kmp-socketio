@@ -2,6 +2,7 @@ package io.socket.client;
 
 import io.socket.util.Optional;
 import kotlin.Unit;
+import kotlinx.io.bytestring.ByteString;
 import kotlinx.serialization.json.JsonObject;
 
 import org.jetbrains.annotations.NotNull;
@@ -281,12 +282,13 @@ public class SocketTest extends Connection {
 
         client("/no", socket -> {
             this.socket = socket;
-            try {
-                socket.emit("disconnecting", "goodbye");
-                fail();
-            } catch (RuntimeException e) {
-                values.offer(Optional.ofNullable(e.getMessage()));
-            }
+            socket.on(Socket.EVENT_ERROR, new Emitter.Listener() {
+                @Override
+                public void call(Object... args) {
+                    values.offer(Optional.ofNullable(args[0]));
+                }
+            });
+            socket.emit("disconnecting", "goodbye");
             return Unit.INSTANCE;
         });
         assertThat((String) values.take().get(), is("emit reserved event: disconnecting"));
@@ -411,99 +413,95 @@ public class SocketTest extends Connection {
         assertThat(values.take(), is(true));
     }
 
-//    @Test(timeout = TIMEOUT)
-//    public void shouldNotTimeoutWhenTheServerDoesAcknowledgeTheEvent() throws InterruptedException {
-//        final BlockingQueue<Object> values = new LinkedBlockingQueue<>();
-//
-//        client("/", socket -> {
-//            this.socket = socket;
-//
-//            socket.on(Socket.EVENT_CONNECT, new Emitter.Listener() {
-//                @Override
-//                public void call(Object... args) {
-//                    socket.emit("ack", 1, "2", new byte[]{3}, new AckWithTimeout(200) {
-//                        @Override
-//                        public void onTimeout() {
-//                            fail();
-//                        }
-//
-//                        @Override
-//                        public void onSuccess(Object... args) {
-//                            for (Object arg : args) {
-//                                values.offer(arg);
-//                            }
-//                        }
-//                    });
-//                }
-//            });
-//
-//            socket.open();
-//            return Unit.INSTANCE;
-//        });
-//
-//        assertThat((Integer) values.take(), is(1));
-//        assertThat((String) values.take(), is("2"));
-//        assertThat((byte[]) values.take(), is(new byte[] { 3 }));
-//    }
-//
-//    @Test(timeout = TIMEOUT)
-//    public void shouldCallCatchAllListenerForIncomingPackets() throws InterruptedException {
-//        final BlockingQueue<Object> values = new LinkedBlockingQueue<>();
-//
-//        client("/", socket -> {
-//            this.socket = socket;
-//
-//            socket.on("message", new Emitter.Listener() {
-//                @Override
-//                public void call(Object... args) {
-//                    socket.emit("echo", 1, "2", new byte[]{3});
-//
-//                    socket.onAnyIncoming(new Emitter.Listener() {
-//                        @Override
-//                        public void call(Object... args) {
-//                            for (Object arg : args) {
-//                                values.offer(arg);
-//                            }
-//                        }
-//                    });
-//                }
-//            });
-//
-//            socket.open();
-//            return Unit.INSTANCE;
-//        });
-//
-//        assertThat((String) values.take(), is("echoBack"));
-//        assertThat((Integer) values.take(), is(1));
-//        assertThat((String) values.take(), is("2"));
-//        assertThat((byte[]) values.take(), is(new byte[] { 3 }));
-//    }
-//
-//    @Test(timeout = TIMEOUT)
-//    public void shouldCallCatchAllListenerForOutgoingPackets() throws InterruptedException {
-//        final BlockingQueue<Object> values = new LinkedBlockingQueue<>();
-//
-//        client("/", socket -> {
-//            this.socket = socket;
-//
-//            socket.emit("echo", 1, "2", new byte[]{3});
-//
-//            socket.onAnyOutgoing(new Emitter.Listener() {
-//                @Override
-//                public void call(Object... args) {
-//                    for (Object arg : args) {
-//                        values.offer(arg);
-//                    }
-//                }
-//            });
-//
-//            socket.open();
-//            return Unit.INSTANCE;
-//        });
-//
-//        assertThat((String) values.take(), is("echo"));
-//        assertThat((Integer) values.take(), is(1));
-//        assertThat((String) values.take(), is("2"));
-//        assertThat((byte[]) values.take(), is(new byte[] { 3 }));
-//    }
+    @Test(timeout = TIMEOUT)
+    public void shouldNotTimeoutWhenTheServerDoesAcknowledgeTheEvent() throws InterruptedException {
+        final BlockingQueue<Object> values = new LinkedBlockingQueue<>();
+
+        client("/", socket -> {
+            this.socket = socket;
+
+            socket.on(Socket.EVENT_CONNECT, new Emitter.Listener() {
+                @Override
+                public void call(Object... args) {
+                    socket.emit("ack", 1, "2", new ByteString(new byte[]{3}, 0, 1), new AckWithTimeout(200) {
+                        @Override
+                        public void onTimeout() {
+                            fail();
+                        }
+
+                        @Override
+                        public void onSuccess(Object... args) {
+                            for (Object arg : args) {
+                                values.offer(arg);
+                            }
+                        }
+                    });
+                }
+            });
+
+            socket.open();
+            return Unit.INSTANCE;
+        });
+
+        assertThat((Integer) values.take(), is(1));
+        assertThat((String) values.take(), is("2"));
+        assertThat(((ByteString) values.take()).getBackingArrayReference(), is(new byte[] { 3 }));
+    }
+
+    @Test(timeout = TIMEOUT)
+    public void shouldCallCatchAllListenerForIncomingPackets() throws InterruptedException {
+        final BlockingQueue<Object> values = new LinkedBlockingQueue<>();
+
+        client("/", socket -> {
+            this.socket = socket;
+
+            socket.on("message", new Emitter.Listener() {
+                @Override
+                public void call(Object... args) {
+                    socket.emit("echo", 1, "2", new ByteString(new byte[]{3}, 0, 1));
+                }
+            }).on("echoBack", new Emitter.Listener() {
+                @Override
+                public void call(Object... args) {
+                    for (Object arg : args) {
+                        values.offer(arg);
+                    }
+                }
+            });
+
+            socket.open();
+            return Unit.INSTANCE;
+        });
+
+        assertThat((Integer) values.take(), is(1));
+        assertThat((String) values.take(), is("2"));
+        assertThat(((ByteString) values.take()).getBackingArrayReference(), is(new byte[] { 3 }));
+    }
+
+    @Test(timeout = TIMEOUT)
+    public void shouldCallCatchAllListenerForOutgoingPackets() throws InterruptedException {
+        final BlockingQueue<Object> values = new LinkedBlockingQueue<>();
+
+        client("/", socket -> {
+            this.socket = socket;
+
+            socket.emit("echo", 1, "2", new ByteString(new byte[]{3}, 0, 1));
+
+            socket.on("echoBack", new Emitter.Listener() {
+                @Override
+                public void call(Object... args) {
+                    for (Object arg : args) {
+                        values.offer(arg);
+                    }
+                }
+            });
+
+            socket.open();
+            return Unit.INSTANCE;
+        });
+
+        assertThat((Integer) values.take(), is(1));
+        assertThat((String) values.take(), is("2"));
+        assertThat(((ByteString) values.take()).getBackingArrayReference(), is(new byte[] { 3 }));
+    }
 }

@@ -1,6 +1,5 @@
 package io.socket.client;
 
-import com.piasy.kmp.socketio.engineio.TestUtil;
 import com.piasy.kmp.socketio.socketio.IO;
 import com.piasy.kmp.socketio.socketio.Socket;
 import kotlin.Unit;
@@ -18,7 +17,7 @@ import java.util.logging.Logger;
 
 public abstract class Connection {
 
-    private static final Logger logger = Logger.getLogger(Connection.class.getName());
+    private static final Logger logger = Logger.getLogger(Socket.class.getName());
 
     final static int TIMEOUT = 7000;
     final static int PORT = 3000;
@@ -30,7 +29,6 @@ public abstract class Connection {
 
     @Before
     public void startServer() throws IOException, InterruptedException {
-        TestUtil.stringMessagePayloadForTesting(false);
         logger.fine("Starting server ...");
 
         final CountDownLatch latch = new CountDownLatch(1);

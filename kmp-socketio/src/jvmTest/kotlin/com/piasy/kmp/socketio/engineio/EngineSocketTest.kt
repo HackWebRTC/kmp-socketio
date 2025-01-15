@@ -39,10 +39,10 @@ class EngineSocketTest : BaseTest() {
 
         val factory = mockk<TransportFactory>()
         if (!upgrade || transportsObj.isEmpty()) {
-            every { factory.create(any(), any(), any()) } returns transport
+            every { factory.create(any(), any(), any(), any()) } returns transport
         } else {
             var count = 0
-            every { factory.create(any(), any(), any()) } answers {
+            every { factory.create(any(), any(), any(), any()) } answers {
                 val trans = transportsObj[count]
                 count++
                 trans
@@ -105,7 +105,7 @@ class EngineSocketTest : BaseTest() {
         sock.socket.open()
         advanceUntilIdle()
 
-        verify(exactly = 1) { sock.factory.create(name, any(), scope) }
+        verify(exactly = 1) { sock.factory.create(name, any(), scope, any()) }
 
         verify(exactly = 1) { sock.transport.open() }
         verifyOn(sock.transport, Transport.EVENT_DRAIN)
@@ -384,7 +384,7 @@ class EngineSocketTest : BaseTest() {
         opt: Options,
         scope: CoroutineScope,
         name: String,
-    ) : Transport(opt, scope, name) {
+    ) : Transport(opt, scope, name, false) {
         val packets = ArrayList<EngineIOPacket<*>>()
         override fun pause(onPause: () -> Unit) {
             if (name == PollingXHR.NAME) {
@@ -410,19 +410,19 @@ class EngineSocketTest : BaseTest() {
             pingInterval: Int = 25000,
             pingTimeout: Int = 20000
         ) {
-            onWsText(mockOpen(upgrades, pingInterval, pingTimeout))
+            onPacket(EngineIO.decodeSocketIO(mockOpen(upgrades, pingInterval, pingTimeout)))
         }
 
         fun mockOnPing() {
-            onWsText("2")
+            onPacket(EngineIO.decodeSocketIO("2"))
         }
 
         fun mockOnPong(data: String? = null) {
-            onWsText("3${data ?: ""}")
+            onPacket(EngineIO.decodeSocketIO("3${data ?: ""}"))
         }
 
         fun mockOnMessage(msg: String) {
-            onWsText(msg)
+            onPacket(EngineIO.decodeSocketIO(msg))
         }
     }
 

@@ -18,7 +18,8 @@ open class PollingXHR(
     scope: CoroutineScope,
     private val ioScope: CoroutineScope = CoroutineScope(Dispatchers.Default),
     private val factory: HttpClientFactory = DefaultHttpClientFactory,
-) : Transport(opt, scope, NAME) {
+    rawMessage: Boolean,
+) : Transport(opt, scope, NAME, rawMessage) {
     private var polling = false
 
     @WorkThread
@@ -136,8 +137,8 @@ open class PollingXHR(
     private fun onPollComplete(data: String) {
         logD("onPollComplete: state $state, `$data`")
         val packets = try {
-            if (stringMessagePayloadForTesting) {
-                EngineIO.decodeHttpBatch(data, deserializeTextPayload = { it })
+            if (rawMessage) {
+                EngineIO.decodeHttpBatch(data, deserializePayload = { it })
             } else {
                 EngineIO.decodeHttpBatch(data, SocketIO::decode)
             }
@@ -175,17 +176,10 @@ open class PollingXHR(
     @WorkThread
     override fun doSend(packets: List<EngineIOPacket<*>>) {
         writable = false
-        @Suppress("UNCHECKED_CAST")
-        val data = if (stringMessagePayloadForTesting) {
-            EngineIO.encodeHttpBatch(
-                packets as List<EngineIOPacket<String>>,
-                serializePayload = { it }
-            )
+        val data = if (rawMessage) {
+            EngineIO.encodeHttpBatch(packets, serializePayload = { it.toString() })
         } else {
-            EngineIO.encodeHttpBatch(
-                packets as List<EngineIOPacket<SocketIOPacket>>,
-                SocketIO::encode
-            )
+            EngineIO.encodeHttpBatch(packets, serializePayload = { SocketIO.encode(it as SocketIOPacket) })
         }
 
         val method = HttpMethod.Post

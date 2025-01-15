@@ -5,15 +5,14 @@ import com.piasy.kmp.socketio.logging.Logger
 import com.piasy.kmp.socketio.parseqs.ParseQS
 import io.ktor.util.date.*
 import kotlinx.coroutines.CoroutineScope
-import org.hildan.socketio.EngineIO
 import org.hildan.socketio.EngineIOPacket
-import org.hildan.socketio.InvalidSocketIOPacketException
 import kotlin.jvm.JvmField
 
 abstract class Transport(
     internal val opt: Options,
     protected val scope: CoroutineScope,
     val name: String,
+    protected val rawMessage: Boolean,
 ) : Emitter() {
     open class Options {
         // @JvmField for jvm test code
@@ -87,29 +86,6 @@ abstract class Transport(
             writable = true
             emit(EVENT_OPEN)
         }
-    }
-
-    @WorkThread
-    protected fun onWsText(data: String) {
-        logD("onWsText: `$data`")
-        val packet = try {
-            if (stringMessagePayloadForTesting) {
-                EngineIO.decodeWsFrame(data, deserializePayload = { it })
-            } else {
-                EngineIO.decodeSocketIO(data)
-            }
-        } catch (e: InvalidSocketIOPacketException) {
-            val log = "onWsText decode error: ${e.message}"
-            logE(log)
-            onError(log)
-            return
-        }
-        onPacket(packet)
-    }
-
-    @WorkThread
-        // TODO: binary
-    protected fun onWsBinary(data: ByteArray) {
     }
 
     @WorkThread
@@ -193,7 +169,6 @@ abstract class Transport(
         const val EVENT_REQUEST_HEADERS: String = "requestHeaders"
         const val EVENT_RESPONSE_HEADERS: String = "responseHeaders"
 
-        internal var stringMessagePayloadForTesting = false
         private const val TAG = "Transport"
     }
 }

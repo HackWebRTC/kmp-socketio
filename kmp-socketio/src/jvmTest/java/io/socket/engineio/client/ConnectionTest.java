@@ -25,7 +25,7 @@ public class ConnectionTest extends Connection {
     public void connectToLocalhost() throws InterruptedException {
         final BlockingQueue<Object> values = new LinkedBlockingQueue<Object>();
 
-        socket = new EngineSocket("http://localhost:" + PORT, new EngineSocket.Options(), TestUtil.testScope(), TestUtil.transportFactory());
+        socket = new EngineSocket("http://localhost:" + PORT, new EngineSocket.Options(), TestUtil.testScope(), TestUtil.transportFactory(), true);
         socket.on(EngineSocket.EVENT_OPEN, new Emitter.Listener() {
             @Override
             public void call(Object... args) {
@@ -47,7 +47,7 @@ public class ConnectionTest extends Connection {
     public void receiveMultibyteUTF8StringsWithPolling() throws InterruptedException {
         final BlockingQueue<Object> values = new LinkedBlockingQueue<Object>();
 
-        socket = new EngineSocket("http://localhost:" + PORT, new EngineSocket.Options(), TestUtil.testScope(), TestUtil.transportFactory());
+        socket = new EngineSocket("http://localhost:" + PORT, new EngineSocket.Options(), TestUtil.testScope(), TestUtil.transportFactory(), true);
         socket.on(EngineSocket.EVENT_OPEN, new Emitter.Listener() {
             @Override
             public void call(Object... args) {
@@ -71,7 +71,7 @@ public class ConnectionTest extends Connection {
     public void receiveEmoji() throws InterruptedException {
         final BlockingQueue<Object> values = new LinkedBlockingQueue<Object>();
 
-        socket = new EngineSocket("http://localhost:" + PORT, new EngineSocket.Options(), TestUtil.testScope(), TestUtil.transportFactory());
+        socket = new EngineSocket("http://localhost:" + PORT, new EngineSocket.Options(), TestUtil.testScope(), TestUtil.transportFactory(), true);
         socket.on(EngineSocket.EVENT_OPEN, new Emitter.Listener() {
             @Override
             public void call(Object... args) {
@@ -95,7 +95,7 @@ public class ConnectionTest extends Connection {
     public void notSendPacketsIfSocketCloses() throws InterruptedException {
         final BlockingQueue<Object> values = new LinkedBlockingQueue<Object>();
 
-        socket = new EngineSocket("http://localhost:" + PORT, new EngineSocket.Options(), TestUtil.testScope(), TestUtil.transportFactory());
+        socket = new EngineSocket("http://localhost:" + PORT, new EngineSocket.Options(), TestUtil.testScope(), TestUtil.transportFactory(), true);
         socket.on(EngineSocket.EVENT_OPEN, new Emitter.Listener() {
             @Override
             public void call(Object... args) {
@@ -126,7 +126,7 @@ public class ConnectionTest extends Connection {
     public void deferCloseWhenUpgrading() throws InterruptedException {
         final BlockingQueue<Object> values = new LinkedBlockingQueue<Object>();
 
-        socket = new EngineSocket("http://localhost:" + PORT, new EngineSocket.Options(), TestUtil.testScope(), TestUtil.transportFactory());
+        socket = new EngineSocket("http://localhost:" + PORT, new EngineSocket.Options(), TestUtil.testScope(), TestUtil.transportFactory(), true);
         socket.on(EngineSocket.EVENT_OPEN, new Emitter.Listener() {
             @Override
             public void call(Object... args) {
@@ -158,7 +158,7 @@ public class ConnectionTest extends Connection {
     public void closeOnUpgradeErrorIfClosingIsDeferred() throws InterruptedException {
         final BlockingQueue<Object> values = new LinkedBlockingQueue<Object>();
 
-        socket = new EngineSocket("http://localhost:" + PORT, new EngineSocket.Options(), TestUtil.testScope(), TestUtil.transportFactory());
+        socket = new EngineSocket("http://localhost:" + PORT, new EngineSocket.Options(), TestUtil.testScope(), TestUtil.transportFactory(), true);
         socket.on(EngineSocket.EVENT_OPEN, new Emitter.Listener() {
             @Override
             public void call(Object... args) {
@@ -195,7 +195,7 @@ public class ConnectionTest extends Connection {
     public void notSendPacketsIfClosingIsDeferred() throws InterruptedException {
         final BlockingQueue<Object> values = new LinkedBlockingQueue<Object>();
 
-        socket = new EngineSocket("http://localhost:" + PORT, new EngineSocket.Options(), TestUtil.testScope(), TestUtil.transportFactory());
+        socket = new EngineSocket("http://localhost:" + PORT, new EngineSocket.Options(), TestUtil.testScope(), TestUtil.transportFactory(), true);
         socket.on(EngineSocket.EVENT_OPEN, new Emitter.Listener() {
             @Override
             public void call(Object... args) {
@@ -229,7 +229,7 @@ public class ConnectionTest extends Connection {
     public void sendAllBufferedPacketsIfClosingIsDeferred() throws InterruptedException {
         final BlockingQueue<Object> values = new LinkedBlockingQueue<Object>();
 
-        socket = new EngineSocket("http://localhost:" + PORT, new EngineSocket.Options(), TestUtil.testScope(), TestUtil.transportFactory());
+        socket = new EngineSocket("http://localhost:" + PORT, new EngineSocket.Options(), TestUtil.testScope(), TestUtil.transportFactory(), true);
         socket.on(EngineSocket.EVENT_OPEN, new Emitter.Listener() {
             @Override
             public void call(Object... args) {
@@ -255,7 +255,7 @@ public class ConnectionTest extends Connection {
     public void receivePing() throws InterruptedException {
         final BlockingQueue<String> values = new LinkedBlockingQueue<>();
 
-        socket = new EngineSocket("http://localhost:" + PORT, new EngineSocket.Options(), TestUtil.testScope(), TestUtil.transportFactory());
+        socket = new EngineSocket("http://localhost:" + PORT, new EngineSocket.Options(), TestUtil.testScope(), TestUtil.transportFactory(), true);
         socket.on(EngineSocket.EVENT_PING, new Emitter.Listener() {
             @Override
             public void call(Object... args) {

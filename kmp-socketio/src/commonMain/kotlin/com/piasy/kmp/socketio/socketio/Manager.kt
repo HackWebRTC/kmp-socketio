@@ -10,7 +10,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.hildan.socketio.EngineIOPacket
-import org.hildan.socketio.SocketIOPacket
 import kotlin.jvm.JvmField
 
 class Manager(
@@ -315,9 +314,9 @@ class Manager(
     }
 
     @WorkThread
-    internal fun packet(packet: EngineIOPacket<*>) {
-        Logger.debug(TAG, "send packet $packet")
-        engine?.send(packet)
+    internal fun packets(packets: List<EngineIOPacket<*>>) {
+        Logger.debug(TAG, "send packets $packets")
+        engine?.send(packets)
     }
 
     @WorkThread

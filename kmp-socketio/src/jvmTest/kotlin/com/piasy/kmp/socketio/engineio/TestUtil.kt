@@ -6,7 +6,6 @@ import com.piasy.kmp.socketio.socketio.Manager
 import com.piasy.kmp.socketio.socketio.Socket
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.*
 import org.json.JSONObject
 
@@ -22,11 +21,6 @@ object TestUtil {
 
     @JvmStatic
     fun getOpt(socket: EngineSocket) = socket.opt
-
-    @JvmStatic
-    fun stringMessagePayloadForTesting(enable: Boolean) {
-        Transport.stringMessagePayloadForTesting = enable
-    }
 
     @JvmStatic
     fun triggerTransportError(socket: EngineSocket, error: String) {

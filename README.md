@@ -59,8 +59,8 @@ IO.socket("http://localhost:3000", IO.Options()) { socket ->
 
 Most of the APIs are the same as socket.io-client-java, here are some differences:
 
-- Create socket is asyncronous, to make it's easier to guarantee thread safety.
-- Binary messages can't be nested, because `emit` only accepts String/Boolean/Number/JsonElement/ByteArray, other types will be converted to String using `toString()`, so there is no way to put ByteArray in JsonElement.
+- Create socket is asynchronous, to make it's easier to guarantee thread safety.
+- Binary messages can't be nested, because `emit` only accepts String/Boolean/Number/JsonElement/ByteString, other types will be converted to String using `toString()`, so there is no way to put ByteString in JsonElement.
 
 ## Example
 

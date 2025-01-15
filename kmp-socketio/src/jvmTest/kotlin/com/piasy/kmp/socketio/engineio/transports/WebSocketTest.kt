@@ -41,7 +41,7 @@ class WebSocketTest : BaseTest() {
 
         val socket = WebSocket(
             Transport.Options(), scope,
-            CoroutineScope(Dispatchers.Default), factory
+            CoroutineScope(Dispatchers.Default), factory, false
         )
 
         val events = ArrayList<String>()

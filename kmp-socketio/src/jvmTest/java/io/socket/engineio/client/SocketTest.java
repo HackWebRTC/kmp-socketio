@@ -29,28 +29,28 @@ public class SocketTest {
 
     @Test
     public void properlyParseHttpUriWithoutPort() throws URISyntaxException {
-        EngineSocket client = new EngineSocket("http://localhost", new EngineSocket.Options(), TestUtil.testScope(), TestUtil.transportFactory());
+        EngineSocket client = new EngineSocket("http://localhost", new EngineSocket.Options(), TestUtil.testScope(), TestUtil.transportFactory(), false);
         assertThat(TestUtil.getOpt(client).hostname, is("localhost"));
         assertThat(TestUtil.getOpt(client).port, is(80));
     }
 
     @Test
     public void properlyParseHttpsUriWithoutPort() throws URISyntaxException {
-        EngineSocket client = new EngineSocket("https://localhost", new EngineSocket.Options(), TestUtil.testScope(), TestUtil.transportFactory());
+        EngineSocket client = new EngineSocket("https://localhost", new EngineSocket.Options(), TestUtil.testScope(), TestUtil.transportFactory(), false);
         assertThat(TestUtil.getOpt(client).hostname, is("localhost"));
         assertThat(TestUtil.getOpt(client).port, is(443));
     }
 
     @Test
     public void properlyParseWssUriWithoutPort() throws URISyntaxException {
-        EngineSocket client = new EngineSocket("wss://localhost", new EngineSocket.Options(), TestUtil.testScope(), TestUtil.transportFactory());
+        EngineSocket client = new EngineSocket("wss://localhost", new EngineSocket.Options(), TestUtil.testScope(), TestUtil.transportFactory(), false);
         assertThat(TestUtil.getOpt(client).hostname, is("localhost"));
         assertThat(TestUtil.getOpt(client).port, is(443));
     }
 
     @Test
     public void properlyParseWssUriWithPort() throws URISyntaxException {
-        EngineSocket client = new EngineSocket("wss://localhost:2020", new EngineSocket.Options(), TestUtil.testScope(), TestUtil.transportFactory());
+        EngineSocket client = new EngineSocket("wss://localhost:2020", new EngineSocket.Options(), TestUtil.testScope(), TestUtil.transportFactory(), false);
         assertThat(TestUtil.getOpt(client).hostname, is("localhost"));
         assertThat(TestUtil.getOpt(client).port, is(2020));
     }
@@ -67,14 +67,14 @@ public class SocketTest {
 
     @Test
     public void properlyParseIPv6UriWithoutPort() throws URISyntaxException {
-        EngineSocket client = new EngineSocket("http://[::1]", new EngineSocket.Options(), TestUtil.testScope(), TestUtil.transportFactory());
+        EngineSocket client = new EngineSocket("http://[::1]", new EngineSocket.Options(), TestUtil.testScope(), TestUtil.transportFactory(), false);
         assertThat(TestUtil.getOpt(client).hostname, is("::1"));
         assertThat(TestUtil.getOpt(client).port, is(80));
     }
 
     @Test
     public void properlyParseIPv6UriWithPort() throws URISyntaxException {
-        EngineSocket client = new EngineSocket("http://[::1]:8080", new EngineSocket.Options(), TestUtil.testScope(), TestUtil.transportFactory());
+        EngineSocket client = new EngineSocket("http://[::1]:8080", new EngineSocket.Options(), TestUtil.testScope(), TestUtil.transportFactory(), false);
         assertThat(TestUtil.getOpt(client).hostname, is("::1"));
         assertThat(TestUtil.getOpt(client).port, is(8080));
     }
