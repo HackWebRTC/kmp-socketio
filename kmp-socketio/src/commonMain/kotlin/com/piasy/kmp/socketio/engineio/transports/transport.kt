@@ -1,7 +1,6 @@
 package com.piasy.kmp.socketio.engineio.transports
 
 import com.piasy.kmp.socketio.engineio.Transport
-import com.piasy.kmp.socketio.logging.Logger
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.logging.*
@@ -64,7 +63,7 @@ object DefaultHttpClientFactory : HttpClientFactory {
         install(Logging) {
             logger = object : io.ktor.client.plugins.logging.Logger {
                 override fun log(message: String) {
-                    Logger.info("Net", message)
+                    com.piasy.kmp.xlog.Logging.info("Net", message)
                 }
             }
             level = LogLevel.ALL

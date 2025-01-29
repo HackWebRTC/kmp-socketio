@@ -5,7 +5,7 @@ import com.piasy.kmp.socketio.engineio.transports.DefaultTransportFactory
 import com.piasy.kmp.socketio.engineio.transports.PollingXHR
 import com.piasy.kmp.socketio.engineio.transports.TransportFactory
 import com.piasy.kmp.socketio.engineio.transports.WebSocket
-import com.piasy.kmp.socketio.logging.Logger
+import com.piasy.kmp.xlog.Logging
 import io.ktor.http.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -107,9 +107,9 @@ class EngineSocket(
      */
     @WorkThread
     fun open() {
-        Logger.info(TAG, "open: state $state")
+        Logging.info(TAG, "open: state $state")
         if (state != State.INIT && state != State.CLOSED) {
-            Logger.error(TAG, "open at wrong state: $state")
+            Logging.error(TAG, "open at wrong state: $state")
             return
         }
 
@@ -150,27 +150,27 @@ class EngineSocket(
      */
     @WorkThread
     fun close() {
-        Logger.info(TAG, "close: state $state, writeBuffer.size ${writeBuffer.size}, upgrading: $upgrading")
+        Logging.info(TAG, "close: state $state, writeBuffer.size ${writeBuffer.size}, upgrading: $upgrading")
         if (state != State.OPENING && state != State.OPEN) {
-            Logger.info(TAG, "close at wrong state: $state")
+            Logging.info(TAG, "close at wrong state: $state")
             return
         }
         state = State.CLOSING
 
         val closeAction = {
-            Logger.info(TAG, "socket closing - telling transport to close")
+            Logging.info(TAG, "socket closing - telling transport to close")
             onClose("force close")
         }
         val cleanupAndClose = object : Listener {
             override fun call(vararg args: Any) {
-                Logger.info(TAG, "close waiting upgrade success")
+                Logging.info(TAG, "close waiting upgrade success")
                 off(EVENT_UPGRADE, this)
                 off(EVENT_UPGRADE_ERROR, this)
                 closeAction()
             }
         }
         val waitForUpgrade = {
-            Logger.info(TAG, "close waiting upgrade")
+            Logging.info(TAG, "close waiting upgrade")
             // wait for upgrade to finish since we can't
             // send packets while pausing transport.
             once(EVENT_UPGRADE, cleanupAndClose)
@@ -178,10 +178,10 @@ class EngineSocket(
         }
 
         if (writeBuffer.isNotEmpty()) {
-            Logger.info(TAG, "close waiting drain event")
+            Logging.info(TAG, "close waiting drain event")
             once(EVENT_DRAIN, object : Listener {
                 override fun call(vararg args: Any) {
-                    Logger.info(TAG, "close waiting drain success")
+                    Logging.info(TAG, "close waiting drain success")
                     if (upgrading) {
                         waitForUpgrade()
                     } else {
@@ -198,7 +198,7 @@ class EngineSocket(
 
     @WorkThread
     private fun createTransport(name: String): Transport {
-        Logger.info(TAG, "createTransport $name")
+        Logging.info(TAG, "createTransport $name")
         val query = HashMap(opt.query)
         query["EIO"] = "4"
         query["transport"] = name
@@ -225,10 +225,10 @@ class EngineSocket(
 
     @WorkThread
     private fun setTransport(transport: Transport) {
-        Logger.info(TAG, "setTransport ${transport.name}")
+        Logging.info(TAG, "setTransport ${transport.name}")
         val oldTransport = this.transport
         if (oldTransport != null) {
-            Logger.info(TAG, "clearing existing transport ${oldTransport.name}")
+            Logging.info(TAG, "clearing existing transport ${oldTransport.name}")
             for (sub in subs) {
                 sub.destroy()
             }
@@ -244,14 +244,14 @@ class EngineSocket(
                 if (args.isNotEmpty() && args[0] is Int) {
                     onDrain(args[0] as Int)
                 } else {
-                    Logger.error(TAG, "onDrain with wrong args: `${args.joinToString()}`")
+                    Logging.error(TAG, "onDrain with wrong args: `${args.joinToString()}`")
                 }
             }
         }))
         subs.add(On.on(transport, Transport.EVENT_PACKET, object : Listener {
             override fun call(vararg args: Any) {
                 val packet = args.firstOrNull() ?: return
-                Logger.debug(TAG, "transport on packet $packet")
+                Logging.debug(TAG, "transport on packet $packet")
                 if (packet is EngineIOPacket<*>) {
                     onPacket(packet)
                 }
@@ -274,14 +274,14 @@ class EngineSocket(
 
     @WorkThread
     private fun onDrain(len: Int) {
-        Logger.debug(TAG, "onDrain: prevBufferLen $prevBufferLen, writeBuffer.size ${writeBuffer.size}, len $len")
+        Logging.debug(TAG, "onDrain: prevBufferLen $prevBufferLen, writeBuffer.size ${writeBuffer.size}, len $len")
         for (i in 1..len) {
             writeBuffer.removeFirst()
         }
         prevBufferLen -= len
 
         if (writeBuffer.isEmpty()) {
-            Logger.debug(TAG, "onDrain fire socket drain event")
+            Logging.debug(TAG, "onDrain fire socket drain event")
             emit(EVENT_DRAIN)
         } else if (writeBuffer.size > prevBufferLen) {
             flush()
@@ -290,9 +290,9 @@ class EngineSocket(
 
     @WorkThread
     private fun sendPackets(packets: List<EngineIOPacket<*>>) {
-        Logger.debug(TAG, "sendPackets: state $state, $packets")
+        Logging.debug(TAG, "sendPackets: state $state, $packets")
         if (state != State.OPENING && state != State.OPEN) {
-            Logger.error(TAG, "sendPackets at wrong state: $state")
+            Logging.error(TAG, "sendPackets at wrong state: $state")
             return
         }
 
@@ -303,9 +303,9 @@ class EngineSocket(
 
     @WorkThread
     private fun onPacket(packet: EngineIOPacket<*>) {
-        Logger.debug(TAG, "onPacket $packet")
+        Logging.debug(TAG, "onPacket $packet")
         if (inactive()) {
-            Logger.error(TAG, "packet received at wrong state: $state")
+            Logging.error(TAG, "packet received at wrong state: $state")
             return
         }
 
@@ -343,7 +343,7 @@ class EngineSocket(
 
         // In case open handler closes socket
         if (state != State.OPEN) {
-            Logger.info(TAG, "onHandshake skip: state $state")
+            Logging.info(TAG, "onHandshake skip: state $state")
             return
         }
 
@@ -357,14 +357,14 @@ class EngineSocket(
 
     @WorkThread
     private fun onOpen() {
-        Logger.info(TAG, "onOpen")
+        Logging.info(TAG, "onOpen")
         state = State.OPEN
         priorWebsocketSuccess = transport?.name == WebSocket.NAME
         emit(EVENT_OPEN)
         flush()
 
         if (opt.upgrade && transport?.name == PollingXHR.NAME && upgrades.isNotEmpty()) {
-            Logger.info(TAG, "starting upgrade probes")
+            Logging.info(TAG, "starting upgrade probes")
             for (upgrade in upgrades) {
                 probe(upgrade)
             }
@@ -373,7 +373,7 @@ class EngineSocket(
 
     @WorkThread
     private fun flush() {
-        Logger.debug(
+        Logging.debug(
             TAG, "flush: state $state, writable ${transport?.writable}, " +
                     "upgrading $upgrading, prevBufferLen $prevBufferLen, " +
                     "writeBuffer.size ${writeBuffer.size}"
@@ -388,7 +388,7 @@ class EngineSocket(
             transport?.send(ArrayList(packets))
             emit(EVENT_FLUSH)
         } else {
-            Logger.info(
+            Logging.info(
                 TAG, "flush ignored: state $state, transport.writable ${transport?.writable}, " +
                         "upgrading $upgrading, writeBuffer.size ${writeBuffer.size}, prevBufferLen $prevBufferLen"
             )
@@ -397,7 +397,7 @@ class EngineSocket(
 
     @WorkThread
     private fun probe(name: String) {
-        Logger.info(TAG, "probing transport '$name'")
+        Logging.info(TAG, "probing transport '$name'")
         val transport = createTransport(name)
         var failed = false
         priorWebsocketSuccess = false
@@ -407,7 +407,7 @@ class EngineSocket(
 
         val onTransportOpen = object : Listener {
             override fun call(vararg args: Any) {
-                Logger.info(TAG, "probe transport $name opened, failed: $failed")
+                Logging.info(TAG, "probe transport $name opened, failed: $failed")
                 if (failed) {
                     return
                 }
@@ -422,7 +422,7 @@ class EngineSocket(
                         if (args.isNotEmpty() && args[0] is EngineIOPacket.Pong
                             && (args[0] as EngineIOPacket.Pong).payload == PROBE
                         ) {
-                            Logger.info(TAG, "probe transport $name pong")
+                            Logging.info(TAG, "probe transport $name pong")
                             upgrading = true
                             emit(EVENT_UPGRADING, transport)
                             if (cleaned) {
@@ -431,16 +431,16 @@ class EngineSocket(
 
                             priorWebsocketSuccess = transport.name == WebSocket.NAME
                             val currentTransport = this@EngineSocket.transport ?: return
-                            Logger.info(TAG, "pausing current transport ${currentTransport.name}")
+                            Logging.info(TAG, "pausing current transport ${currentTransport.name}")
                             currentTransport.pause {
                                 if (failed || state == State.CLOSED) {
                                     return@pause
                                 }
-                                Logger.info(TAG, "changing transport and sending upgrade packet")
+                                Logging.info(TAG, "changing transport and sending upgrade packet")
                                 cleanUp[0]()
                                 transport.once(EVENT_DRAIN, object : Listener {
                                     override fun call(vararg args: Any) {
-                                        Logger.info(TAG, "upgrade packet send success")
+                                        Logging.info(TAG, "upgrade packet send success")
                                         emit(EVENT_UPGRADE, transport)
                                         setTransport(transport)
                                         cleaned = true
@@ -451,7 +451,7 @@ class EngineSocket(
                                 transport.send(listOf(EngineIOPacket.Upgrade))
                             }
                         } else {
-                            Logger.error(TAG, "probe transport $name failed")
+                            Logging.error(TAG, "probe transport $name failed")
                             emit(EVENT_UPGRADE_ERROR, PROBE_ERROR)
                         }
                     }
@@ -473,19 +473,19 @@ class EngineSocket(
         val onTransportError = object : Listener {
             override fun call(vararg args: Any) {
                 freezeTransport.call()
-                Logger.error(TAG, "probe transport $name failed because of error: ${args.joinToString()}")
+                Logging.error(TAG, "probe transport $name failed because of error: ${args.joinToString()}")
                 emit(EVENT_UPGRADE_ERROR, PROBE_ERROR)
             }
         }
         val onTransportClose = object : Listener {
             override fun call(vararg args: Any) {
-                Logger.error(TAG, "probe transport $name, but transport closed")
+                Logging.error(TAG, "probe transport $name, but transport closed")
                 onTransportError.call("transport closed")
             }
         }
         val onClose = object : Listener {
             override fun call(vararg args: Any) {
-                Logger.error(TAG, "probe transport $name, but socket closed")
+                Logging.error(TAG, "probe transport $name, but socket closed")
                 onTransportError.call("socket closed")
             }
         }
@@ -494,7 +494,7 @@ class EngineSocket(
                 if (args.isNotEmpty() && args[0] is Transport) {
                     val to = args[0] as Transport
                     if (to.name != transport.name) {
-                        Logger.info(TAG, "probe but ${to.name} works, abort ${transport.name}")
+                        Logging.info(TAG, "probe but ${to.name} works, abort ${transport.name}")
                         freezeTransport.call()
                     }
                 }
@@ -535,7 +535,7 @@ class EngineSocket(
     @WorkThread
     private fun onError(msg: String) {
         val log = "transport onError: `$msg`"
-        Logger.error(TAG, log)
+        Logging.error(TAG, log)
         priorWebsocketSuccess = false
         emit(EVENT_ERROR, msg)
         onClose(log)
@@ -547,7 +547,7 @@ class EngineSocket(
             return
         }
 
-        Logger.info(TAG, "onClose $reason")
+        Logging.info(TAG, "onClose $reason")
         pingTimeoutJob?.cancel()
 
         // stop event from firing again for transport

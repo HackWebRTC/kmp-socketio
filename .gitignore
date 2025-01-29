@@ -10,7 +10,6 @@ captures
 local.properties
 
 xcuserdata
-**.xcodeproj
 **.podspec
 Podfile.lock
 Pods

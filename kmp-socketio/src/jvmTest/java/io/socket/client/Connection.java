@@ -1,6 +1,6 @@
 package io.socket.client;
 
-import com.piasy.kmp.socketio.logging.Logger;
+import com.piasy.kmp.xlog.Logging;
 import com.piasy.kmp.socketio.socketio.IO;
 import com.piasy.kmp.socketio.socketio.Socket;
 import kotlin.Unit;
@@ -31,7 +31,7 @@ public abstract class Connection {
 
     @Before
     public void startServer() throws IOException, InterruptedException {
-        Logger.INSTANCE.info(TAG, "Starting server ...");
+        Logging.INSTANCE.info(TAG, "Starting server ...");
 
         final CountDownLatch latch = new CountDownLatch(1);
         serverProcess = Runtime.getRuntime().exec(
@@ -47,10 +47,10 @@ public abstract class Connection {
                     line = reader.readLine();
                     latch.countDown();
                     do {
-                        Logger.INSTANCE.info(TAG, "SERVER OUT: " + line);
+                        Logging.INSTANCE.info(TAG, "SERVER OUT: " + line);
                     } while ((line = reader.readLine()) != null);
                 } catch (IOException e) {
-                    Logger.INSTANCE.error(TAG, "startServer error: " + e.getMessage());
+                    Logging.INSTANCE.error(TAG, "startServer error: " + e.getMessage());
                 }
             }
         });
@@ -62,10 +62,10 @@ public abstract class Connection {
                 String line;
                 try {
                     while ((line = reader.readLine()) != null) {
-                        Logger.INSTANCE.info(TAG, "SERVER ERR: " + line);
+                        Logging.INSTANCE.info(TAG, "SERVER ERR: " + line);
                     }
                 } catch (IOException e) {
-                    Logger.INSTANCE.error(TAG, "startServer error: " + e.getMessage());
+                    Logging.INSTANCE.error(TAG, "startServer error: " + e.getMessage());
                 }
             }
         });
@@ -81,7 +81,7 @@ public abstract class Connection {
             socket2.close();
         }
 
-        Logger.INSTANCE.info(TAG, "Stopping server ...");
+        Logging.INSTANCE.info(TAG, "Stopping server ...");
         serverProcess.destroy();
         serverOutput.cancel(false);
         serverError.cancel(false);

@@ -1,7 +1,7 @@
 package com.piasy.kmp.socketio.engineio
 
 import com.piasy.kmp.socketio.emitter.Emitter
-import com.piasy.kmp.socketio.logging.Logger
+import com.piasy.kmp.xlog.Logging
 import com.piasy.kmp.socketio.parseqs.ParseQS
 import io.ktor.util.date.*
 import kotlinx.coroutines.CoroutineScope
@@ -148,15 +148,15 @@ abstract class Transport(
     }
 
     protected fun logD(log: String) {
-        Logger.debug(TAG, "$name@${hashCode()} $log")
+        Logging.debug(TAG, "$name@${hashCode()} $log")
     }
 
     protected fun logI(log: String) {
-        Logger.info(TAG, "$name@${hashCode()} $log")
+        Logging.info(TAG, "$name@${hashCode()} $log")
     }
 
     protected fun logE(log: String) {
-        Logger.error(TAG, "$name@${hashCode()} $log")
+        Logging.error(TAG, "$name@${hashCode()} $log")
     }
 
     companion object {
