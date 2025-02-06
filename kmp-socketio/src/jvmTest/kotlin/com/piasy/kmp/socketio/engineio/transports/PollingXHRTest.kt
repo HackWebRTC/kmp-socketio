@@ -4,7 +4,6 @@ import com.piasy.kmp.socketio.engineio.BaseTest
 import com.piasy.kmp.socketio.engineio.Transport
 import com.piasy.kmp.socketio.engineio.mockOpen
 import com.piasy.kmp.socketio.engineio.on
-import com.piasy.kmp.xlog.Logging
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*

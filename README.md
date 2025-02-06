@@ -103,6 +103,12 @@ Use Chrome CORS Unblock extension to workaround with CORS error.
 ./gradlew :example:shared:jsBrowserRun
 ```
 
+### WASM JS
+
+ ```bash
+ ./gradlew :example:shared:wasmJsBrowserRun
+ ```
+
 ### Windows
 
 ```bash
