@@ -1,6 +1,6 @@
 package com.piasy.kmp.socketio.socketio
 
-import com.piasy.kmp.xlog.Logging
+//import com.piasy.kmp.xlog.Logging
 import kotlinx.io.bytestring.ByteString
 import org.hildan.socketio.PayloadElement
 import org.hildan.socketio.SocketIOPacket
@@ -20,10 +20,10 @@ class BinaryPacketReconstructor(
                     if (it.attachmentIndex in 0..<buffers.size) {
                         data.add(buffers[it.attachmentIndex])
                     } else {
-                        Logging.error(
-                            Socket.TAG,
-                            "BinaryPacketReconstructor bad index: ${it.attachmentIndex}, ${buffers.size}"
-                        )
+                        //Logging.error((
+//                            Socket.TAG,
+//                            "BinaryPacketReconstructor bad index: ${it.attachmentIndex}, ${buffers.size}"
+//                        )
                     }
                 } else {
                     data.add((it as PayloadElement.Json).jsonElement)

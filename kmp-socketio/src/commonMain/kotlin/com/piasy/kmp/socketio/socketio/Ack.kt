@@ -1,6 +1,6 @@
 package com.piasy.kmp.socketio.socketio
 
-import com.piasy.kmp.xlog.Logging
+//import com.piasy.kmp.xlog.Logging
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -14,27 +14,27 @@ abstract class AckWithTimeout(val timeout: Long) : Ack {
     private var job: Job? = null
 
     override fun call(vararg args: Any) {
-        Logging.info(TAG, "@${hashCode()} ack success")
+        //Logging.info(TAG, "@${hashCode()} ack success")
         job?.cancel()
         onSuccess(*args)
     }
 
     internal fun schedule(scope: CoroutineScope, block: () -> Unit) {
         if (job != null) {
-            Logging.error(TAG, "@${hashCode()} schedule error: already scheduled")
+            //Logging.error((TAG, "@${hashCode()} schedule error: already scheduled")
             return
         }
-        Logging.info(TAG, "@${hashCode()} schedule ack timeout $timeout")
+        ////Logging.info(TAG, "@${hashCode()} schedule ack timeout $timeout")
         job = scope.launch {
             delay(timeout)
-            Logging.info(TAG, "@${hashCode()} ack timeout $timeout")
+            //Logging.info(TAG, "@${hashCode()} ack timeout $timeout")
             block()
             onTimeout()
         }
     }
 
     internal fun cancel() {
-        Logging.info(TAG, "@${hashCode()} cancel timeout")
+        //Logging.info(TAG, "@${hashCode()} cancel timeout")
         job?.cancel()
     }
 

@@ -1,6 +1,6 @@
 package com.piasy.kmp.socketio.socketio
 
-import com.piasy.kmp.xlog.Logging
+//import com.piasy.kmp.xlog.Logging
 import io.ktor.http.Url
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -27,7 +27,7 @@ object IO {
     @JvmStatic
     fun socket(uri: String, opt: Options, block: (Socket) -> Unit) {
         scope.launch {
-            Logging.info(TAG, "socket: uri $uri, opt $opt")
+            //Logging.info(TAG, "socket: uri $uri, opt $opt")
             val url = Url(uri)
             val id = "${url.protocol}://${url.host}:${url.port}"
             val sameNsp = managers.containsKey(id)
@@ -37,11 +37,11 @@ object IO {
             // url queries will be handled in EngineSocket
 
             val io = if (newConn) {
-                Logging.info(TAG, "socket newConn, sameNsp $sameNsp")
+                //Logging.info(TAG, "socket newConn, sameNsp $sameNsp")
                 Manager(uri, opt, scope)
             } else {
                 managers.getOrElse(id) {
-                    Logging.info(TAG, "socket not newConn, but create one")
+                    //Logging.info(TAG, "socket not newConn, but create one")
                     val manager = Manager(uri, opt, scope)
                     managers[id] = manager
                     manager

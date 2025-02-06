@@ -5,7 +5,7 @@ import com.piasy.kmp.socketio.engineio.EngineSocket
 import com.piasy.kmp.socketio.engineio.On
 import com.piasy.kmp.socketio.engineio.State
 import com.piasy.kmp.socketio.engineio.WorkThread
-import com.piasy.kmp.xlog.Logging
+//import com.piasy.kmp.xlog.Logging
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -92,7 +92,7 @@ class Manager(
      */
     @WorkThread
     fun open(callback: ((String) -> Unit)? = null) {
-        Logging.info(TAG, "open, state $state, uri $uri")
+        //Logging.info(TAG, "open, state $state, uri $uri")
         if (state != State.INIT && state != State.CLOSED) {
             return
         }
@@ -116,7 +116,7 @@ class Manager(
         })
         val errorSub = On.on(socket, EngineSocket.EVENT_ERROR, object : Listener {
             override fun call(vararg args: Any) {
-                Logging.error(TAG, "open connect_error")
+                //Logging.error((TAG, "open connect_error")
                 cleanUp()
                 state = State.CLOSED
                 emit(EVENT_ERROR, *args)
@@ -130,7 +130,7 @@ class Manager(
         })
 
         val onTimeout = {
-            Logging.error(TAG, "connect attempt timed out after ${opt.timeout}")
+            //Logging.error((TAG, "connect attempt timed out after ${opt.timeout}")
             openSub.destroy()
             socket.close()
             socket.emit(EngineSocket.EVENT_ERROR, "timeout")
@@ -157,7 +157,7 @@ class Manager(
 
     @WorkThread
     private fun onOpen() {
-        Logging.info(TAG, "onOpen, state $state")
+        //Logging.info(TAG, "onOpen, state $state")
         if (state != State.OPENING) {
             return
         }
@@ -169,7 +169,7 @@ class Manager(
         subs.add(On.on(socket, EngineSocket.EVENT_DATA, object : Listener {
             override fun call(vararg args: Any) {
                 if (args.isNotEmpty()) {
-                    Logging.debug(TAG, "on EngineSocket data ${args[0]::class}")
+                    //Logging.debug((TAG, "on EngineSocket data ${args[0]::class}")
                     emit(EVENT_PACKET, args[0])
                 }
             }
@@ -196,7 +196,7 @@ class Manager(
 
     @WorkThread
     private fun cleanUp() {
-        Logging.info(TAG, "cleanUp")
+        //Logging.info(TAG, "cleanUp")
         for (sub in subs) {
             sub.destroy()
         }
@@ -205,13 +205,13 @@ class Manager(
 
     @WorkThread
     private fun onError(error: String) {
-        Logging.error(TAG, "onError `$error`")
+        //Logging.error((TAG, "onError `$error`")
         emit(EVENT_ERROR, error)
     }
 
     @WorkThread
     internal fun close() {
-        Logging.info(TAG, "close")
+        //Logging.info(TAG, "close")
         skipReconnect = true
         reconnecting = false
         cleanUp()
@@ -223,7 +223,7 @@ class Manager(
 
     @WorkThread
     private fun onClose(reason: String) {
-        Logging.info(TAG, "onClose `$reason`, reconnection ${opt.reconnection}, skipReconnect $skipReconnect")
+        //Logging.info(TAG, "onClose `$reason`, reconnection ${opt.reconnection}, skipReconnect $skipReconnect")
         cleanUp()
         opt.backoff.reset()
         state = State.CLOSED
@@ -237,10 +237,10 @@ class Manager(
     @WorkThread
     private fun maybeReconnectOnOpen() {
         // Only try to reconnect if it's the first time we're connecting
-        Logging.info(
-            TAG, "maybeReconnectOnOpen: reconnecting $reconnecting, " +
-                    "reconnection ${opt.reconnection}, attempts ${opt.backoff.attempts}"
-        )
+        //Logging.info(
+//            TAG, "maybeReconnectOnOpen: reconnecting $reconnecting, " +
+//                    "reconnection ${opt.reconnection}, attempts ${opt.backoff.attempts}"
+//        )
         if (!reconnecting && opt.reconnection && opt.backoff.attempts == 0) {
             reconnect()
         }
@@ -248,41 +248,41 @@ class Manager(
 
     @WorkThread
     private fun reconnect() {
-        Logging.info(TAG, "reconnect: reconnecting $reconnecting, skipReconnect $skipReconnect")
+        //Logging.info(TAG, "reconnect: reconnecting $reconnecting, skipReconnect $skipReconnect")
         if (reconnecting || skipReconnect) {
             return
         }
         if (opt.backoff.attempts >= opt.reconnectionAttempts) {
-            Logging.error(TAG, "reconnect failed")
+            //Logging.error((TAG, "reconnect failed")
             opt.backoff.reset()
             emit(EVENT_RECONNECT_FAILED)
             reconnecting = false
         } else {
             val delay = opt.backoff.duration
-            Logging.info(TAG, "reconnect will wait $delay ms before attempt")
+            //Logging.info(TAG, "reconnect will wait $delay ms before attempt")
             reconnecting = true
             val job = scope.launch {
                 delay(delay)
                 if (skipReconnect) {
-                    Logging.info(TAG, "reconnect skip after delay")
+                    //Logging.info(TAG, "reconnect skip after delay")
                     return@launch
                 }
-                Logging.info(TAG, "reconnect attempting")
+                //Logging.info(TAG, "reconnect attempting")
                 emit(EVENT_RECONNECT_ATTEMPT, opt.backoff.attempts)
 
                 // check again for the case socket closed in above events
                 if (skipReconnect) {
-                    Logging.info(TAG, "reconnect skip after EVENT_RECONNECT_ATTEMPT")
+                    //Logging.info(TAG, "reconnect skip after EVENT_RECONNECT_ATTEMPT")
                     return@launch
                 }
 
                 open {
                     reconnecting = false
                     if (it.isEmpty()) {
-                        Logging.info(TAG, "reconnect success")
+                        //Logging.info(TAG, "reconnect success")
                         emit(EVENT_RECONNECT, opt.backoff.reset())
                     } else {
-                        Logging.error(TAG, "reconnect attempt error")
+                        //Logging.error((TAG, "reconnect attempt error")
                         reconnect()
                         emit(EVENT_RECONNECT_ERROR, it)
                     }
@@ -305,7 +305,7 @@ class Manager(
      */
     @WorkThread
     internal fun socket(nsp: String, auth: Map<String, String>): Socket {
-        Logging.info(TAG, "socket: nsp $nsp, auth $auth")
+        //Logging.info(TAG, "socket: nsp $nsp, auth $auth")
         return nsps.getOrElse(nsp) {
             val sock = Socket(this, nsp, auth, scope)
             nsps[nsp] = sock
@@ -315,16 +315,16 @@ class Manager(
 
     @WorkThread
     internal fun packets(packets: List<EngineIOPacket<*>>) {
-        Logging.debug(TAG, "send packets $packets")
+        //Logging.debug((TAG, "send packets $packets")
         engine?.send(packets)
     }
 
     @WorkThread
     internal fun destroy() {
-        Logging.info(TAG, "destroy")
+        //Logging.info(TAG, "destroy")
         for ((nsp, sock) in nsps) {
             if (sock.active()) {
-                Logging.info(TAG, "destroy with socket in $nsp still active, skip")
+                //Logging.info(TAG, "destroy with socket in $nsp still active, skip")
                 return
             }
         }

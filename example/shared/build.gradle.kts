@@ -1,3 +1,6 @@
+import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
+import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
+
 plugins {
     alias(libs.plugins.kmp)
 
@@ -37,6 +40,12 @@ kotlin {
         }
         binaries.executable()
     }
+    @OptIn(ExperimentalWasmDsl::class)
+    wasmJs {
+        browser {
+        }
+        binaries.executable()
+    }
 
     listOf(/*linuxX64(), */mingwX64()).forEach {
         it.binaries {
@@ -52,6 +61,11 @@ kotlin {
             dependencies {
                 //implementation("${Consts.releaseGroup}:${Consts.releaseName}:${Consts.releaseVersion}")
                 implementation(project(":kmp-socketio"))
+            }
+        }
+        wasmJsMain {
+            dependencies {
+                implementation(libs.kotlinx.browser)
             }
         }
     }
