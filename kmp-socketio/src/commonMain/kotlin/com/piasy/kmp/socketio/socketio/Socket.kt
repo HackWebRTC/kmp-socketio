@@ -2,7 +2,7 @@ package com.piasy.kmp.socketio.socketio
 
 import com.piasy.kmp.socketio.emitter.Emitter
 import com.piasy.kmp.socketio.engineio.*
-//import com.piasy.kmp.xlog.Logging
+import com.piasy.kmp.xlog.Logging
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.io.bytestring.ByteString
@@ -35,7 +35,7 @@ class Socket(
     @CallerThread
     fun open() {
         scope.launch {
-            //Logging.info(TAG, "open: connected $connected, io reconnecting ${io.reconnecting}")
+            Logging.info(TAG, "open: connected $connected, io reconnecting ${io.reconnecting}")
             if (connected || io.reconnecting) {
                 return@launch
             }
@@ -54,7 +54,7 @@ class Socket(
     @CallerThread
     fun close() {
         scope.launch {
-            //Logging.info(TAG, "close: connected $connected")
+            Logging.info(TAG, "close: connected $connected")
             if (connected) {
                 io.packets(listOf(EngineIOPacket.Message(SocketIOPacket.Disconnect(nsp))))
             }
@@ -99,10 +99,10 @@ class Socket(
 
     @WorkThread
     private fun emitWithAck(event: String, args: Array<out Any>, ack: Ack?) {
-        //Logging.debug((TAG, "emitWithAck: $event, ${args.joinToString()}, ack $ack")
+        Logging.debug(TAG, "emitWithAck: $event, ${args.joinToString()}, ack $ack")
         val ackId = if (ack != null) this.ackId else null
         if (ack != null && ackId != null) {
-            //Logging.info(TAG, "emit with ack id $ackId")
+            Logging.info(TAG, "emit with ack id $ackId")
             if (ack is AckWithTimeout) {
                 ack.schedule(scope) {
                     // remove the ack from the map (to prevent an actual acknowledgement)
@@ -190,7 +190,7 @@ class Socket(
 
     @WorkThread
     private fun subEvents() {
-        //Logging.info(TAG, "subEvents: subs ${subs.size}")
+        Logging.info(TAG, "subEvents: subs ${subs.size}")
         if (subs.isNotEmpty()) {
             return
         }
@@ -228,7 +228,7 @@ class Socket(
 
     @WorkThread
     private fun onOpen() {
-        //Logging.info(TAG, "onOpen")
+        Logging.info(TAG, "onOpen")
         val auth = if (auth.isEmpty()) {
             null
         } else {
@@ -239,7 +239,7 @@ class Socket(
 
     @WorkThread
     private fun onPacket(packet: SocketIOPacket) {
-        //Logging.debug((TAG, "onPacket: nsp $nsp, $packet")
+        Logging.debug(TAG, "onPacket: nsp $nsp, $packet")
         if (nsp != packet.namespace) {
             return
         }
@@ -260,7 +260,7 @@ class Socket(
             }
 
             is SocketIOPacket.Event -> {
-                //Logging.debug((TAG, "onEvent $packet")
+                Logging.debug(TAG, "onEvent $packet")
                 onEvent(packet.ackId, ArrayList(packet.payload))
             }
 
@@ -271,10 +271,10 @@ class Socket(
                     onError("Receive binary event/ack while reconstructing binary packet, $packet")
                     // let's just reconstruct a new binary packet
                 }
-                //Logging.info(TAG, "start reconstructing binary packet, $packet")
+                Logging.info(TAG, "start reconstructing binary packet, $packet")
                 reconstructor =
                     BinaryPacketReconstructor(packet as SocketIOPacket.BinaryMessage) { isAck, ackId, data ->
-                        //Logging.info(TAG, "finish reconstructing binary packet, isAck $isAck, ackId $ackId")
+                        Logging.info(TAG, "finish reconstructing binary packet, isAck $isAck, ackId $ackId")
                         if (isAck) {
                             onAck(ackId!!, data)
                         } else {
@@ -288,13 +288,13 @@ class Socket(
 
     @WorkThread
     private fun onError(msg: String) {
-        //Logging.error((TAG, msg)
+        Logging.error(TAG, msg)
         super.emit(EVENT_ERROR, msg)
     }
 
     @WorkThread
     private fun onConnect(id: String) {
-        //Logging.info(TAG, "onConnect sid $id")
+        Logging.info(TAG, "onConnect sid $id")
         connected = true
         this.id = id
 
@@ -309,7 +309,7 @@ class Socket(
 
     @WorkThread
     private fun onDisconnect() {
-        //Logging.info(TAG, "onDisconnect")
+        Logging.info(TAG, "onDisconnect")
         destroy()
         onClose("io server disconnect")
     }
@@ -317,7 +317,7 @@ class Socket(
     @WorkThread
     private fun onEvent(eventId: Int?, data: ArrayList<Any>) {
         if (eventId != null) {
-            //Logging.debug((TAG, "attaching ack callback to event")
+            Logging.debug(TAG, "attaching ack callback to event")
             data.add(createAck(eventId))
         }
         if (data.isEmpty()) {
@@ -360,7 +360,7 @@ class Socket(
                     return@launch
                 }
                 sent = true
-                //Logging.info(TAG, "sending ack: id $ackId ${args.joinToString()}")
+                Logging.info(TAG, "sending ack: id $ackId ${args.joinToString()}")
 
                 val packets = if (args.hasBinary()) {
                     binaryPackets(args) { payloads, nAttachments ->
@@ -380,7 +380,7 @@ class Socket(
     private fun onAck(ackId: Int, data: ArrayList<Any>) {
         val fn = this.ack.remove(ackId)
         if (fn != null) {
-            //Logging.info(TAG, "calling ack $ackId with $data")
+            Logging.info(TAG, "calling ack $ackId with $data")
             val args = Array(data.size) {
                 when (val elem = data[it]) {
                     is JsonElement -> elem.flatPrimitive()
@@ -389,13 +389,13 @@ class Socket(
             }
             fn.call(*args)
         } else {
-            //Logging.info(TAG, "bad ack $ackId")
+            Logging.info(TAG, "bad ack $ackId")
         }
     }
 
     @WorkThread
     private fun onManagerError(error: String) {
-        //Logging.error((TAG, "onManagerError: `$error`")
+        Logging.error(TAG, "onManagerError: `$error`")
         if (!connected) {
             super.emit(EVENT_CONNECT_ERROR, error)
         }
@@ -403,7 +403,7 @@ class Socket(
 
     @WorkThread
     private fun onClose(reason: String) {
-        //Logging.info(TAG, "onClose: `$reason`")
+        Logging.info(TAG, "onClose: `$reason`")
         connected = false
         id = ""
         super.emit(EVENT_DISCONNECT, reason)
@@ -504,7 +504,7 @@ private fun JsonElement.flatPrimitive(): Any {
                     if (doubleVal != null) {
                         return doubleVal
                     }
-                    //Logging.error(("JSON", "bad json primitive $this")
+                    Logging.error("JSON", "bad json primitive $this")
                     return 0
                 }
             }

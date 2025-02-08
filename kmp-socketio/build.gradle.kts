@@ -53,7 +53,7 @@ kotlin {
                 api(libs.ktor.client.core)
                 api(libs.ktor.client.logging)
                 api(libs.ktor.client.websockets)
-//                api(libs.kmpXlog)
+                api(libs.kmpXlog)
             }
         }
         jvmMain {
