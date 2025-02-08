@@ -63,7 +63,7 @@ object DefaultHttpClientFactory : HttpClientFactory {
         install(Logging) {
             logger = object : io.ktor.client.plugins.logging.Logger {
                 override fun log(message: String) {
-//                    com.piasy.kmp.xlog.Logging.info("Net", message)
+                    com.piasy.kmp.xlog.Logging.info("Net", message)
                 }
             }
             level = LogLevel.ALL

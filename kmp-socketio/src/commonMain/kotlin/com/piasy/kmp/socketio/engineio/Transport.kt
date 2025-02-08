@@ -149,17 +149,14 @@ abstract class Transport(
 
     protected fun logD(log: String) {
         Logging.debug(TAG, "$name@${hashCode()} $log")
-        println("$TAG D $name@${hashCode()} $log")
     }
 
     protected fun logI(log: String) {
         Logging.info(TAG, "$name@${hashCode()} $log")
-        println("$TAG I $name@${hashCode()} $log")
     }
 
     protected fun logE(log: String) {
         Logging.error(TAG, "$name@${hashCode()} $log")
-        println("$TAG E $name@${hashCode()} $log")
     }
 
     companion object {

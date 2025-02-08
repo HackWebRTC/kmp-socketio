@@ -24,7 +24,7 @@ abstract class AckWithTimeout(val timeout: Long) : Ack {
             Logging.error(TAG, "@${hashCode()} schedule error: already scheduled")
             return
         }
-        //Logging.info(TAG, "@${hashCode()} schedule ack timeout $timeout")
+        Logging.info(TAG, "@${hashCode()} schedule ack timeout $timeout")
         job = scope.launch {
             delay(timeout)
             Logging.info(TAG, "@${hashCode()} ack timeout $timeout")
