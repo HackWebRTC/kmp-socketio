@@ -96,7 +96,7 @@ Use Chrome CORS Unblock extension to workaround with CORS error.
 Use Chrome CORS Unblock extension to workaround with CORS error.
 
  ```bash
- ./gradlew :example:shared:wasmJsBrowserRun
+./gradlew :example:shared:wasmJsBrowserRun
  ```
 
 ### Windows
@@ -127,6 +127,7 @@ Maven central portal credentials and signing configs are set in `~/.gradle/gradl
     publishIosX64PublicationToMavenCentralRepository \
     publishMacosArm64PublicationToMavenCentralRepository \
     publishMacosX64PublicationToMavenCentralRepository \
+    publishWasmJsPublicationToMavenCentralRepository \
     publishJsPublicationToMavenCentralRepository \
     --no-configuration-cache
 ```
