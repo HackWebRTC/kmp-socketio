@@ -9,7 +9,8 @@ KMP (pure Kotlin) implementation of SocketIO client.
 |      Platform      | 🛠Builds🛠 + 🔬Tests🔬 |
 | :----------------: | :------------------: |
 |      `JVM` 17      |          🚀          |
-| `Browser` (Chrome) |          🚀          |
+| `JS`     (Chrome)  |          🚀          |
+| `WasmJS` (Chrome)  |          🚀          |
 |     `Android`      |          🚀          |
 |       `iOS`        |          🚀          |
 |      `macOS`       |          🚀          |
@@ -63,25 +64,12 @@ Most of the APIs are the same as socket.io-client-java, here are some difference
 - Create socket is asynchronous, to make it's easier to guarantee thread safety.
 - Binary messages can't be nested, because `emit` only accepts String/Boolean/Number/JsonElement/ByteString, other types will be converted to String using `toString()`, so there is no way to put ByteString in JsonElement.
 
-### Set logging callback
-
-```kotlin
-Logger.setLogger(object : LoggerInterface {
-    override fun debug(tag: String, log: String) {
-        TODO("Not yet implemented")
-    }
-
-    override fun info(tag: String, log: String) {
-        TODO("Not yet implemented")
-    }
-
-    override fun error(tag: String, log: String) {
-        TODO("Not yet implemented")
-    }
-})
-```
+### Logging with [kmp-xlog](https://github.com/HackWebRTC/kmp-xlog)
 
 ## Example
+
+Before running examples, run `node kmp-socketio/src/jvmTest/resources/socket-server.js` to start the socket-io echo server,
+and update the local IP address in `example/shared/src/commonMain/kotlin/com/piasy/kmp/socketio/example/Greeting.kt`.
 
 ### Android
 
@@ -104,6 +92,8 @@ Use Chrome CORS Unblock extension to workaround with CORS error.
 ```
 
 ### WASM JS
+
+Use Chrome CORS Unblock extension to workaround with CORS error.
 
  ```bash
  ./gradlew :example:shared:wasmJsBrowserRun

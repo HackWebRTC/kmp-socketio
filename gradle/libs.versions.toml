@@ -4,14 +4,12 @@ iosDeploymentTarget = "14.0"
 compileSdk = "35"
 minSdk = "21"
 targetSdk = "35"
-agp = "8.8.0"
+agp = "8.7.3"
 kotlin = "2.1.0"
 mockk = "1.13.16"
 ktor = "3.0.3"
 coroutine = "1.10.1"
-compose = "1.7.6"
-kotlinxBrowser = "0.3"
-kmpXlog = "1.3.1"
+compose = "1.7.7"
 
 [libraries]
 junit = "junit:junit:4.13.2"
@@ -22,7 +20,7 @@ kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-t
 json = "org.json:json:20250107"
 socketioParser = "org.hildan.socketio:socketio-kotlin:2.0.0"
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutine" }
-kotlinx-browser = { module = "org.jetbrains.kotlinx:kotlinx-browser", version.ref = "kotlinxBrowser" }
+kotlinx-browser = "org.jetbrains.kotlinx:kotlinx-browser:0.3"
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-websockets = { module = "io.ktor:ktor-client-websockets", version.ref = "ktor" }
 ktor-client-logging = { module = "io.ktor:ktor-client-logging", version.ref = "ktor" }
@@ -34,7 +32,7 @@ ktor-client-curl = { module = "io.ktor:ktor-client-curl", version.ref = "ktor" }
 ktor-client-js = { module = "io.ktor:ktor-client-js", version.ref = "ktor" }
 ktor-client-java = { module = "io.ktor:ktor-client-java", version.ref = "ktor" }
 ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
-kmpXlog = { module = "com.piasy:kmp-xlog", version.ref = "kmpXlog" }
+kmpXlog = "com.piasy:kmp-xlog:1.3.1"
 
 androidx-compose-ui = { module = "androidx.compose.ui:ui", version.ref = "compose" }
 androidx-compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "compose" }

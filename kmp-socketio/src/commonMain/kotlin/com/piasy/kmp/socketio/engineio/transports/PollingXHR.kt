@@ -142,7 +142,7 @@ open class PollingXHR(
             } else {
                 EngineIO.decodeHttpBatch(data, SocketIO::decode)
             }
-        } catch (e: InvalidSocketIOPacketException) {
+        } catch (e: Exception) { // InvalidSocketIOPacketException | InvalidEngineIOPacketException
             val log = "onPollComplete decode error: ${e.message}"
             logE(log)
             onError(log)

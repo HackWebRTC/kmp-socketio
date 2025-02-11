@@ -10,19 +10,14 @@ import kotlinx.io.bytestring.unsafe.UnsafeByteStringOperations
 class Greeting {
     @OptIn(UnsafeByteStringApi::class)
     fun greet() {
-        IO.socket(
-            "https://echo.websocket.org/",
-            IO.Options().apply {
-                transports = listOf("websocket")
-            }
-        ) { socket ->
+        IO.socket("http://172.16.11.25:3000", IO.Options()) { socket ->
             socket.on(Socket.EVENT_CONNECT) { args ->
-                println("on connect ${args.joinToString()}")
+                println("Greeting on connect ${args.joinToString()}")
 
                 val bin = UnsafeByteStringOperations.wrapUnsafe(byteArrayOf(0x1, 0x3, 0x1, 0x4))
                 socket.emit("echo", 1, "2", bin, GMTDate())
             }.on("echoBack") { args ->
-                println("on echoBack ${args.joinToString()}")
+                println("Greeting on echoBack ${args.joinToString()}")
             }
 
             socket.open()
