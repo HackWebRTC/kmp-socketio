@@ -28,7 +28,6 @@ kotlin {
     mingwX64 {}
     @OptIn(ExperimentalWasmDsl::class)
     wasmJs {
-        moduleName = "kmp-socketio"
         browser {
         }
         binaries.executable()
