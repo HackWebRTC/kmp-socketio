@@ -15,6 +15,7 @@ import kotlinx.io.bytestring.unsafe.UnsafeByteStringApi
 import kotlinx.io.bytestring.unsafe.UnsafeByteStringOperations
 import org.hildan.socketio.EngineIO
 import org.hildan.socketio.EngineIOPacket
+import org.hildan.socketio.InvalidEngineIOPacketException
 import org.hildan.socketio.InvalidSocketIOPacketException
 import org.hildan.socketio.SocketIOPacket
 
@@ -108,7 +109,7 @@ open class WebSocket(
                 } else {
                     EngineIO.decodeSocketIO(data)
                 }
-            } catch (e: InvalidSocketIOPacketException) {
+            } catch (e: InvalidEngineIOPacketException) {
                 val log = "onWsText decode error: ${e.message}"
                 logE(log)
                 onError(log)

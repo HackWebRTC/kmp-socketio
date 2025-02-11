@@ -1,4 +1,5 @@
 import com.vanniktech.maven.publish.SonatypeHost
+import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 
 plugins {
     alias(libs.plugins.kmp)
@@ -25,6 +26,12 @@ kotlin {
         binaries.executable()
     }
     mingwX64 {}
+    @OptIn(ExperimentalWasmDsl::class)
+    wasmJs {
+        browser {
+        }
+        binaries.executable()
+    }
 
     // Ktor's curl engine doesn't support websockets now,
     // although CIO engine supports websockets, but it doesn't support TLS.
@@ -83,6 +90,11 @@ kotlin {
         mingwMain {
             dependencies {
                 api(libs.ktor.client.winhttp)
+            }
+        }
+        wasmJsMain {
+            dependencies {
+                api(libs.ktor.client.wasm)
             }
         }
     }
