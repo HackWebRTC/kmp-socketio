@@ -5,10 +5,10 @@ plugins {
 }
 
 android {
-    namespace = "${Consts.androidNS.replace('_', '.')}.android"
+    namespace = "${Consts.androidNS}.android"
     compileSdk = libs.versions.compileSdk.get().toInt()
     defaultConfig {
-        applicationId = "${Consts.androidNS.replace('_', '.')}.android"
+        applicationId = "${Consts.androidNS}.android"
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = libs.versions.targetSdk.get().toInt()
         versionCode = 1

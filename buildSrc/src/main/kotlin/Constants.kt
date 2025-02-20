@@ -3,5 +3,5 @@ object Consts {
   const val releaseName = "kmp-socketio"
   const val releaseVersion = "1.1.2"
 
-  val androidNS = "$releaseGroup.${releaseName.replace('-', '_')}"
+  val androidNS = "$releaseGroup.${releaseName.replace('-', '.')}"
 }
