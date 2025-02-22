@@ -301,8 +301,10 @@ class Socket(
         recvBuffer.forEach { fireEvent(it) }
         recvBuffer.clear()
 
-        io.packets(sendBuffer)
-        sendBuffer.clear()
+        if (sendBuffer.isNotEmpty()) {
+            io.packets(sendBuffer)
+            sendBuffer.clear()
+        }
 
         super.emit(EVENT_CONNECT)
     }

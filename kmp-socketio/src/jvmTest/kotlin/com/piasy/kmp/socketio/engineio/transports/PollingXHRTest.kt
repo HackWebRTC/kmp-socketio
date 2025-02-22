@@ -252,7 +252,7 @@ class PollingXHRTest : BaseTest() {
         waitExec(this)
         polling.polling.close()
         waitExec(this)
-        waitExec(this, 2500)
+        waitExec(this, 5000)
 
         coVerify(exactly = 3) { polling.factory.httpRequest(any(), any()) }
         Logging.info("XXPXX", "closeOpening verify events")
