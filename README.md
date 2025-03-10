@@ -78,7 +78,12 @@ Open the project (the repo root dir) in Android studio, and run the example.andr
 ### iOS
 
 ```bash
+brew install cocoapods xcodegen
+# if you have installed them earlier, you need to remove them at first,
+# or run brew link --overwrite xcodegen cocoapods
+
 cd example/iosApp
+xcodegen
 pod install
 # open iosApp.xcworkspace in Xcode, and run it.
 ```

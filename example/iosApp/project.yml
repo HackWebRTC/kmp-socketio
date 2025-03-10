@@ -1,0 +1,17 @@
+name: iosApp
+targets:
+  iosApp:
+    type: application
+    platform: iOS
+    deploymentTarget: "14.0"
+    sources:
+      - path: iosApp
+    settings:
+      LIBRARY_SEARCH_PATHS: "$(inherited)"
+      OTHER_LDFLAGS: "$(inherited)"
+      FRAMEWORK_SEARCH_PATHS: "$(inherited)"
+      CLANG_WARN_DOCUMENTATION_COMMENTS: "NO"
+      TARGETED_DEVICE_FAMILY: "1,2"
+      ASSETCATALOG_COMPILER_APPICON_NAME: "AppIcon"
+      ONLY_ACTIVE_ARCH: "NO"
+      VALID_ARCHS: "arm64"
