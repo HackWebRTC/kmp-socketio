@@ -1,5 +1,8 @@
 package com.piasy.kmp.socketio.socketio
 
+import com.kgit2.kommand.process.Child
+import com.kgit2.kommand.process.Command
+import com.kgit2.kommand.process.Stdio
 import com.piasy.kmp.xlog.Logging
 import io.ktor.client.*
 import io.ktor.client.engine.curl.*
@@ -15,36 +18,26 @@ import kotlinx.coroutines.withTimeout
 import org.hildan.socketio.EngineIO
 import org.hildan.socketio.EngineIOPacket
 import org.hildan.socketio.SocketIO
-import platform.posix.*
 import kotlin.test.Test
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 class ConnectionTestLinux : ConnectionTest() {
-    private var pid = -1
+    private var server: Child? = null
 
     override fun startServer() {
         Logging.info(TAG, "startServer")
-        pid = fork()
-        if (pid == 0) {
-            val command = "node src/jvmTest/resources/socket-server.js /"
-            val res = execlp("/bin/sh", "sh", "-c", command, null)
-            Logging.info(TAG, "startServer res: $res")
-        } else {
-            Logging.info(TAG, "startServer pid: $pid")
-        }
+        server = Command("node")
+            .args(listOf("src/jvmTest/resources/socket-server.js", "/"))
+            .stdout(Stdio.Inherit)
+            .spawn()
+        Logging.info(TAG, "startServer finish")
     }
 
     override fun stopServer() {
-        Logging.info(TAG, "stopServer pid: $pid")
-        if (pid > 0) {
-            val res1 = kill(pid, SIGINT)
-            val res2 = kill(pid + 1, SIGINT)
-            Logging.info(TAG, "stopServer kill res: $res1 $res2")
-            val res3 = waitpid(pid, null, 0)
-            val res4 = waitpid(pid + 1, null, 0)
-            Logging.info(TAG, "stopServer wait res: $res3 $res4")
-        }
+        Logging.info(TAG, "stopServer")
+        server?.kill()
+        Logging.info(TAG, "stopServer finish")
     }
 
     @Test

@@ -98,6 +98,11 @@ kotlin {
                 api(libs.ktor.client.curl)
             }
         }
+        linuxTest {
+            dependencies {
+                implementation(libs.kommand)
+            }
+        }
         wasmJsMain {
             dependencies {
                 api(libs.ktor.client.wasm)

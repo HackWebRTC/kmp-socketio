@@ -18,6 +18,8 @@ kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotl
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutine" }
 json = "org.json:json:20250107"
+kommand = "com.kgit2:kommand:2.3.0"
+
 socketioParser = "org.hildan.socketio:socketio-kotlin:2.0.0"
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutine" }
 kotlinx-browser = "org.jetbrains.kotlinx:kotlinx-browser:0.3"
