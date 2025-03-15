@@ -48,6 +48,7 @@ io.of("/no").use((socket, next) => {
 });
 
 io.of(nsp).on('connection', function(socket) {
+  console.log('on connection');
   socket.send('hello client');
 
   socket.on('message', function() {
@@ -57,7 +58,9 @@ io.of(nsp).on('connection', function(socket) {
 
   socket.on('echo', function() {
     var args = slice.call(arguments);
+    console.log('on echo', args);
     socket.emit.apply(socket, ['echoBack'].concat(args));
+    console.log('echoBack sent');
   });
 
   socket.on('ack', function() {

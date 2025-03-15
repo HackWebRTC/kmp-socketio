@@ -1,4 +1,3 @@
-import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
 
 plugins {
@@ -40,27 +39,8 @@ kotlin {
         }
         binaries.executable()
     }
-    @OptIn(ExperimentalWasmDsl::class)
-    wasmJs {
-        moduleName = "example"
-        browser {
-            val rootDirPath = project.rootDir.path
-            val projectDirPath = project.projectDir.path
-            commonWebpackConfig {
-                outputFileName = "composeApp.js"
-                devServer = (devServer ?: KotlinWebpackConfig.DevServer()).apply {
-                    static = (static ?: mutableListOf()).apply {
-                        // Serve sources to debug inside browser
-                        add(rootDirPath)
-                        add(projectDirPath)
-                    }
-                }
-            }
-        }
-        binaries.executable()
-    }
 
-    listOf(/*linuxX64(), */mingwX64()).forEach {
+    listOf(linuxX64(), mingwX64()).forEach {
         it.binaries {
             executable("kmp_socketio") {
                 entryPoint = "com.piasy.kmp.socketio.example.main"
@@ -74,11 +54,6 @@ kotlin {
             dependencies {
                 //implementation("${Consts.releaseGroup}:${Consts.releaseName}:${Consts.releaseVersion}")
                 implementation(project(":kmp-socketio"))
-            }
-        }
-        wasmJsMain {
-            dependencies {
-                implementation(libs.kotlinx.browser)
             }
         }
     }

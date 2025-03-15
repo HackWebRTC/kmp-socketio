@@ -99,7 +99,9 @@ class Socket(
 
     @WorkThread
     private fun emitWithAck(event: String, args: Array<out Any>, ack: Ack?) {
-        Logging.debug(TAG, "emitWithAck: $event, ${args.joinToString()}, ack $ack")
+        if (Logging.debug()) {
+            Logging.debug(TAG, "emitWithAck: $event, ${args.joinToString()}, ack $ack")
+        }
         val ackId = if (ack != null) this.ackId else null
         if (ack != null && ackId != null) {
             Logging.info(TAG, "emit with ack id $ackId")
@@ -239,7 +241,9 @@ class Socket(
 
     @WorkThread
     private fun onPacket(packet: SocketIOPacket) {
-        Logging.debug(TAG, "onPacket: nsp $nsp, $packet")
+        if (Logging.debug()) {
+            Logging.debug(TAG, "onPacket: nsp $nsp, $packet")
+        }
         if (nsp != packet.namespace) {
             return
         }
@@ -260,7 +264,9 @@ class Socket(
             }
 
             is SocketIOPacket.Event -> {
-                Logging.debug(TAG, "onEvent $packet")
+                if (Logging.debug()) {
+                    Logging.debug(TAG, "onEvent $packet")
+                }
                 onEvent(packet.ackId, ArrayList(packet.payload))
             }
 
@@ -319,7 +325,9 @@ class Socket(
     @WorkThread
     private fun onEvent(eventId: Int?, data: ArrayList<Any>) {
         if (eventId != null) {
-            Logging.debug(TAG, "attaching ack callback to event")
+            if (Logging.debug()) {
+                Logging.debug(TAG, "attaching ack callback to event")
+            }
             data.add(createAck(eventId))
         }
         if (data.isEmpty()) {

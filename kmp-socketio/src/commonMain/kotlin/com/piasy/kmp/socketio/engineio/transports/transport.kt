@@ -1,6 +1,7 @@
 package com.piasy.kmp.socketio.engineio.transports
 
 import com.piasy.kmp.socketio.engineio.Transport
+import com.piasy.kmp.xlog.Platform
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.logging.*
@@ -59,9 +60,25 @@ interface HttpClientFactory {
 }
 
 object DefaultHttpClientFactory : HttpClientFactory {
-    private val client = httpClient {
+    private val wsClient = httpClient {
         install(Logging) {
-            logger = object : io.ktor.client.plugins.logging.Logger {
+            logger = object : Logger {
+                override fun log(message: String) {
+                    com.piasy.kmp.xlog.Logging.info("Net", message)
+                }
+            }
+            level = LogLevel.ALL
+        }
+        install(WebSockets) {
+            pingIntervalMillis = 20_000
+        }
+    }
+    // Linux curl engine doesn't work for simultaneous websocket and http request.
+    // see https://youtrack.jetbrains.com/issue/KTOR-8259/
+    // Use two http client could work around it.
+    private val httpClient: HttpClient = if (!Platform.isLinux) wsClient else httpClient {
+        install(Logging) {
+            logger = object : Logger {
                 override fun log(message: String) {
                     com.piasy.kmp.xlog.Logging.info("Net", message)
                 }
@@ -77,10 +94,10 @@ object DefaultHttpClientFactory : HttpClientFactory {
         url: String,
         request: HttpRequestBuilder.() -> Unit,
         block: suspend DefaultClientWebSocketSession.() -> Unit,
-    ) = client.webSocket(url, request, block)
+    ) = wsClient.webSocket(url, request, block)
 
     override suspend fun httpRequest(
         url: String,
         block: HttpRequestBuilder.() -> Unit
-    ) = client.request(url, block)
+    ) = httpClient.request(url, block)
 }

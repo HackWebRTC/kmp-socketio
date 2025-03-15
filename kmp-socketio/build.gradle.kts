@@ -1,5 +1,4 @@
 import com.vanniktech.maven.publish.SonatypeHost
-import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 
 plugins {
     alias(libs.plugins.kmp)
@@ -20,29 +19,21 @@ kotlin {
     iosX64()
     macosArm64()
     macosX64()
+
     js(IR) {
         browser {
         }
         binaries.executable()
     }
-    mingwX64 {}
-    @OptIn(ExperimentalWasmDsl::class)
-    wasmJs {
-        browser {
-        }
-        binaries.executable()
-    }
 
-    // Ktor's curl engine doesn't support websockets now,
-    // although CIO engine supports websockets, but it doesn't support TLS.
-    // - [Native Sockets TLS Client/Server support for linux](https://github.com/ktorio/ktor/pull/2939)
-    // - [Possible websockets support for curl engine](https://github.com/whyoleg/ktor/tree/libcurl-ws)
-    //linuxX64 {}
+    mingwX64 {}
+    linuxX64 {}
 
     applyDefaultHierarchyTemplate()
     sourceSets {
         all {
             languageSettings.optIn("kotlinx.coroutines.ExperimentalCoroutinesApi")
+            languageSettings.optIn("kotlinx.cinterop.ExperimentalForeignApi")
         }
 
         commonMain {
@@ -55,6 +46,13 @@ kotlin {
                 api(libs.kmpXlog)
             }
         }
+        commonTest {
+            dependencies {
+                implementation(libs.kotlin.test)
+                implementation(libs.kotlinx.coroutines.test)
+            }
+        }
+
         jvmMain {
             dependencies {
                 //api(libs.ktor.client.java) // java engine can't get ws response headers
@@ -77,9 +75,15 @@ kotlin {
                 implementation(libs.json)
             }
         }
+
         appleMain {
             dependencies {
                 api(libs.ktor.client.darwin)
+            }
+        }
+        macosTest {
+            dependencies {
+                implementation(libs.kommand)
             }
         }
         jsMain {
@@ -92,9 +96,14 @@ kotlin {
                 api(libs.ktor.client.winhttp)
             }
         }
-        wasmJsMain {
+        linuxMain {
             dependencies {
-                api(libs.ktor.client.wasm)
+                api(libs.ktor.client.curl)
+            }
+        }
+        linuxTest {
+            dependencies {
+                implementation(libs.kommand)
             }
         }
     }
