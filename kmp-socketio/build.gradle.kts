@@ -83,6 +83,11 @@ kotlin {
                 api(libs.ktor.client.darwin)
             }
         }
+        macosTest {
+            dependencies {
+                implementation(libs.kommand)
+            }
+        }
         jsMain {
             dependencies {
                 api(libs.ktor.client.js)
