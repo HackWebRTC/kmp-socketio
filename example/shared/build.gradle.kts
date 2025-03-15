@@ -60,7 +60,7 @@ kotlin {
         binaries.executable()
     }
 
-    listOf(/*linuxX64(), */mingwX64()).forEach {
+    listOf(linuxX64(), mingwX64()).forEach {
         it.binaries {
             executable("kmp_socketio") {
                 entryPoint = "com.piasy.kmp.socketio.example.main"

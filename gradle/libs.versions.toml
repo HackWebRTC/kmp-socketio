@@ -7,9 +7,9 @@ targetSdk = "35"
 agp = "8.7.3"
 kotlin = "2.1.0"
 mockk = "1.13.16"
-ktor = "3.0.3"
+ktor = "3.1.0"
 coroutine = "1.10.1"
-compose = "1.7.7"
+compose = "1.7.8"
 
 [libraries]
 junit = "junit:junit:4.13.2"

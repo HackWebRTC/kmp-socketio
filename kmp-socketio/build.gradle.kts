@@ -33,11 +33,7 @@ kotlin {
         binaries.executable()
     }
 
-    // Ktor's curl engine doesn't support websockets now,
-    // although CIO engine supports websockets, but it doesn't support TLS.
-    // - [Native Sockets TLS Client/Server support for linux](https://github.com/ktorio/ktor/pull/2939)
-    // - [Possible websockets support for curl engine](https://github.com/whyoleg/ktor/tree/libcurl-ws)
-    //linuxX64 {}
+    linuxX64 {}
 
     applyDefaultHierarchyTemplate()
     sourceSets {
@@ -90,6 +86,11 @@ kotlin {
         mingwMain {
             dependencies {
                 api(libs.ktor.client.winhttp)
+            }
+        }
+        linuxMain {
+            dependencies {
+                api(libs.ktor.client.curl)
             }
         }
         wasmJsMain {

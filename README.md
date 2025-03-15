@@ -15,15 +15,7 @@ KMP (pure Kotlin) implementation of SocketIO client.
 |       `iOS`        |          🚀          |
 |      `macOS`       |          🚀          |
 |   `Windows X64`    |          🚀          |
-|    `Linux X64`     |          🔮          |
-
-About Linux support: Ktor's curl engine doesn't support websockets now,
-although CIO engine supports websockets, but it doesn't support TLS.
-
-Ref:
-
-- [Native Sockets TLS Client/Server support for linux](https://github.com/ktorio/ktor/pull/2939)
-- [Possible websockets support for curl engine](https://github.com/whyoleg/ktor/tree/libcurl-ws)
+|    `Linux X64`     |          🚀          |
 
 ## Dependency
 
@@ -110,6 +102,12 @@ Use Chrome CORS Unblock extension to workaround with CORS error.
 .\gradlew runKmp_socketioDebugExecutableMingwX64
 ```
 
+### Linux
+
+```bash
+./gradlew runKmp_socketioDebugExecutableLinuxX64
+```
+
 ### macOS
 
 ```bash
@@ -121,6 +119,8 @@ Use Chrome CORS Unblock extension to workaround with CORS error.
 Maven central portal credentials and signing configs are set in `~/.gradle/gradle.properties`.
 
 ```bash
+# on Linux: need manual release on website
+./gradlew clean publishLinuxX64PublicationToMavenCentralRepository --no-configuration-cache
 # on Windows: need manual release on website
 .\gradlew clean publishMingwX64PublicationToMavenCentralRepository --no-configuration-cache
 # on macOS: need manual release on website
