@@ -10,7 +10,6 @@ KMP (pure Kotlin) implementation of SocketIO client.
 | :----------------: | :------------------: |
 |      `JVM` 17      |          🚀          |
 | `JS`     (Chrome)  |          🚀          |
-| `WasmJS` (Chrome)  |          🚀          |
 |     `Android`      |          🚀          |
 |       `iOS`        |          🚀          |
 |      `macOS`       |          🚀          |
@@ -58,6 +57,11 @@ Most of the APIs are the same as socket.io-client-java, here are some difference
 
 ### Logging with [kmp-xlog](https://github.com/HackWebRTC/kmp-xlog)
 
+## Development
+
+To check coverage details, run `./gradlew :kmp-socketio:jvmTest --info && ./gradlew koverHtmlReport`,
+then check `kmp-socketio/build/reports/kover/html/index.html`. 
+
 ## Example
 
 Before running examples, run `node kmp-socketio/src/jvmTest/resources/socket-server.js` to start the socket-io echo server,
@@ -87,14 +91,6 @@ Use Chrome CORS Unblock extension to workaround with CORS error.
 ```bash
 ./gradlew :example:shared:jsBrowserRun
 ```
-
-### WASM JS
-
-Use Chrome CORS Unblock extension to workaround with CORS error.
-
- ```bash
-./gradlew :example:shared:wasmJsBrowserRun
- ```
 
 ### Windows
 
@@ -132,7 +128,6 @@ Maven central portal credentials and signing configs are set in `~/.gradle/gradl
     publishIosX64PublicationToMavenCentralRepository \
     publishMacosArm64PublicationToMavenCentralRepository \
     publishMacosX64PublicationToMavenCentralRepository \
-    publishWasmJsPublicationToMavenCentralRepository \
     publishJsPublicationToMavenCentralRepository \
     --no-configuration-cache
 ```

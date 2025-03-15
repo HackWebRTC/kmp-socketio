@@ -148,7 +148,9 @@ abstract class Transport(
     }
 
     protected fun logD(log: String) {
-        Logging.debug(TAG, "$name@${hashCode()} $log")
+        if (Logging.debug()) {
+            Logging.debug(TAG, "$name@${hashCode()} $log")
+        }
     }
 
     protected fun logI(log: String) {

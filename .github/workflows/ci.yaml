@@ -19,15 +19,15 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - cmd: "./gradlew :kmp-socketio:jvmTest --info"
-            os: macos-latest
+          - os: macos-latest
             cov: on
-          - cmd: "./gradlew :kmp-socketio:macosX64Test --info && ./kmp-socketio/src/jsTest/start_server.sh && ./gradlew :kmp-socketio:jsBrowserTest --info && ./kmp-socketio/src/jsTest/stop_server.sh"
-            os: macos-latest
-          - cmd: "./gradlew :kmp-socketio:linuxX64Test --info"
-            os: ubuntu-latest
-          - cmd: "./gradlew :kmp-socketio:mingwX64Test --info"
-            os: windows-latest
+            cmd: "./gradlew :kmp-socketio:jvmTest --info"
+          - os: macos-latest
+            cmd: "./gradlew :kmp-socketio:macosX64Test --info && ./kmp-socketio/src/jsTest/start_server.sh && ./gradlew :kmp-socketio:jsBrowserTest --info && ./kmp-socketio/src/jsTest/stop_server.sh"
+          - os: ubuntu-latest
+            cmd: "./gradlew :kmp-socketio:linuxX64Test --info"
+          - os: windows-latest
+            cmd: "./gradlew :kmp-socketio:mingwX64Test --info"
     runs-on: ${{ matrix.os }}
     permissions:
       pull-requests: write

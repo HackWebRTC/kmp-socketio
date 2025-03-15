@@ -24,6 +24,7 @@ class BinaryPacketReconstructor(
                             Socket.TAG,
                             "BinaryPacketReconstructor bad index: ${it.attachmentIndex}, ${buffers.size}"
                         )
+                        return
                     }
                 } else {
                     data.add((it as PayloadElement.Json).jsonElement)
