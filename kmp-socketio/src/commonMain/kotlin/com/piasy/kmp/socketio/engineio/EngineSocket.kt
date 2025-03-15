@@ -361,6 +361,8 @@ class EngineSocket(
         state = State.OPEN
         priorWebsocketSuccess = transport?.name == WebSocket.NAME
         emit(EVENT_OPEN)
+        // this flush call will always be ignored, because `emit(EVENT_OPEN)` will trigger
+        // sending Connect packet, which will trigger flush.
         flush()
 
         if (opt.upgrade && transport?.name == PollingXHR.NAME && upgrades.isNotEmpty()) {

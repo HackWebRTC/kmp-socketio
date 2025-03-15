@@ -61,7 +61,7 @@ interface HttpClientFactory {
 object DefaultHttpClientFactory : HttpClientFactory {
     private val client = httpClient {
         install(Logging) {
-            logger = object : io.ktor.client.plugins.logging.Logger {
+            logger = object : Logger {
                 override fun log(message: String) {
                     com.piasy.kmp.xlog.Logging.info("Net", message)
                 }

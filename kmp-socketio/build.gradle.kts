@@ -51,6 +51,13 @@ kotlin {
                 api(libs.kmpXlog)
             }
         }
+        commonTest {
+            dependencies {
+                implementation(libs.kotlin.test)
+                implementation(libs.kotlinx.coroutines.test)
+            }
+        }
+
         jvmMain {
             dependencies {
                 //api(libs.ktor.client.java) // java engine can't get ws response headers
@@ -73,6 +80,7 @@ kotlin {
                 implementation(libs.json)
             }
         }
+
         appleMain {
             dependencies {
                 api(libs.ktor.client.darwin)
