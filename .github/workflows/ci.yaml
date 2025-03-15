@@ -46,6 +46,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 14
+          architecture: 'x64'
       - name: Setup Test Env
         run: |
           cd kmp-socketio/src/jvmTest/resources/
