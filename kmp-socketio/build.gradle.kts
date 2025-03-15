@@ -20,25 +20,22 @@ kotlin {
     iosX64()
     macosArm64()
     macosX64()
-    js(IR) {
-        browser {
-        }
-        binaries.executable()
-    }
-    mingwX64 {}
+
     @OptIn(ExperimentalWasmDsl::class)
-    wasmJs {
-        browser {
+    listOf(js(IR), wasmJs()).forEach {
+        it.browser {
         }
-        binaries.executable()
+        it.binaries.executable()
     }
 
+    mingwX64 {}
     linuxX64 {}
 
     applyDefaultHierarchyTemplate()
     sourceSets {
         all {
             languageSettings.optIn("kotlinx.coroutines.ExperimentalCoroutinesApi")
+            languageSettings.optIn("kotlinx.cinterop.ExperimentalForeignApi")
         }
 
         commonMain {

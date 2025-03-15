@@ -42,7 +42,7 @@ abstract class ConnectionTest {
         return runTest(timeout = timeout, testBody = trueBody)
     }
 
-    //@Test
+    @Test
     fun connectAndEcho() = doTest {
         Logging.info(TAG, "connectAndEcho start")
 
