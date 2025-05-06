@@ -11,7 +11,7 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.coroutines.CoroutineScope
 
-expect fun httpClient(config: HttpClientConfig<*>.() -> Unit = {}): HttpClient
+expect fun httpClient(trustAllCerts: Boolean = false, config: HttpClientConfig<*>.() -> Unit = {}): HttpClient
 
 internal fun putHeaders(
     builder: HeadersBuilder,
