@@ -17,7 +17,7 @@ object TestUtil {
     fun transportFactory() = DefaultTransportFactory
 
     @JvmStatic
-    fun httpFactory() = DefaultHttpClientFactory
+    fun httpFactory() = DefaultHttpClientFactory()
 
     @JvmStatic
     fun getOpt(socket: EngineSocket) = socket.opt
