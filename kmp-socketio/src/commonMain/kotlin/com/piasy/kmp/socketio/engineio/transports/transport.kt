@@ -11,7 +11,7 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.coroutines.CoroutineScope
 
-expect fun httpClient(config: HttpClientConfig<*>.() -> Unit = {}): HttpClient
+expect fun httpClient(trustAllCerts: Boolean = false, config: HttpClientConfig<*>.() -> Unit = {}): HttpClient
 
 internal fun putHeaders(
     builder: HeadersBuilder,
@@ -59,8 +59,12 @@ interface HttpClientFactory {
     ): HttpResponse
 }
 
-object DefaultHttpClientFactory : HttpClientFactory {
-    private val wsClient = httpClient {
+class DefaultHttpClientFactory(
+    trustAllCerts: Boolean = false,
+): HttpClientFactory {
+    private val wsClient = httpClient(
+        trustAllCerts = trustAllCerts,
+    ) {
         install(Logging) {
             logger = object : Logger {
                 override fun log(message: String) {
@@ -76,7 +80,9 @@ object DefaultHttpClientFactory : HttpClientFactory {
     // Linux curl engine doesn't work for simultaneous websocket and http request.
     // see https://youtrack.jetbrains.com/issue/KTOR-8259/
     // Use two http client could work around it.
-    private val httpClient: HttpClient = if (!Platform.isLinux) wsClient else httpClient {
+    private val httpClient: HttpClient = if (!Platform.isLinux) wsClient else httpClient(
+        trustAllCerts = trustAllCerts,
+    ) {
         install(Logging) {
             logger = object : Logger {
                 override fun log(message: String) {

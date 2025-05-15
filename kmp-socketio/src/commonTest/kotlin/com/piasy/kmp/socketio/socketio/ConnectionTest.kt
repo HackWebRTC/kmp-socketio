@@ -1,5 +1,6 @@
 package com.piasy.kmp.socketio.socketio
 
+import com.piasy.kmp.socketio.engineio.transports.DefaultHttpClientFactory
 import com.piasy.kmp.socketio.engineio.transports.WebSocket
 import com.piasy.kmp.xlog.Logging
 import io.ktor.util.date.*
@@ -73,6 +74,33 @@ abstract class ConnectionTest {
         assertEquals("2", args[1])
         assertEquals(ByteString(byteArrayOf(0x1, 0x3, 0x1, 0x4)), args[2])
         assertEquals(now.toString(), args[3])
+    }
+
+    @Test
+    fun shouldConnectUntrusted() = doTest {
+        val trustAllCertsHttpClientFactory = DefaultHttpClientFactory(
+            trustAllCerts = true,
+        )
+        val responseResult = runCatching {
+            trustAllCertsHttpClientFactory.httpRequest(
+                url = "https://expired.badssl.com/",
+            ) {}
+        }
+        assertTrue(responseResult.isSuccess)
+        assertEquals(responseResult.getOrThrow().status.value, 200)
+    }
+
+    @Test
+    fun shouldResetConnectionUntrusted() = doTest {
+        val trustAllCertsHttpClientFactory = DefaultHttpClientFactory(
+            trustAllCerts = false,
+        )
+        val responseResult = runCatching {
+            trustAllCertsHttpClientFactory.httpRequest(
+                url = "https://expired.badssl.com/",
+            ) {}
+        }
+        assertTrue(responseResult.isFailure)
     }
 
     companion object {

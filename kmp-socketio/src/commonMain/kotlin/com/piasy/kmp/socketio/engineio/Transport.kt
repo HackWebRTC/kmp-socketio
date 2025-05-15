@@ -39,6 +39,9 @@ abstract class Transport(
 
         @JvmField
         var extraHeaders: Map<String, List<String>> = emptyMap()
+
+        @JvmField
+        var trustAllCerts: Boolean = false
     }
 
     protected var state = State.INIT
