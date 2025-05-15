@@ -169,9 +169,7 @@ class Manager(
         subs.add(On.on(socket, EngineSocket.EVENT_DATA, object : Listener {
             override fun call(vararg args: Any) {
                 if (args.isNotEmpty()) {
-                    if (Logging.debug()) {
-                        Logging.debug(TAG, "on EngineSocket data ${args[0]::class}")
-                    }
+                    Logging.debug(TAG) { "on EngineSocket data ${args[0]::class}" }
                     emit(EVENT_PACKET, args[0])
                 }
             }
@@ -317,9 +315,7 @@ class Manager(
 
     @WorkThread
     internal fun packets(packets: List<EngineIOPacket<*>>) {
-        if (Logging.debug()) {
-            Logging.debug(TAG, "send packets $packets")
-        }
+        Logging.debug(TAG) { "send packets $packets" }
         engine?.send(packets)
     }
 

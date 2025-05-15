@@ -77,7 +77,7 @@ abstract class ConnectionTest {
     }
 
     @Test
-    fun shouldConnectUntrusted() = doTest {
+    open fun shouldConnectUntrusted() = doTest {
         val trustAllCertsHttpClientFactory = DefaultHttpClientFactory(
             trustAllCerts = true,
         )

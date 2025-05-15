@@ -49,7 +49,7 @@ abstract class Transport(
 
     @WorkThread
     fun open(): Transport {
-        logD("open")
+        logD { "open" }
         if (state == State.CLOSED || state == State.INIT) {
             state = State.OPENING
             doOpen()
@@ -59,7 +59,7 @@ abstract class Transport(
 
     @WorkThread
     fun send(packets: List<EngineIOPacket<*>>) {
-        logD("send: state $state, ${packets.size} packets")
+        logD { "send: state $state, ${packets.size} packets" }
         if (state == State.OPEN) {
             doSend(packets)
         } else {
@@ -93,7 +93,7 @@ abstract class Transport(
 
     @WorkThread
     protected fun onPacket(packet: EngineIOPacket<*>) {
-        logD("onPacket $packet")
+        logD { "onPacket $packet" }
         emit(EVENT_PACKET, packet)
     }
 
@@ -150,9 +150,9 @@ abstract class Transport(
         return "$schema://$hostname$port${opt.path}$derivedQuery"
     }
 
-    protected fun logD(log: String) {
+    protected fun logD(block: () -> String) {
         if (Logging.debug()) {
-            Logging.debug(TAG, "$name@${hashCode()} $log")
+            Logging.debug(TAG, "$name@${hashCode()} ${block()}")
         }
     }
 
