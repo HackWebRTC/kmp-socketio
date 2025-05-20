@@ -16,7 +16,6 @@ import kotlinx.io.bytestring.unsafe.UnsafeByteStringOperations
 import org.hildan.socketio.EngineIO
 import org.hildan.socketio.EngineIOPacket
 import org.hildan.socketio.InvalidEngineIOPacketException
-import org.hildan.socketio.InvalidSocketIOPacketException
 import org.hildan.socketio.SocketIOPacket
 
 open class WebSocket(
@@ -72,7 +71,7 @@ open class WebSocket(
         while (true) {
             try {
                 val frame = ws?.incoming?.receive() ?: break
-                logD("Receive frame: $frame")
+                logD { "Receive frame: $frame" }
                 when (frame) {
                     is Frame.Text -> {
                         onWsText(frame.readText())
@@ -88,7 +87,8 @@ open class WebSocket(
                     }
 
                     else -> {
-                        logI("Received unknown frame")
+                        // ignore
+                        //logI("Received unknown frame")
                     }
                 }
             } catch (e: Exception) {
@@ -102,7 +102,7 @@ open class WebSocket(
     @IoThread
     private fun onWsText(data: String) {
         scope.launch {
-            logD("onWsText: `$data`")
+            logD { "onWsText: `$data`" }
             val packet = try {
                 if (rawMessage) {
                     EngineIO.decodeWsFrame(data, deserializePayload = { it })
@@ -123,7 +123,7 @@ open class WebSocket(
     @IoThread
     private fun onWsBinary(data: ByteArray) {
         scope.launch {
-            logD("onWsBinary ${data.size} bytes")
+            logD { "onWsBinary ${data.size} bytes" }
             onPacket(EngineIO.decodeWsFrame(UnsafeByteStringOperations.wrapUnsafe(data)))
         }
     }
@@ -131,7 +131,7 @@ open class WebSocket(
     @OptIn(UnsafeByteStringApi::class)
     @WorkThread
     override fun doSend(packets: List<EngineIOPacket<*>>) {
-        logD("doSend ${packets.size} packets start")
+        logD { "doSend ${packets.size} packets start" }
         writable = false
 
         ioScope.launch {
@@ -144,7 +144,7 @@ open class WebSocket(
                 try {
                     if (pkt is EngineIOPacket.BinaryData) {
                         UnsafeByteStringOperations.withByteArrayUnsafe(pkt.payload) {
-                            logD("doSend binary: ${it.size} bytes")
+                            logD { "doSend binary: ${it.size} bytes" }
                             ws?.send(it)
                         }
                     } else {
@@ -154,17 +154,18 @@ open class WebSocket(
                             @Suppress("UNCHECKED_CAST")
                             EngineIO.encodeSocketIO(pkt as EngineIOPacket<SocketIOPacket>)
                         }
-                        logD("doSend: $pkt, `$data`")
+                        logD { "doSend: $pkt, `$data`" }
                         ws?.send(data)
                     }
                 } catch (e: Exception) {
                     logE("doSend error: `${e.message}`")
                     //break
+                    // TODO: send error is ignored, should we handle it?
                 }
             }
 
             scope.launch {
-                logD("doSend ${packets.size} packets finish")
+                logD { "doSend ${packets.size} packets finish" }
                 writable = true
                 emit(EVENT_DRAIN, packets.size)
             }

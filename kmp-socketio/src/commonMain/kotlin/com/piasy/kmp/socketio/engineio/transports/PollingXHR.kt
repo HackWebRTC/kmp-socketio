@@ -66,7 +66,7 @@ open class PollingXHR(
 
     @WorkThread
     private fun poll() {
-        logD("poll start")
+        logD { "poll start" }
         polling = true
 
         val method = HttpMethod.Get
@@ -98,7 +98,7 @@ open class PollingXHR(
         onResponse: (String) -> Unit = {},
         onSuccess: () -> Unit = {},
     ) {
-        logD("doRequest ${method.value} $uri, data $data, headers $requestHeaders")
+        logD { "doRequest ${method.value} $uri, data $data, headers $requestHeaders" }
         val resp = try {
             factory.httpRequest(uri) {
                 this.method = method
@@ -116,7 +116,7 @@ open class PollingXHR(
             return
         }
 
-        logD("doRequest response: ${resp.status}")
+        logD { "doRequest response: ${resp.status}" }
         scope.launch {
             emit(EVENT_RESPONSE_HEADERS, resp.headers.toMap())
         }
@@ -135,7 +135,7 @@ open class PollingXHR(
 
     @WorkThread
     private fun onPollComplete(data: String) {
-        logD("onPollComplete: state $state, `$data`")
+        logD { "onPollComplete: state $state, `$data`" }
         val packets = try {
             if (rawMessage) {
                 EngineIO.decodeHttpBatch(data, deserializePayload = { it })

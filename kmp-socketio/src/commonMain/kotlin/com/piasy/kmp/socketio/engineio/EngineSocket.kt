@@ -252,9 +252,7 @@ class EngineSocket(
         subs.add(On.on(transport, Transport.EVENT_PACKET, object : Listener {
             override fun call(vararg args: Any) {
                 val packet = args.firstOrNull() ?: return
-                if (Logging.debug()) {
-                    Logging.debug(TAG, "transport on packet $packet")
-                }
+                Logging.debug(TAG) { "transport on packet $packet" }
                 if (packet is EngineIOPacket<*>) {
                     onPacket(packet)
                 }
@@ -277,18 +275,14 @@ class EngineSocket(
 
     @WorkThread
     private fun onDrain(len: Int) {
-        if (Logging.debug()) {
-            Logging.debug(TAG, "onDrain: prevBufferLen $prevBufferLen, writeBuffer.size ${writeBuffer.size}, len $len")
-        }
+        Logging.debug(TAG) { "onDrain: prevBufferLen $prevBufferLen, writeBuffer.size ${writeBuffer.size}, len $len" }
         for (i in 1..len) {
             writeBuffer.removeFirst()
         }
         prevBufferLen -= len
 
         if (writeBuffer.isEmpty()) {
-            if (Logging.debug()) {
-                Logging.debug(TAG, "onDrain fire socket drain event")
-            }
+            Logging.debug(TAG) { "onDrain fire socket drain event" }
             emit(EVENT_DRAIN)
         } else if (writeBuffer.size > prevBufferLen) {
             flush()
@@ -297,9 +291,7 @@ class EngineSocket(
 
     @WorkThread
     private fun sendPackets(packets: List<EngineIOPacket<*>>) {
-        if (Logging.debug()) {
-            Logging.debug(TAG, "sendPackets: state $state, $packets")
-        }
+        Logging.debug(TAG) { "sendPackets: state $state, $packets" }
         if (state != State.OPENING && state != State.OPEN) {
             Logging.error(TAG, "sendPackets at wrong state: $state")
             return
@@ -312,9 +304,7 @@ class EngineSocket(
 
     @WorkThread
     private fun onPacket(packet: EngineIOPacket<*>) {
-        if (Logging.debug()) {
-            Logging.debug(TAG, "onPacket $packet")
-        }
+        Logging.debug(TAG) { "onPacket $packet" }
         if (inactive()) {
             Logging.error(TAG, "packet received at wrong state: $state")
             return
@@ -386,12 +376,10 @@ class EngineSocket(
 
     @WorkThread
     private fun flush() {
-        if (Logging.debug()) {
-            Logging.debug(
-                TAG, "flush: state $state, writable ${transport?.writable}, " +
-                        "upgrading $upgrading, prevBufferLen $prevBufferLen, " +
-                        "writeBuffer.size ${writeBuffer.size}"
-            )
+        Logging.debug(TAG) {
+            "flush: state $state, writable ${transport?.writable}, " +
+                    "upgrading $upgrading, prevBufferLen $prevBufferLen, " +
+                    "writeBuffer.size ${writeBuffer.size}"
         }
         if (state != State.CLOSED
             && transport?.writable == true
