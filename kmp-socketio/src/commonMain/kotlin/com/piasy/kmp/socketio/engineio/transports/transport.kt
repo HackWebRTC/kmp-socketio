@@ -79,22 +79,8 @@ class DefaultHttpClientFactory(
     }
     // Linux curl engine doesn't work for simultaneous websocket and http request.
     // see https://youtrack.jetbrains.com/issue/KTOR-8259/
-    // Use two http client could work around it.
-    private val httpClient: HttpClient = if (!Platform.isLinux) wsClient else httpClient(
-        trustAllCerts = trustAllCerts,
-    ) {
-        install(Logging) {
-            logger = object : Logger {
-                override fun log(message: String) {
-                    com.piasy.kmp.xlog.Logging.info("Net", message)
-                }
-            }
-            level = LogLevel.ALL
-        }
-        install(WebSockets) {
-            pingIntervalMillis = 20_000
-        }
-    }
+    // But it's fixed in 3.2.0.
+    private val httpClient: HttpClient = wsClient
 
     override suspend fun createWs(
         url: String,
