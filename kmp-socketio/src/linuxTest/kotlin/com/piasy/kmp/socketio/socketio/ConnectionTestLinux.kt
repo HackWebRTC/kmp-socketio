@@ -92,7 +92,7 @@ class ConnectionTestLinux : ConnectionTest() {
     }
 
     @Test
-    fun `simultaneous ws and http request with a single http client will hang`() = doTest {
+    fun `simultaneous ws and http request with a single http client will also work`() = doTest {
         val config: HttpClientConfig<*>.() -> Unit = {
             install(io.ktor.client.plugins.logging.Logging) {
                 logger = object : Logger {
@@ -110,7 +110,9 @@ class ConnectionTestLinux : ConnectionTest() {
             config(this)
         }
 
-        assertFailsWith<TimeoutCancellationException> {
+        var pollRes = ""
+        // ktor 3.2.0 fix the problem
+        //assertFailsWith<TimeoutCancellationException> {
             withContext(Dispatchers.Default) {
                 withTimeout(5000) {
                     client.webSocket("ws://localhost:3000/socket.io/?EIO=4&transport=websocket", {}) {
@@ -126,8 +128,8 @@ class ConnectionTestLinux : ConnectionTest() {
                                 }
                                 Logging.info(TAG, "http response status: ${resp.status}")
                                 if (resp.status.isSuccess()) {
-                                    val body = resp.bodyAsText()
-                                    Logging.info(TAG, "http response body: $body")
+                                    pollRes = resp.bodyAsText()
+                                    Logging.info(TAG, "http response body: $pollRes")
                                     break
                                 }
                             } catch (e: Exception) {
@@ -138,6 +140,9 @@ class ConnectionTestLinux : ConnectionTest() {
                     }
                 }
             }
-        }
+        //}
+
+        val pkt = EngineIO.decodeHttpBatch(pollRes, SocketIO::decode)[0]
+        assertTrue(pkt is EngineIOPacket.Open)
     }
 }
