@@ -6,6 +6,8 @@ import com.piasy.kmp.socketio.socketio.Ack;
 import com.piasy.kmp.socketio.socketio.IO;
 import com.piasy.kmp.socketio.socketio.Manager;
 import com.piasy.kmp.socketio.socketio.Socket;
+import com.piasy.kmp.xlog.Logging;
+
 import kotlin.Unit;
 import kotlinx.io.bytestring.ByteString;
 import kotlinx.serialization.json.*;
@@ -454,7 +456,7 @@ public class ConnectionTest extends Connection {
         opts.reconnection = true;
         opts.timeout = 0;
         opts.reconnectionAttempts = 3;
-        opts.setReconnectionDelay(100);
+        opts.setReconnectionDelay(1000);
         opts.setRandomizationFactor(0.2);
         final Manager manager = new Manager(uri(), opts, TestUtil.testScope());
         socket = TestUtil.socket(manager, "/timeout");
@@ -468,6 +470,7 @@ public class ConnectionTest extends Connection {
             @Override
             public void call(Object... args) {
                 startTime[0] = new Date().getTime();
+                Logging.INSTANCE.info(TAG, "reconnectDelayShouldIncreaseEveryTime startTime " + startTime[0]);
             }
         });
         manager.on(Manager.EVENT_RECONNECT_ATTEMPT, new Emitter.Listener() {
@@ -476,6 +479,8 @@ public class ConnectionTest extends Connection {
                 reconnects[0]++;
                 long currentTime = new Date().getTime();
                 long delay = currentTime - startTime[0];
+                Logging.INSTANCE.info(TAG, "reconnectDelayShouldIncreaseEveryTime currentTime "
+                        + currentTime + ", delay " + delay + ", prevDelay " + prevDelay[0]);
                 if (delay <= prevDelay[0]) {
                     increasingDelay[0] = false;
                 }

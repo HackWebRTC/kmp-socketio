@@ -14,7 +14,6 @@ import kotlin.Unit;
 import kotlinx.serialization.json.JsonElementBuildersKt;
 import kotlinx.serialization.json.JsonElementKt;
 import kotlinx.serialization.json.JsonObject;
-import org.json.JSONObject;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
