@@ -17,7 +17,7 @@ import java.util.concurrent.*;
 
 public abstract class Connection {
 
-    private static final String TAG = "TestConnection";
+    protected static final String TAG = "TestConnection";
     final static int TIMEOUT = 7000;
     final static int PORT = 3000;
 
