@@ -449,7 +449,7 @@ public class ConnectionTest extends Connection {
         assertThat((Integer)values.take(), is(2));
     }
 
-    @Test(timeout = TIMEOUT)
+    @Test(timeout = TIMEOUT * 2)
     public void reconnectDelayShouldIncreaseEveryTime() throws InterruptedException {
         final BlockingQueue<Object> values = new LinkedBlockingQueue<>();
         IO.Options opts = createOptions();

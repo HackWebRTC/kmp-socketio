@@ -19,7 +19,7 @@ class WebSocketTest : BaseTest() {
         scope: CoroutineScope,
         incomingWait: Boolean = true
     ): TestWs {
-        val ws = mockk<WebSocketSession>(relaxed = true)
+        val ws = mockk<DefaultClientWebSocketSession>(relaxed = true)
 
         val incoming = mockk<ReceiveChannel<Frame>>()
         if (incomingWait) {
