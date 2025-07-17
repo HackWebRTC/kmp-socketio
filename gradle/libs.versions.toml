@@ -5,22 +5,21 @@ compileSdk = "35"
 minSdk = "21"
 targetSdk = "35"
 agp = "8.7.3"
-kotlin = "2.1.10"
-mockk = "1.13.16"
+kotlin = "2.2.0"
 ktor = "3.2.2"
-coroutine = "1.10.1"
-compose = "1.7.8"
+coroutine = "1.10.2"
+compose = "1.8.3"
 
 [libraries]
 junit = "junit:junit:4.13.2"
 hamcrest = "org.hamcrest:hamcrest-library:3.0"
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
-mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+mockk = "io.mockk:mockk:1.14.4"
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutine" }
 json = "org.json:json:20250107"
 kommand = "com.kgit2:kommand:2.3.0"
 
-socketioParser = "org.hildan.socketio:socketio-kotlin:2.0.0"
+socketioParser = "org.hildan.socketio:socketio-kotlin:2.6.0"
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutine" }
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-websockets = { module = "io.ktor:ktor-client-websockets", version.ref = "ktor" }
@@ -48,7 +47,7 @@ android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kmp = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
-versions = "com.github.ben-manes.versions:0.51.0"
-versionUpdate = "nl.littlerobots.version-catalog-update:0.8.5"
+versions = "com.github.ben-manes.versions:0.52.0"
+versionUpdate = "nl.littlerobots.version-catalog-update:1.0.0"
 vanniktech-mavenPublish = "com.vanniktech.maven.publish:0.30.0"
 kover = "org.jetbrains.kotlinx.kover:0.9.1"

@@ -10,9 +10,7 @@ version = Consts.releaseVersion
 group = Consts.releaseGroup
 
 kotlin {
-    jvm {
-        withJava()
-    }
+    jvm()
 
     iosArm64()
     iosSimulatorArm64()
@@ -26,8 +24,8 @@ kotlin {
         binaries.executable()
     }
 
-    mingwX64 {}
-    linuxX64 {}
+    mingwX64()
+    linuxX64()
 
     applyDefaultHierarchyTemplate()
     sourceSets {
