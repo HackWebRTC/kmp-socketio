@@ -83,7 +83,7 @@ abstract class ConnectionTest {
         )
         val responseResult = runCatching {
             trustAllCertsHttpClientFactory.httpRequest(
-                url = "https://expired.badssl.com/",
+                url = "https://localhost:8443/",
             ) {}
         }
         assertTrue(responseResult.isSuccess)
@@ -97,7 +97,7 @@ abstract class ConnectionTest {
         )
         val responseResult = runCatching {
             trustAllCertsHttpClientFactory.httpRequest(
-                url = "https://expired.badssl.com/",
+                url = "https://localhost:8443/",
             ) {}
         }
         assertTrue(responseResult.isFailure)
