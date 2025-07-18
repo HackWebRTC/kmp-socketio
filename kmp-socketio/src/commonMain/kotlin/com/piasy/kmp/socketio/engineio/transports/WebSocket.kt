@@ -25,7 +25,7 @@ open class WebSocket(
     private val factory: HttpClientFactory = DefaultHttpClientFactory(trustAllCerts = opt.trustAllCerts),
     rawMessage: Boolean,
 ) : Transport(opt, scope, NAME, rawMessage) {
-    private var ws: DefaultClientWebSocketSession? = null
+    private var ws: WebSocketSession? = null
 
     @WorkThread
     override fun pause(onPause: () -> Unit) {
@@ -49,10 +49,12 @@ open class WebSocket(
                     }
                 }) {
                     ws = this
-                    val respHeaders = call.response.headers.toMap()
-                    scope.launch {
-                        emit(EVENT_RESPONSE_HEADERS, respHeaders)
-                        onOpen()
+                    if (this is DefaultClientWebSocketSession) {
+                        val respHeaders = call.response.headers.toMap()
+                        scope.launch {
+                            emit(EVENT_RESPONSE_HEADERS, respHeaders)
+                            onOpen()
+                        }
                     }
 
                     listen()

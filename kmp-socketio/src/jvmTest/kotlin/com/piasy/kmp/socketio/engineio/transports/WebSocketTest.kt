@@ -33,7 +33,7 @@ class WebSocketTest : BaseTest() {
 
         val factory = mockk<HttpClientFactory>()
         val requestBuilder = slot<HttpRequestBuilder.() -> Unit>()
-        val block = slot<suspend DefaultClientWebSocketSession.() -> Unit>()
+        val block = slot<suspend WebSocketSession.() -> Unit>()
         coEvery { factory.createWs(any(), capture(requestBuilder), capture(block)) } coAnswers {
             requestBuilder.captured(HttpRequestBuilder())
             block.captured(ws)

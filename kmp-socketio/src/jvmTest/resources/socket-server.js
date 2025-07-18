@@ -146,3 +146,14 @@ before(io.engine, 'handleUpgrade', function(req, socket, head) {
 server.listen(port, function() {
   console.log('Socket.IO server listening on port', port);
 });
+
+https_server = require('https').createServer({
+  key: fs.readFileSync(__dirname + '/key.pem'),
+  cert: fs.readFileSync(__dirname + '/cert.pem')
+}, (req, res) => {
+  console.log('got https req');
+  res.end('self signed https server');
+});
+https_server.listen(8443, function() {
+  console.log('https server listening on port 8443');
+});

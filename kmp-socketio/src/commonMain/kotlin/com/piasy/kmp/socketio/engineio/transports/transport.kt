@@ -1,7 +1,6 @@
 package com.piasy.kmp.socketio.engineio.transports
 
 import com.piasy.kmp.socketio.engineio.Transport
-import com.piasy.kmp.xlog.Platform
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.logging.*
@@ -9,6 +8,7 @@ import io.ktor.client.plugins.websocket.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import io.ktor.websocket.WebSocketSession
 import kotlinx.coroutines.CoroutineScope
 
 expect fun httpClient(trustAllCerts: Boolean = false, config: HttpClientConfig<*>.() -> Unit = {}): HttpClient
@@ -50,7 +50,7 @@ interface HttpClientFactory {
     suspend fun createWs(
         url: String,
         request: HttpRequestBuilder.() -> Unit,
-        block: suspend DefaultClientWebSocketSession.() -> Unit,
+        block: suspend WebSocketSession.() -> Unit,
     )
 
     suspend fun httpRequest(
@@ -85,7 +85,7 @@ class DefaultHttpClientFactory(
     override suspend fun createWs(
         url: String,
         request: HttpRequestBuilder.() -> Unit,
-        block: suspend DefaultClientWebSocketSession.() -> Unit,
+        block: suspend WebSocketSession.() -> Unit,
     ) = wsClient.webSocket(url, request, block)
 
     override suspend fun httpRequest(
