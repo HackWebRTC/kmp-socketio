@@ -23,7 +23,7 @@ jobs:
             cov: on
             cmd: "./gradlew :kmp-socketio:jvmTest --info"
           - os: macos-latest
-            cmd: "./gradlew :kmp-socketio:macosX64Test --info && ./kmp-socketio/src/jsTest/start_server.sh && ./gradlew :kmp-socketio:jsBrowserTest --info && ./kmp-socketio/src/jsTest/stop_server.sh"
+            cmd: "./gradlew :kmp-socketio:macosX64Test --info && ./kmp-socketio/src/webTest/start_server.sh && ./gradlew :kmp-socketio:jsBrowserTest --info && ./gradlew :kmp-socketio:wasmJsBrowserTest --info && ./kmp-socketio/src/webTest/stop_server.sh"
           - os: ubuntu-latest
             cmd: "./gradlew :kmp-socketio:linuxX64Test --info"
           - os: windows-latest

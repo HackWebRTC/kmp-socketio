@@ -1,22 +1,22 @@
 [versions]
 jvm = "17"
 iosDeploymentTarget = "14.0"
-compileSdk = "35"
+compileSdk = "36"
 minSdk = "21"
-targetSdk = "35"
-agp = "8.7.3"
-kotlin = "2.2.0"
-ktor = "3.2.2"
+targetSdk = "36"
+agp = "8.13.0"
+kotlin = "2.2.20"
+ktor = "3.3.0"
 coroutine = "1.10.2"
-compose = "1.8.3"
+compose = "1.9.2"
 
 [libraries]
 junit = "junit:junit:4.13.2"
 hamcrest = "org.hamcrest:hamcrest-library:3.0"
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
-mockk = "io.mockk:mockk:1.14.4"
+mockk = "io.mockk:mockk:1.14.5"
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutine" }
-json = "org.json:json:20250107"
+json = "org.json:json:20250517"
 kommand = "com.kgit2:kommand:2.3.0"
 
 socketioParser = "org.hildan.socketio:socketio-kotlin:2.6.0"
@@ -32,14 +32,14 @@ ktor-client-curl = { module = "io.ktor:ktor-client-curl", version.ref = "ktor" }
 ktor-client-js = { module = "io.ktor:ktor-client-js", version.ref = "ktor" }
 ktor-client-java = { module = "io.ktor:ktor-client-java", version.ref = "ktor" }
 ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
-kmpXlog = "com.piasy:kmp-xlog-api:1.4.3"
+kmpXlog = "com.piasy:kmp-xlog-api:1.5.0"
 
 androidx-compose-ui = { module = "androidx.compose.ui:ui", version.ref = "compose" }
 androidx-compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "compose" }
 androidx-compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview", version.ref = "compose" }
 androidx-compose-foundation = { module = "androidx.compose.foundation:foundation", version.ref = "compose" }
 androidx-compose-material = { module = "androidx.compose.material:material", version.ref = "compose" }
-androidx-activity-compose = "androidx.activity:activity-compose:1.10.1"
+androidx-activity-compose = "androidx.activity:activity-compose:1.11.0"
 
 [plugins]
 android-library = { id = "com.android.library", version.ref = "agp" }
@@ -49,5 +49,5 @@ compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "
 kmp = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 versions = "com.github.ben-manes.versions:0.52.0"
 versionUpdate = "nl.littlerobots.version-catalog-update:1.0.0"
-vanniktech-mavenPublish = "com.vanniktech.maven.publish:0.30.0"
-kover = "org.jetbrains.kotlinx.kover:0.9.1"
+vanniktech-mavenPublish = "com.vanniktech.maven.publish:0.34.0"
+kover = "org.jetbrains.kotlinx.kover:0.9.2"

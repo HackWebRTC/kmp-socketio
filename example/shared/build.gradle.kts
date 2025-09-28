@@ -1,4 +1,6 @@
-import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
+@file:OptIn(ExperimentalWasmDsl::class)
+
+import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 
 plugins {
     alias(libs.plugins.kmp)
@@ -34,11 +36,22 @@ kotlin {
         }
     }
 
-    js(IR) {
-        browser {
-        }
+    js {
+        browser()
+        nodejs()
         binaries.executable()
     }
+    wasmJs {
+        browser()
+        nodejs()
+        d8()
+        binaries.executable()
+    }
+    // ktor doesn't support wasmWasi yet.
+//    wasmWasi {
+//        nodejs()
+//        binaries.executable()
+//    }
 
     listOf(linuxX64(), mingwX64()).forEach {
         it.binaries {
