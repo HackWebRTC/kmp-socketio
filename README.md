@@ -89,7 +89,15 @@ pod install
 Use Chrome CORS Unblock extension to workaround with CORS error.
 
 ```bash
-./gradlew :example:shared:jsBrowserRun
+./gradlew :example:shared:jsBrowserDevelopmentRun
+```
+
+### WasmJS
+
+Use Chrome CORS Unblock extension to workaround with CORS error.
+
+```bash
+./gradlew :example:shared:wasmJsBrowserDevelopmentRun
 ```
 
 ### Windows
