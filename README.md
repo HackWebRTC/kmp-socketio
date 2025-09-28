@@ -9,7 +9,8 @@ KMP (pure Kotlin) implementation of SocketIO client.
 |      Platform      | 🛠Builds🛠 + 🔬Tests🔬 |
 | :----------------: | :------------------: |
 |      `JVM` 17      |          🚀          |
-| `JS`     (Chrome)  |          🚀          |
+| `JS`     (Chrome, Node)  |          🚀          |
+| `WasmJS` (Chrome, Node)  |          🚀          |
 |     `Android`      |          🚀          |
 |       `iOS`        |          🚀          |
 |      `macOS`       |          🚀          |
