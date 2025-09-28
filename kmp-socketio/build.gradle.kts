@@ -99,6 +99,11 @@ kotlin {
                 api(libs.ktor.client.js)
             }
         }
+        wasmJsMain {
+            dependencies {
+                api(libs.ktor.client.wasm)
+            }
+        }
         mingwMain {
             dependencies {
                 api(libs.ktor.client.winhttp)
