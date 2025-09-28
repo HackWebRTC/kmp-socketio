@@ -137,6 +137,7 @@ Maven central portal credentials and signing configs are set in `~/.gradle/gradl
     publishMacosArm64PublicationToMavenCentralRepository \
     publishMacosX64PublicationToMavenCentralRepository \
     publishJsPublicationToMavenCentralRepository \
+    publishWasmJsPublicationToMavenCentralRepository \
     --no-configuration-cache
 ```
 
