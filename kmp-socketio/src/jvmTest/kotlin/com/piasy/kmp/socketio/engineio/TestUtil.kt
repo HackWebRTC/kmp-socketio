@@ -6,6 +6,7 @@ import com.piasy.kmp.socketio.socketio.Manager
 import com.piasy.kmp.socketio.socketio.Socket
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.serialization.json.*
 import org.json.JSONObject
 
@@ -47,7 +48,9 @@ object TestUtil {
 
     @JvmStatic
     fun closeEngineSocket(socket: Socket) {
-        socket.io.engine?.close()
+        socket.io.engine?.scope?.launch {
+            socket.io.engine?.close()
+        }
     }
 
     @JvmStatic

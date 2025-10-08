@@ -17,7 +17,7 @@ import kotlin.jvm.JvmField
 class EngineSocket(
     uri: String,
     @JvmField internal val opt: Options,
-    private val scope: CoroutineScope,
+    internal val scope: CoroutineScope,
     private val factory: TransportFactory = DefaultTransportFactory,
     private val rawMessage: Boolean = false,
 ) : Emitter() {
