@@ -116,7 +116,7 @@ open class PollingXHR(
             return
         }
 
-        logD { "doRequest response: ${resp.status}" }
+        logD { "doRequest ${method.value} $uri response: ${resp.status}" }
         scope.launch {
             emit(EVENT_RESPONSE_HEADERS, resp.headers.toMap())
         }
