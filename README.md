@@ -60,6 +60,36 @@ Most of the APIs are the same as socket.io-client-java, here are some difference
 
 ## Development
 
+You can open this project in Android Studio, but please setup iOS example project first:
+
+```bash
+brew install cocoapods xcodegen
+# if you have installed them earlier, you need to remove them at first,
+# or run brew link --overwrite xcodegen cocoapods
+
+cd example/iosApp
+xcodegen
+pod install
+```
+
+Otherwise you may see error like below:
+
+```bash
+> Task :example:shared:podInstall FAILED
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':example:shared:podInstall'.
+> 'pod install' command failed with code 1.
+  Error message:
+
+          Please, check that podfile contains following lines in header:
+          source 'https://cdn.cocoapods.org'
+
+          Please, check that each target depended on shared contains following dependencies:
+```
+
 To check coverage details, run `./gradlew :kmp-socketio:jvmTest --info && ./gradlew koverHtmlReport`,
 then check `kmp-socketio/build/reports/kover/html/index.html`. 
 
@@ -75,12 +105,7 @@ Open the project (the repo root dir) in Android studio, and run the example.andr
 ### iOS
 
 ```bash
-brew install cocoapods xcodegen
-# if you have installed them earlier, you need to remove them at first,
-# or run brew link --overwrite xcodegen cocoapods
-
 cd example/iosApp
-xcodegen
 pod install
 # open iosApp.xcworkspace in Xcode, and run it.
 ```

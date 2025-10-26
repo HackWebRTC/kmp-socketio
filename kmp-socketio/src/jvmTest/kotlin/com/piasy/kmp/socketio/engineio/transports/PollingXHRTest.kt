@@ -257,7 +257,7 @@ class PollingXHRTest : BaseTest() {
         // initial poll, then write close packet, and state will be set to OPEN in onOpen,
         // then it will poll again in onPollComplete
         coVerify(exactly = 3) { polling.factory.httpRequest(any(), any()) }
-        Logging.info("XXPXX", "closeOpening verify events")
+        Logging.info("XXPXX", "closeOpening verify events, ${polling.events.size} events")
         // sometimes the mock response of close packet can't be retrieved...
         if (polling.events.size == 9) {
             assertEquals(
