@@ -6,13 +6,28 @@ plugins {
     alias(libs.plugins.kmp)
     alias(libs.plugins.vanniktech.mavenPublish)
     alias(libs.plugins.kover)
+    alias(libs.plugins.android.library)
 }
 
 version = Consts.releaseVersion
 group = Consts.releaseGroup
 
+android {
+    namespace = "${Consts.androidNS}.android"
+    compileSdk = libs.versions.compileSdk.get().toInt()
+    defaultConfig {
+        minSdk = libs.versions.minSdk.get().toInt()
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.toVersion(libs.versions.jvm.get().toInt())
+        targetCompatibility = JavaVersion.toVersion(libs.versions.jvm.get().toInt())
+    }
+}
+
 kotlin {
     jvm()
+    androidTarget()
 
     iosArm64()
     iosSimulatorArm64()
@@ -67,6 +82,11 @@ kotlin {
                 //api(libs.ktor.client.java) // java engine can't get ws response headers
                 //api(libs.ktor.client.okhttp) // okhttp engine can get ws response headers, but all in lowercase
                 api(libs.ktor.client.cio) // cio engine works fine
+            }
+        }
+        androidMain {
+            dependencies {
+                api(libs.ktor.client.okhttp)
             }
         }
         jvmTest {
