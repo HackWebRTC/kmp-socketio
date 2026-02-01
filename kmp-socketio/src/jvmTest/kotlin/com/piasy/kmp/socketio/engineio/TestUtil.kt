@@ -43,7 +43,9 @@ object TestUtil {
 
     @JvmStatic
     fun closeManager(manager: Manager) {
-        manager.close()
+        manager.engine?.scope?.launch {
+            manager.close()
+        }
     }
 
     @JvmStatic
