@@ -37,7 +37,9 @@ kotlin {
 ## Usage
 
 ```kotlin
-IO.socket("http://localhost:3000", IO.Options()) { socket ->
+val opt = IO.Options()
+// opt.trustAllCerts = true
+IO.socket("http://localhost:3000", opt) { socket ->
     socket.on(Socket.EVENT_CONNECT) { args ->
         println("on connect ${args.joinToString()}")
 
@@ -156,6 +158,7 @@ Maven central portal credentials and signing configs are set in `~/.gradle/gradl
 # on macOS: need manual release on website
 ./gradlew clean \
     publishKotlinMultiplatformPublicationToMavenCentralRepository \
+    publishAndroidReleasePublicationToMavenCentralRepository \
     publishJvmPublicationToMavenCentralRepository \
     publishIosArm64PublicationToMavenCentralRepository \
     publishIosSimulatorArm64PublicationToMavenCentralRepository \

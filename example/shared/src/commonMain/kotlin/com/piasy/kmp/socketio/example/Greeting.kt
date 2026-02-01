@@ -10,7 +10,9 @@ import kotlinx.io.bytestring.unsafe.UnsafeByteStringOperations
 class Greeting {
     @OptIn(UnsafeByteStringApi::class)
     fun greet() {
-        IO.socket("http://172.16.11.186:3000", IO.Options()) { socket ->
+        val opt = IO.Options()
+        //opt.trustAllCerts = true
+        IO.socket("http://172.16.11.186:3000", opt) { socket ->
             socket.on(Socket.EVENT_CONNECT) { args ->
                 println("Greeting on connect ${args.joinToString()}")
 

@@ -23,11 +23,18 @@ android {
         sourceCompatibility = JavaVersion.toVersion(libs.versions.jvm.get().toInt())
         targetCompatibility = JavaVersion.toVersion(libs.versions.jvm.get().toInt())
     }
+    testOptions {
+        unitTests.all {
+            it.failOnNoDiscoveredTests = false
+        }
+    }
 }
 
 kotlin {
     jvm()
-    androidTarget()
+    androidTarget {
+        publishLibraryVariants("release")
+    }
 
     iosArm64()
     iosSimulatorArm64()
