@@ -277,7 +277,7 @@ class EngineSocket(
     private fun onDrain(len: Int) {
         Logging.debug(TAG) { "onDrain: prevBufferLen $prevBufferLen, writeBuffer.size ${writeBuffer.size}, len $len" }
         for (i in 1..len) {
-            writeBuffer.removeFirst()
+            writeBuffer.removeAt(0)
         }
         prevBufferLen -= len
 
