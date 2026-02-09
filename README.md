@@ -36,6 +36,8 @@ kotlin {
 
 ## Usage
 
+### Callback-based API (Original)
+
 ```kotlin
 val opt = IO.Options()
 // opt.trustAllCerts = true
@@ -53,10 +55,64 @@ IO.socket("http://localhost:3000", opt) { socket ->
 }
 ```
 
+### Coroutines-based API (Recommended)
+
+```kotlin
+val opt = IO.Options()
+opt.transports = listOf(WebSocket.NAME)
+
+// Create socket using suspend function
+val socket = IO.socketSuspend("http://localhost:3000", opt)
+
+// Monitor connection state using StateFlow
+socket.connectedFlow.collect { connected ->
+    println("Socket connected: $connected")
+}
+
+// Monitor manager state using StateFlow
+socket.io.stateFlow.collect { state ->
+    println("Manager state: $state")
+}
+
+// Listen to events using Flow
+socket.flow(Socket.EVENT_CONNECT).collect { args ->
+    println("Connected: ${args.joinToString()}")
+}
+
+socket.flow("echoBack").collect { args ->
+    println("EchoBack: ${args.joinToString()}")
+}
+
+// Open socket using suspend function
+socket.openSuspend()
+
+// Emit event using suspend function
+val bin = UnsafeByteStringOperations.wrapUnsafe(byteArrayOf(0x1, 0x3, 0x1, 0x4))
+socket.emitSuspend("echo", 1, "2", bin, GMTDate())
+
+// Emit with suspend acknowledgement callback (trailing lambda syntax)
+socket.emitSuspend("echoWithAck", 42, "test") { args ->
+    println("Ack received: ${args.joinToString()}")
+}
+```
+
 Most of the APIs are the same as socket.io-client-java, here are some differences:
 
 - Create socket is asynchronous, to make it's easier to guarantee thread safety.
 - Binary messages can't be nested, because `emit` only accepts String/Boolean/Number/JsonElement/ByteString, other types will be converted to String using `toString()`, so there is no way to put ByteString in JsonElement.
+
+### Available Extension Functions
+
+- `IO.socketSuspend(uri, opt)` - Create socket using coroutines
+- `Manager.openSuspend()` - Open manager using coroutines
+- `Socket.openSuspend()` - Open socket using coroutines
+- `Socket.emitSuspend(event, *args)` - Emit event using coroutines
+- `Socket.emitSuspend(event, *args, ack: suspend (Array<out Any>) -> Unit)` - Emit with suspend acknowledgement callback (trailing lambda)
+- `Manager.stateFlow` - StateFlow for tracking manager state
+- `Socket.connectedFlow` - StateFlow for tracking connection state
+- `Socket.socketIdFlow` - StateFlow for tracking socket ID
+- `Emitter.flow(event)` - Flow for event streaming
+- `Emitter.flowWithReplay(event, replay)` - Flow with replay buffer
 
 ### Logging with [kmp-xlog](https://github.com/HackWebRTC/kmp-xlog)
 
