@@ -1,8 +1,6 @@
 package com.piasy.kmp.socketio.socketio
 
 import com.piasy.kmp.socketio.emitter.Emitter
-import com.piasy.kmp.socketio.engineio.State
-import com.piasy.kmp.socketio.engineio.WorkThread
 import com.piasy.kmp.xlog.Logging
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -10,32 +8,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
-
-/**
- * Extension function to open Manager using coroutines.
- * Converts the callback-based open() method to a suspend function.
- * 
- * @throws Exception if connection fails or times out.
- */
-@WorkThread
-suspend fun Manager.openSuspend() {
-    suspendCancellableCoroutine<Unit> { continuation ->
-        var callbackInvoked = false
-        open { error ->
-            if (!callbackInvoked) {
-                callbackInvoked = true
-                if (error.isEmpty()) {
-                    continuation.resume(Unit)
-                } else {
-                    continuation.resumeWithException(Exception(error))
-                }
-            }
-        }
-        continuation.invokeOnCancellation {
-            // Cleanup if cancelled
-        }
-    }
-}
 
 /**
  * Extension function to open Socket using coroutines.
@@ -72,32 +44,6 @@ suspend fun Socket.openSuspend() {
 }
 
 /**
- * Extension function to emit event using coroutines.
- * Supports both regular Ack and suspend lambda for acknowledgements.
- * 
- * @param event event name
- * @param args only accepts String/Boolean/Number/JsonElement/ByteString
- */
-suspend fun Socket.emitSuspend(event: String, vararg args: Any) {
-    // Check reserved events manually (since RESERVED_EVENTS is private)
-    val reservedEvents = setOf(
-        Socket.EVENT_CONNECT,
-        Socket.EVENT_CONNECT_ERROR,
-        Socket.EVENT_DISCONNECT,
-        "disconnecting",
-        "newListener",
-        "removeListener",
-    )
-    if (reservedEvents.contains(event)) {
-        Logging.error(Socket.TAG, "emit reserved event: $event")
-        return
-    }
-    
-    // Regular emit without ack - just call the existing method
-    emit(event, *args)
-}
-
-/**
  * Extension function to emit event with suspend acknowledgement callback.
  * 
  * @param event event name
@@ -105,28 +51,14 @@ suspend fun Socket.emitSuspend(event: String, vararg args: Any) {
  * @param ack suspend lambda that will be called when acknowledgement is received (trailing lambda)
  */
 suspend fun Socket.emitSuspend(event: String, vararg args: Any, ack: suspend (Array<out Any>) -> Unit) {
-    // Check reserved events manually (since RESERVED_EVENTS is private)
-    val reservedEvents = setOf(
-        Socket.EVENT_CONNECT,
-        Socket.EVENT_CONNECT_ERROR,
-        Socket.EVENT_DISCONNECT,
-        "disconnecting",
-        "newListener",
-        "removeListener",
-    )
-    if (reservedEvents.contains(event)) {
-        Logging.error(Socket.TAG, "emit reserved event: $event")
-        return
-    }
-    
     // Use suspendCancellableCoroutine to wait for ack
     suspendCancellableCoroutine<Unit> { continuation ->
         val ackWrapper = object : Ack {
-            override fun call(vararg ackArgs: Any) {
+            override fun call(vararg args: Any) {
                 // Use CoroutineScope since socket's scope is private
                 CoroutineScope(Dispatchers.Default).launch {
                     try {
-                        ack(ackArgs)
+                        ack(args)
                         continuation.resume(Unit)
                     } catch (e: Exception) {
                         continuation.resumeWithException(e)

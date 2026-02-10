@@ -86,9 +86,9 @@ socket.flow("echoBack").collect { args ->
 // Open socket using suspend function
 socket.openSuspend()
 
-// Emit event using suspend function
+// Emit event using regular emit; suspend is only needed for ack
 val bin = UnsafeByteStringOperations.wrapUnsafe(byteArrayOf(0x1, 0x3, 0x1, 0x4))
-socket.emitSuspend("echo", 1, "2", bin, GMTDate())
+socket.emit("echo", 1, "2", bin, GMTDate())
 
 // Emit with suspend acknowledgement callback (trailing lambda syntax)
 socket.emitSuspend("echoWithAck", 42, "test") { args ->
@@ -104,9 +104,7 @@ Most of the APIs are the same as socket.io-client-java, here are some difference
 ### Available Extension Functions
 
 - `IO.socketSuspend(uri, opt)` - Create socket using coroutines
-- `Manager.openSuspend()` - Open manager using coroutines
 - `Socket.openSuspend()` - Open socket using coroutines
-- `Socket.emitSuspend(event, *args)` - Emit event using coroutines
 - `Socket.emitSuspend(event, *args, ack: suspend (Array<out Any>) -> Unit)` - Emit with suspend acknowledgement callback (trailing lambda)
 - `Manager.stateFlow` - StateFlow for tracking manager state
 - `Socket.connectedFlow` - StateFlow for tracking connection state

@@ -28,10 +28,6 @@ import kotlinx.serialization.json.*
 import kotlin.test.*
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
-import java.io.BufferedReader
-import java.io.InputStreamReader
-import java.util.concurrent.*
-import kotlin.jvm.JvmStatic
 
 @OptIn(UnsafeByteStringApi::class)
 abstract class CoroutinesExtensionsTest {
@@ -107,8 +103,8 @@ abstract class CoroutinesExtensionsTest {
         socket.openSuspend()
         delay(1000)
         
-        // Emit using suspend function
-        socket.emitSuspend("echo", 1, "2", now)
+        // Emit using regular API; suspend is only needed for ack version
+        socket.emit("echo", 1, "2", now)
         Logging.info(TAG, "testEmitSuspend echo emitted")
 
         val args = echoBack.await()
@@ -281,7 +277,7 @@ abstract class CoroutinesExtensionsTest {
             socket.openSuspend()
             delay(1000)
             
-            socket.emitSuspend("echo", 1, "2", now)
+            socket.emit("echo", 1, "2", now)
             delay(500)
             
             job.cancel()
@@ -315,7 +311,7 @@ abstract class CoroutinesExtensionsTest {
         socket.openSuspend()
         delay(1000)
         
-        socket.emitSuspend("echo", bin)
+        socket.emit("echo", bin)
         val args = echoBack.await()
         
         assertEquals(ByteString(byteArrayOf(0x1, 0x3, 0x1, 0x4)), args[0])
@@ -340,7 +336,7 @@ abstract class CoroutinesExtensionsTest {
         socket.openSuspend()
         delay(1000)
         
-        socket.emitSuspend("echo", false)
+        socket.emit("echo", false)
         val result = echoBack.await()
         
         assertEquals(false, result)
@@ -373,7 +369,7 @@ abstract class CoroutinesExtensionsTest {
         delay(1000)
         
         correct.forEach { str ->
-            socket.emitSuspend("echo", str)
+            socket.emit("echo", str)
             delay(100)
         }
         
@@ -391,7 +387,7 @@ abstract class CoroutinesExtensionsTest {
     fun testEmitSuspendWithBinaryAck() = doTest {
         Logging.info(TAG, "testEmitSuspendWithBinaryAck start")
 
-        val buf = "huehue".toByteArray()
+        val buf = "huehue".encodeToByteArray()
         val ackReceived = CompletableDeferred<ByteString>()
 
         val opt = IO.Options()
@@ -410,11 +406,11 @@ abstract class CoroutinesExtensionsTest {
         socket.openSuspend()
         delay(1000)
         
-        socket.emitSuspend("callAckBinary")
+        socket.emit("callAckBinary")
         delay(500)
         
         val result = ackReceived.await()
-        assertArrayEquals(buf, result.toByteArray())
+        assertEquals(ByteString(buf, 0, buf.size), result)
         
         socket.close()
     }
@@ -423,7 +419,7 @@ abstract class CoroutinesExtensionsTest {
     fun testEmitSuspendReceiveBinaryDataWithAck() = doTest {
         Logging.info(TAG, "testEmitSuspendReceiveBinaryDataWithAck start")
 
-        val buf = "huehue".toByteArray()
+        val buf = "huehue".encodeToByteArray()
         val ackReceived = CompletableDeferred<ByteString>()
 
         val opt = IO.Options()
@@ -438,7 +434,7 @@ abstract class CoroutinesExtensionsTest {
         }
 
         val result = ackReceived.await()
-        assertArrayEquals(buf, result.toByteArray())
+        assertEquals(ByteString(buf, 0, buf.size), result)
         
         socket.close()
     }
@@ -447,7 +443,7 @@ abstract class CoroutinesExtensionsTest {
     fun testEmitSuspendWithBinaryDataMixedWithJson() = doTest {
         Logging.info(TAG, "testEmitSuspendWithBinaryDataMixedWithJson start")
 
-        val buf = "howdy".toByteArray()
+        val buf = "howdy".encodeToByteArray()
         val echoBack = CompletableDeferred<Array<out Any>>()
 
         val opt = IO.Options()
@@ -465,7 +461,7 @@ abstract class CoroutinesExtensionsTest {
             put("hello", "lol")
             put("goodbye", "gotcha")
         }
-        socket.emitSuspend("echo", data, ByteString(buf, 0, buf.size))
+        socket.emit("echo", data, ByteString(buf, 0, buf.size))
         
         val args = echoBack.await()
         val json = args[0] as JsonObject
@@ -587,7 +583,7 @@ abstract class CoroutinesExtensionsTest {
         socket.openSuspend()
         delay(1000)
         
-        socket.emitSuspend("echo", date)
+        socket.emit("echo", date)
         val result = echoBack.await()
         
         assertTrue(result is String)
@@ -616,7 +612,7 @@ abstract class CoroutinesExtensionsTest {
         val data = buildJsonObject {
             put("date", date.toString())
         }
-        socket.emitSuspend("echo", data)
+        socket.emit("echo", data)
         val result = echoBack.await()
         
         assertTrue(result["date"]?.jsonPrimitive?.content is String)
@@ -628,7 +624,7 @@ abstract class CoroutinesExtensionsTest {
     fun testEmitSuspendSendBinaryData() = doTest {
         Logging.info(TAG, "testEmitSuspendSendBinaryData start")
 
-        val buf = "asdfasdf".toByteArray()
+        val buf = "asdfasdf".encodeToByteArray()
         val echoBack = CompletableDeferred<ByteString>()
 
         val opt = IO.Options()
@@ -642,10 +638,10 @@ abstract class CoroutinesExtensionsTest {
         socket.openSuspend()
         delay(1000)
         
-        socket.emitSuspend("echo", ByteString(buf, 0, buf.size))
+        socket.emit("echo", ByteString(buf, 0, buf.size))
         val result = echoBack.await()
         
-        assertArrayEquals(buf, result.toByteArray())
+        assertEquals(ByteString(buf, 0, buf.size), result)
         
         socket.close()
     }
@@ -654,7 +650,7 @@ abstract class CoroutinesExtensionsTest {
     fun testEmitSuspendSendEventsWithByteArraysInCorrectOrder() = doTest {
         Logging.info(TAG, "testEmitSuspendSendEventsWithByteArraysInCorrectOrder start")
 
-        val buf = "abuff1".toByteArray()
+        val buf = "abuff1".encodeToByteArray()
         val received = mutableListOf<Any>()
 
         val opt = IO.Options()
@@ -668,8 +664,8 @@ abstract class CoroutinesExtensionsTest {
         socket.openSuspend()
         delay(1000)
         
-        socket.emitSuspend("echo", ByteString(buf, 0, buf.size))
-        socket.emitSuspend("echo", "please arrive second")
+        socket.emit("echo", ByteString(buf, 0, buf.size))
+        socket.emit("echo", "please arrive second")
         
         delay(1000)
         
@@ -682,12 +678,5 @@ abstract class CoroutinesExtensionsTest {
 
     companion object {
         const val TAG = "CoroutinesExtensionsTest"
-        
-        private fun assertArrayEquals(expected: ByteArray, actual: ByteArray) {
-            assertEquals(expected.size, actual.size)
-            expected.forEachIndexed { index, byte ->
-                assertEquals(byte, actual[index])
-            }
-        }
     }
 }

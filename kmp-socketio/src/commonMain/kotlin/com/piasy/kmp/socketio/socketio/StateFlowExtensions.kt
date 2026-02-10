@@ -3,12 +3,14 @@ package com.piasy.kmp.socketio.socketio
 import com.piasy.kmp.socketio.emitter.Emitter
 import com.piasy.kmp.socketio.engineio.State
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.callbackFlow
 
 /**
  * Extension property to get StateFlow for Manager state.
@@ -79,32 +81,33 @@ val Socket.socketIdFlow: StateFlow<String>
     }
 
 /**
- * Extension function to get Flow for Emitter events.
- * Allows using coroutines to listen to events.
- * 
+ * Extension function to get a cold [Flow] for [Emitter] events.
+ *
+ * Differences from the original listener API:
+ * - integrates with coroutines (cancellation, operators, structured concurrency);
+ * - automatically subscribes/unsubscribes the underlying listener with the Flow lifecycle.
+ *
  * @param event event name
- * @return Flow that emits event arguments
+ * @return cold [Flow] that emits event arguments while it is collected
  */
-fun Emitter.flow(event: String): Flow<Array<out Any>> {
-    val sharedFlow = MutableSharedFlow<Array<out Any>>(
-        replay = 0,
-        extraBufferCapacity = Channel.UNLIMITED
-    )
-    
-    val listener = object : Emitter.Listener {
-        override fun call(vararg args: Any) {
-            sharedFlow.tryEmit(args)
+fun Emitter.flow(event: String): Flow<Array<out Any>> =
+    callbackFlow {
+        val listener = object : Emitter.Listener {
+            override fun call(vararg args: Any) {
+                trySend(args).isSuccess
+            }
+        }
+
+        on(event, listener)
+
+        awaitClose {
+            off(event, listener)
         }
     }
-    
-    on(event, listener)
-    
-    return sharedFlow.asSharedFlow()
-}
 
 /**
  * Extension function to get Flow for Emitter events with replay buffer.
- * 
+ *
  * @param event event name
  * @param replay number of events to replay to new subscribers
  * @return Flow that emits event arguments
@@ -114,14 +117,14 @@ fun Emitter.flowWithReplay(event: String, replay: Int = 1): Flow<Array<out Any>>
         replay = replay,
         extraBufferCapacity = Channel.UNLIMITED
     )
-    
+
     val listener = object : Emitter.Listener {
         override fun call(vararg args: Any) {
             sharedFlow.tryEmit(args)
         }
     }
-    
+
     on(event, listener)
-    
+
     return sharedFlow.asSharedFlow()
 }

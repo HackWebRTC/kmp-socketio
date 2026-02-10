@@ -58,9 +58,9 @@ class CoroutinesExample {
         // Wait a bit for connection
         kotlinx.coroutines.delay(1000)
         
-        // Emit event using suspend function
+        // Emit event using regular API; suspend is only needed for ack
         val bin = UnsafeByteStringOperations.wrapUnsafe(byteArrayOf(0x1, 0x3, 0x1, 0x4))
-        socket.emitSuspend("echo", 1, "2", bin, GMTDate())
+        socket.emit("echo", 1, "2", bin, GMTDate())
         
         // Emit with suspend acknowledgement callback (trailing lambda syntax)
         socket.emitSuspend("echoWithAck", 42, "test") { args ->
@@ -98,7 +98,7 @@ class CoroutinesExample {
         // Example 1: Handle errors in suspend functions with try-catch
         try {
             socket.openSuspend()
-            socket.emitSuspend("someEvent", "data")
+            socket.emit("someEvent", "data")
         } catch (e: Exception) {
             println("Error occurred: ${e.message}")
             // Handle error appropriately
@@ -263,7 +263,7 @@ class CoroutinesExample {
             delay(1000)
             
             // Use socket for some operations
-            socket.emitSuspend("someEvent", "data")
+            socket.emit("someEvent", "data")
             
             // Step 2: Close old socket properly
             println("Closing old socket...")
@@ -293,7 +293,7 @@ class CoroutinesExample {
             delay(1000)
             
             // Use new socket
-            socket.emitSuspend("someEvent", "new_data")
+            socket.emit("someEvent", "new_data")
             
             delay(1000)
             
@@ -337,7 +337,7 @@ class CoroutinesExample {
             try {
                 socket.openSuspend()
                 delay(1000)
-                socket.emitSuspend("test", "data")
+                socket.emit("test", "data")
                 delay(1000)
             } catch (e: Exception) {
                 println("Error: ${e.message}")
