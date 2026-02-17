@@ -466,10 +466,15 @@ class Socket(
 
         const val EVENT_MESSAGE = "message"
         const val EVENT_ERROR = Manager.EVENT_ERROR
+
         private val RESERVED_EVENTS = setOf(
             EVENT_CONNECT,
             EVENT_CONNECT_ERROR,
             EVENT_DISCONNECT,
+            // used on the server-side
+            "disconnecting",
+            "newListener",
+            "removeListener",
         )
     }
 }
