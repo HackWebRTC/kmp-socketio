@@ -1,0 +1,174 @@
+  详细分析报告：reconnectManually 测试偶现失败问题
+
+  一、测试用例逻辑
+
+  reconnectManually 测试的核心逻辑：
+
+  1. 第一次连接：调用 socket.open() → 等待 EVENT_CONNECT → 调用 socket.close()
+  2. 第二次连接：收到 EVENT_DISCONNECT 后 → 再次调用 socket.open() → 等待 EVENT_CONNECT → 调用 socket.close() → 测试完成
+
+  ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  二、关键 Transport 实例说明
+
+  根据日志中的 hash 值，我整理出以下 transport 实例：
+
+   日志文件   Transport 实例         类型        用途
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   good.log   polling@709407350      Polling     第一次连接的初始 transport
+              websocket@2087361714   WebSocket   第一次连接的 probe transport（升级失败）
+              polling@969147974      Polling     第二次连接的 transport
+              websocket@590078241    WebSocket   第二次连接的 probe transport
+   err.log    polling@1929439163     Polling     第一次连接的初始 transport
+              websocket@260110639    WebSocket   第一次连接的 probe transport（升级成功但引发崩溃）
+              polling@2125549749     Polling     第二次连接的 transport
+              websocket@897766716    WebSocket   第二次连接的 probe transport
+
+  ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  三、正常情况（good.log）的执行流程分析
+
+  [第一次连接]
+  1. polling@709407350: INIT → OPENING → OPEN (发送 Connect 包)
+  2. 启动 upgrade probe: 创建 websocket@2087361714
+  3. websocket@2087361714: OPENING → OPEN → 发送 probe ping
+  4. 此时 socket.close() 被调用，开始关闭流程
+  5. polling@709407350: 进入 CLOSING → 发送 Disconnect 包 → 收到 drain → 关闭
+  6. websocket@2087361714: 因 socket 关闭而关闭 (probe 失败: "socket closed")
+
+  [第二次连接]
+  7. 创建新的 polling@969147974: INIT → OPENING → OPEN
+  8. 启动 upgrade probe: 创建 websocket@590078241
+  9. polling@969147974 正常处理数据
+  10. 测试完成，停止服务器
+
+  关键点：在 good.log 中，第一次连接的 WebSocket probe (websocket@2087361714) 在成功前就被 socket 关闭流程中断了，没有完成升级。
+
+  ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  四、失败情况（err.log）的执行流程分析
+
+  [第一次连接]
+  1. polling@1929439163: INIT → OPENING → OPEN (发送 Connect 包)
+  2. 启动 upgrade probe: 创建 websocket@260110639
+  3. socket.close() 被调用，但此时 writeBuffer 有待发送数据 (Disconnect 包)
+  4. EngineSocket 进入 "waiting drain" 状态
+
+  [关键问题时间点]
+  5. websocket@260110639 在 socket 等待 drain 期间完成了 WebSocket 握手 (101 Switching Protocols)
+  6. websocket@260110639: 发送 probe ping → 收到 probe pong → 升级流程开始
+  7. EngineSocket 状态: CLOSING，但 upgrade 流程仍在进行！
+  8. polling@1929439163 被 pause() → 进入 PAUSED 状态
+  9. EngineSocket "close waiting upgrade"（在 CLOSING 状态下等待升级）
+
+  [严重问题]
+  10. websocket@260110639 发送 upgrade 包成功 → 触发 drain 事件
+  11. onDrain 被调用: prevBufferLen=0, writeBuffer.size=0, len=1
+  12. 尝试 writeBuffer.removeAt(0) 但队列为空！
+  13. 抛出 NoSuchElementException: ArrayDeque is empty
+
+  ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  五、根本问题分析
+
+  5.1 问题核心：状态竞争条件
+
+  问题场景：在 socket.close() 被调用后，如果此时：
+
+  1. writeBuffer 非空（有待发送的 Disconnect 包）
+  2. 但 WebSocket probe 恰好在此时完成了握手并收到 pong
+  3. 升级流程会启动（upgrading = true）
+
+  代码路径分析：
+
+  在 EngineSocket.close() 方法中（第 180-196 行）：
+
+  if (writeBuffer.isNotEmpty()) {
+      once(EVENT_DRAIN, object : Listener {
+          override fun call(vararg args: Any) {
+              if (upgrading) {  // <- 此时 upgrading 可能为 true
+                  waitForUpgrade()
+              } else {
+                  closeAction()
+              }
+          }
+      })
+  }
+
+  在 probe() 方法中（第 402-455 行），当 probe 成功后：
+
+  transport.once(EVENT_DRAIN, object : Listener {
+      override fun call(vararg args: Any) {
+          emit(EVENT_UPGRADE, transport)
+          setTransport(transport)  // <- 这会替换 transport
+          // ...
+          flush()  // <- 新 transport 的 flush
+      }
+  })
+
+  5.2 崩溃的直接原因
+
+  在 onDrain 方法中（第 277-290 行）：
+
+  private fun onDrain(len: Int) {
+      for (i in 1..len) {
+          writeBuffer.removeAt(0)  // <- 崩溃点！当 writeBuffer 为空时抛出异常
+      }
+  }
+
+  为什么会空？
+
+  1. 第一次 close() 时，writeBuffer 有 1 个 Disconnect 包
+  2. polling transport 发送 Disconnect 并触发 drain
+  3. 但在 drain 事件触发前，WebSocket probe 完成了并调用 setTransport(transport)
+  4. 新 transport 的 flush 可能修改了 prevBufferLen 或触发了额外的 drain 事件
+  5. 导致 onDrain 被调用时，writeBuffer 已经被清空
+
+  5.3 关键日志对比
+
+   时间点         good.log (正常)                err.log (失败)
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   Socket close   在 WebSocket probe 成功前      在 WebSocket probe 成功后
+   polling 状态   直接 CLOSING → 关闭            PAUSED (因 upgrade 而暂停)
+   upgrade 完成   否                             是
+   后续流程       直接关闭                       尝试 setTransport + flush
+   drain 处理     正常处理 Disconnect 的 drain   异常的 drain (buffer 不匹配)
+
+  ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  六、状态变化时序图
+
+  [good.log - 正常关闭]
+  polling@709407350: OPEN ──→ CLOSING ──→ 发送 Disconnect ──→ drain ──→ CLOSED
+                                ↑
+  websocket@2087361714:    OPENING (probe 进行中)
+                                │
+                           收到 socket closed 错误，probe 失败
+
+  [err.log - 异常关闭]
+  polling@1929439163:  OPEN ──→ CLOSING ──→ pause ──→ PAUSED ──→ 关闭
+                                   ↑              ↑
+  websocket@260110639:       OPENING ──→ OPEN ──→ probe pong ──→ upgrade
+                                                            │
+                                                            ↓
+                                                      setTransport()
+                                                            │
+                                                      flush() [新 transport]
+                                                            │
+                                                      onDrain(len=1) ← 异常！
+                                                            │
+                                                      writeBuffer 已空
+
+  ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  七、总结
+
+  根本原因：EngineSocket.close() 和 probe() 的 upgrade 流程之间存在竞争条件。当 socket 正在关闭（有未发送数据等待 drain）时，如果 probe transport 成功完成，会触发升级流程。此时：
+
+  1. upgrading 被设为 true
+  2. 原 polling transport 被 pause
+  3. 新 WebSocket transport 被设置并触发 flush
+  4. 这导致 onDrain 在错误的时机被调用，writeBuffer 和 prevBufferLen 状态不一致
+  5. 最终 ArrayDeque.removeFirst() 在空队列上抛出 NoSuchElementException
+
+  触发条件：这是一个时序相关的竞态条件，取决于：
+
+  • WebSocket probe 完成的时间点
+  • socket.close() 调用的时间点
+  • 网络延迟和调度顺序
+
+  这就是为什么该问题是偶现的。

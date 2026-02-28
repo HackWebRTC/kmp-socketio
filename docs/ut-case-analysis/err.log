@@ -1,0 +1,489 @@
+2026-02-01T07:33:00.5236510Z ConnectionTest[jvm] > reconnectManually[jvm] STANDARD_OUT
+2026-02-01T07:33:00.5236820Z     1769931180437 I TestConnection Starting server ...
+2026-02-01T07:33:00.5237520Z     1769931180437 E Transport websocket@1696140781 Receive error while reading websocket frame: `Channel was closed`
+2026-02-01T07:33:00.5237990Z     1769931180437 I Transport websocket@1696140781 onClose
+2026-02-01T07:33:00.7239180Z     1769931180644 I TestConnection SERVER ERR: 2026-02-01T07:33:00.644Z socket.io:server initializing namespace /
+2026-02-01T07:33:00.7342520Z     1769931180645 I TestConnection SERVER ERR: 2026-02-01T07:33:00.645Z socket.io:server creating engine.io instance with opts {"pingInterval":2000,"cleanupEmptyChildNamespaces":false,"path":"/socket.io"}
+2026-02-01T07:33:00.7360710Z     1769931180646 I TestConnection SERVER ERR: 2026-02-01T07:33:00.646Z socket.io:server attaching client serving req handler
+2026-02-01T07:33:00.7361560Z     1769931180646 I TestConnection SERVER ERR: 2026-02-01T07:33:00.646Z socket.io:server initializing namespace /foo
+2026-02-01T07:33:00.7362340Z     1769931180647 I TestConnection SERVER ERR: 2026-02-01T07:33:00.646Z socket.io:server initializing namespace /timeout_socket
+2026-02-01T07:33:00.7363130Z     1769931180647 I TestConnection SERVER ERR: 2026-02-01T07:33:00.646Z socket.io:server initializing namespace /valid
+2026-02-01T07:33:00.7363880Z     1769931180647 I TestConnection SERVER ERR: 2026-02-01T07:33:00.646Z socket.io:server initializing namespace /asd
+2026-02-01T07:33:00.7364610Z     1769931180647 I TestConnection SERVER ERR: 2026-02-01T07:33:00.646Z socket.io:server initializing namespace /abc
+2026-02-01T07:33:00.7365710Z     1769931180647 I TestConnection SERVER ERR: 2026-02-01T07:33:00.646Z socket.io:server initializing namespace /no
+2026-02-01T07:33:00.7366450Z     1769931180662 I TestConnection SERVER OUT: Socket.IO server listening on port 3000
+2026-02-01T07:33:00.7367020Z     1769931180662 I TestConnection SERVER OUT: https server listening on port 8443
+
+
+
+
+
+
+
+
+
+
+
+2026-02-01T07:33:00.7367680Z     1769931180663 I IO socket: uri http://localhost:3000/, opt com.piasy.kmp.socketio.socketio.IO$Options@311b50f9
+2026-02-01T07:33:00.7368230Z     1769931180663 I IO socket newConn, sameNsp false
+2026-02-01T07:33:00.7368610Z     1769931180663 I Manager socket: nsp /, auth {}
+2026-02-01T07:33:00.7369030Z     1769931180664 I Socket open: connected false, io reconnecting false
+2026-02-01T07:33:00.7369440Z     1769931180664 I Socket subEvents: subs 0
+2026-02-01T07:33:00.7369860Z     1769931180664 I Manager open, state INIT, uri http://localhost:3000/
+2026-02-01T07:33:00.7370280Z     1769931180664 I EngineSocket open: state INIT
+2026-02-01T07:33:00.7370660Z     1769931180664 I EngineSocket createTransport polling
+2026-02-01T07:33:00.7371060Z     1769931180665 I EngineSocket setTransport polling
+2026-02-01T07:33:00.7371430Z     1769931180665 D Transport polling@1929439163 open
+2026-02-01T07:33:00.7371820Z     1769931180665 D Transport polling@1929439163 poll start
+2026-02-01T07:33:00.7372540Z     1769931180665 D Transport polling@1929439163 doRequest GET http://localhost:3000/socket.io/?EIO=4&transport=polling, data null, headers {Accept=[*/*]}
+2026-02-01T07:33:00.7373300Z     1769931180665 I Net REQUEST: http://localhost:3000/socket.io/?EIO=4&transport=polling
+2026-02-01T07:33:00.7373690Z     METHOD: GET
+2026-02-01T07:33:00.7373920Z     COMMON HEADERS
+2026-02-01T07:33:00.7374150Z     -> Accept: */*
+2026-02-01T07:33:00.7374380Z     -> Accept-Charset: UTF-8
+2026-02-01T07:33:00.7374640Z     CONTENT HEADERS
+2026-02-01T07:33:00.7374870Z     -> Content-Length: 0
+2026-02-01T07:33:00.7375120Z     BODY Content-Type: null
+2026-02-01T07:33:00.7375370Z     BODY START
+2026-02-01T07:33:00.7375540Z 
+2026-02-01T07:33:00.7375680Z     BODY END
+2026-02-01T07:33:00.7376250Z     1769931180678 I TestConnection SERVER ERR: 2026-02-01T07:33:00.678Z socket.io:server incoming connection with id Seja1HgqfCyOAv0qAAAA
+2026-02-01T07:33:00.7376820Z     1769931180679 I Net RESPONSE: 200 OK
+2026-02-01T07:33:00.7377090Z     METHOD: GET
+2026-02-01T07:33:00.7377430Z     FROM: http://localhost:3000/socket.io/?EIO=4&transport=polling
+2026-02-01T07:33:00.7377770Z     COMMON HEADERS
+2026-02-01T07:33:00.7378160Z     -> Connection: keep-alive
+2026-02-01T07:33:00.7378420Z     -> Content-Length: 117
+2026-02-01T07:33:00.7378730Z     -> Content-Type: text/plain; charset=UTF-8
+2026-02-01T07:33:00.7379070Z     -> Date: Sun, 01 Feb 2026 07:33:00 GMT
+2026-02-01T07:33:00.7379360Z     -> Keep-Alive: timeout=5
+2026-02-01T07:33:00.7379650Z     -> cache-control: no-store
+2026-02-01T07:33:00.7380010Z     BODY Content-Type: text/plain; charset=UTF-8
+2026-02-01T07:33:00.7380300Z     BODY START
+2026-02-01T07:33:00.7380830Z     0{"sid":"Seja1HgqfCyOAv0qAAAA","upgrades":["websocket"],"pingInterval":2000,"pingTimeout":20000,"maxPayload":1000000}
+2026-02-01T07:33:00.7381300Z     BODY END
+2026-02-01T07:33:00.7381870Z     1769931180679 D Transport polling@1929439163 doRequest GET http://localhost:3000/socket.io/?EIO=4&transport=polling response: 200 OK
+2026-02-01T07:33:00.7383380Z     1769931180680 D Transport polling@1929439163 onPollComplete: state OPENING, `0{"sid":"Seja1HgqfCyOAv0qAAAA","upgrades":["websocket"],"pingInterval":2000,"pingTimeout":20000,"maxPayload":1000000}`
+2026-02-01T07:33:00.7384200Z     1769931180680 I Transport polling@1929439163 onOpen, state OPENING
+2026-02-01T07:33:00.7385010Z     1769931180680 D Transport polling@1929439163 onPacket Open(sid=Seja1HgqfCyOAv0qAAAA, upgrades=[websocket], pingInterval=2000, pingTimeout=20000, maxPayload=1000000)
+2026-02-01T07:33:00.7386160Z     1769931180680 D EngineSocket transport on packet Open(sid=Seja1HgqfCyOAv0qAAAA, upgrades=[websocket], pingInterval=2000, pingTimeout=20000, maxPayload=1000000)
+2026-02-01T07:33:00.7387180Z     1769931180680 D EngineSocket onPacket Open(sid=Seja1HgqfCyOAv0qAAAA, upgrades=[websocket], pingInterval=2000, pingTimeout=20000, maxPayload=1000000)
+2026-02-01T07:33:00.7387790Z     1769931180680 I EngineSocket onOpen
+2026-02-01T07:33:00.7388200Z     1769931180680 I Manager onOpen, state OPENING
+2026-02-01T07:33:00.7388530Z     1769931180680 I Manager cleanUp
+2026-02-01T07:33:00.7388820Z     1769931180680 I Socket onOpen
+2026-02-01T07:33:00.7389300Z     1769931180680 D Manager send packets [Message(payload=Connect(namespace=/, payload=null))]
+2026-02-01T07:33:00.7389990Z     1769931180680 D EngineSocket sendPackets: state OPEN, [Message(payload=Connect(namespace=/, payload=null))]
+2026-02-01T07:33:00.7390740Z     1769931180680 D EngineSocket flush: state OPEN, writable true, upgrading false, prevBufferLen 0, writeBuffer.size 1
+2026-02-01T07:33:00.7391430Z     1769931180680 D Transport polling@1929439163 send: state OPEN, 1 packets
+2026-02-01T07:33:00.7391880Z     1769931180680 I EngineSocket starting upgrade probes
+2026-02-01T07:33:00.7392300Z     1769931180680 I EngineSocket probing transport 'websocket'
+2026-02-01T07:33:00.7392730Z     1769931180680 I EngineSocket createTransport websocket
+2026-02-01T07:33:00.7393730Z     1769931180681 D Transport polling@1929439163 doRequest POST http://localhost:3000/socket.io/?EIO=4&transport=polling&sid=Seja1HgqfCyOAv0qAAAA, data 40, headers {Content-type=[text/plain;charset=UTF-8], Accept=[*/*]}
+2026-02-01T07:33:00.7394600Z     1769931180681 D Transport websocket@260110639 open
+2026-02-01T07:33:00.7395250Z     1769931180681 I Transport websocket@260110639 doOpen ws://localhost:3000/socket.io/?EIO=4&transport=websocket&sid=Seja1HgqfCyOAv0qAAAA
+2026-02-01T07:33:00.7395870Z     1769931180681 D Transport polling@1929439163 poll start
+2026-02-01T07:33:00.7396670Z     1769931180681 D Transport polling@1929439163 doRequest GET http://localhost:3000/socket.io/?EIO=4&transport=polling&sid=Seja1HgqfCyOAv0qAAAA, data null, headers {Accept=[*/*]}
+2026-02-01T07:33:00.7397580Z     1769931180681 I Net REQUEST: http://localhost:3000/socket.io/?EIO=4&transport=polling&sid=Seja1HgqfCyOAv0qAAAA
+2026-02-01T07:33:00.7398040Z     METHOD: POST
+2026-02-01T07:33:00.7398270Z     COMMON HEADERS
+2026-02-01T07:33:00.7398490Z     -> Accept: */*
+2026-02-01T07:33:00.7398730Z     -> Accept-Charset: UTF-8
+2026-02-01T07:33:00.7398990Z     CONTENT HEADERS
+2026-02-01T07:33:00.7399220Z     -> Content-Length: 2
+2026-02-01T07:33:00.7399520Z     -> Content-Type: text/plain; charset=UTF-8
+2026-02-01T07:33:00.7400020Z     BODY Content-Type: text/plain; charset=UTF-8
+2026-02-01T07:33:00.7400310Z     BODY START
+2026-02-01T07:33:00.7400520Z     40
+2026-02-01T07:33:00.7400730Z     BODY END
+2026-02-01T07:33:00.7401220Z     1769931180681 I Net REQUEST: http://localhost:3000/socket.io/?EIO=4&transport=polling&sid=Seja1HgqfCyOAv0qAAAA
+2026-02-01T07:33:00.7401680Z     METHOD: GET
+2026-02-01T07:33:00.7401910Z     COMMON HEADERS
+2026-02-01T07:33:00.7402130Z     -> Accept: */*
+2026-02-01T07:33:00.7402370Z     -> Accept-Charset: UTF-8
+2026-02-01T07:33:00.7402630Z     CONTENT HEADERS
+2026-02-01T07:33:00.7402870Z     -> Content-Length: 0
+2026-02-01T07:33:00.7403120Z     BODY Content-Type: null
+2026-02-01T07:33:00.7403370Z     BODY START
+2026-02-01T07:33:00.7403540Z 
+2026-02-01T07:33:00.7403680Z     BODY END
+2026-02-01T07:33:00.7404160Z     1769931180682 I Net REQUEST: ws://localhost:3000/socket.io/?EIO=4&transport=websocket&sid=Seja1HgqfCyOAv0qAAAA
+2026-02-01T07:33:00.7404610Z     METHOD: GET
+2026-02-01T07:33:00.7404830Z     COMMON HEADERS
+2026-02-01T07:33:00.7405050Z     -> Accept: */*
+2026-02-01T07:33:00.7405290Z     -> Accept-Charset: UTF-8
+2026-02-01T07:33:00.7405540Z     CONTENT HEADERS
+2026-02-01T07:33:00.7405780Z     -> Connection: Upgrade
+2026-02-01T07:33:00.7406100Z     -> Sec-WebSocket-Key: MTQ3YTY2NWRiZGRlMjdjYQ==
+2026-02-01T07:33:00.7406450Z     -> Sec-WebSocket-Version: 13
+2026-02-01T07:33:00.7406720Z     -> Upgrade: websocket
+2026-02-01T07:33:00.7406980Z     BODY Content-Type: null
+2026-02-01T07:33:00.7407290Z     BODY START
+2026-02-01T07:33:00.7407470Z 
+2026-02-01T07:33:00.7407600Z     BODY END
+2026-02-01T07:33:00.7408090Z     1769931180687 I TestConnection SERVER ERR: 2026-02-01T07:33:00.687Z socket.io:client connecting to namespace /
+2026-02-01T07:33:00.7408820Z     1769931180687 I TestConnection SERVER ERR: 2026-02-01T07:33:00.687Z socket.io:namespace adding socket to nsp /
+2026-02-01T07:33:00.7409310Z     1769931180689 I Net RESPONSE: 200 OK
+2026-02-01T07:33:00.7409580Z     METHOD: POST
+2026-02-01T07:33:00.7410020Z     FROM: http://localhost:3000/socket.io/?EIO=4&transport=polling&sid=Seja1HgqfCyOAv0qAAAA
+2026-02-01T07:33:00.7410420Z     COMMON HEADERS
+2026-02-01T07:33:00.7410660Z     -> Connection: keep-alive
+2026-02-01T07:33:00.7410930Z     -> Content-Length: 2
+2026-02-01T07:33:00.7411210Z     -> Content-Type: text/html
+2026-02-01T07:33:00.7411590Z     -> Date: Sun, 01 Feb 2026 07:33:00 GMT
+2026-02-01T07:33:00.7411940Z     -> Keep-Alive: timeout=5
+2026-02-01T07:33:00.7412230Z     -> cache-control: no-store
+2026-02-01T07:33:00.7412530Z     BODY Content-Type: text/html
+2026-02-01T07:33:00.7412790Z     BODY START
+2026-02-01T07:33:00.7413000Z     ok
+2026-02-01T07:33:00.7413200Z     BODY END
+2026-02-01T07:33:00.7413850Z     1769931180689 D Transport polling@1929439163 doRequest POST http://localhost:3000/socket.io/?EIO=4&transport=polling&sid=Seja1HgqfCyOAv0qAAAA response: 200 OK
+2026-02-01T07:33:00.7414630Z     1769931180690 D EngineSocket onDrain: prevBufferLen 1, writeBuffer.size 1, len 1
+2026-02-01T07:33:00.7415140Z     1769931180690 D EngineSocket onDrain fire socket drain event
+2026-02-01T07:33:00.7415760Z     1769931180691 I TestConnection SERVER ERR: 2026-02-01T07:33:00.689Z socket.io:socket socket connected - writing packet
+2026-02-01T07:33:00.7416610Z     1769931180691 I TestConnection SERVER ERR: 2026-02-01T07:33:00.689Z socket.io:socket join room Q_xqaV-43ilrJOWWAAAB
+2026-02-01T07:33:00.7417230Z     1769931180692 I TestConnection SERVER OUT: on connection
+2026-02-01T07:33:00.7417600Z     1769931180692 I Net RESPONSE: 200 OK
+2026-02-01T07:33:00.7417870Z     METHOD: GET
+2026-02-01T07:33:00.7418290Z     FROM: http://localhost:3000/socket.io/?EIO=4&transport=polling&sid=Seja1HgqfCyOAv0qAAAA
+2026-02-01T07:33:00.7418700Z     COMMON HEADERS
+2026-02-01T07:33:00.7418930Z     -> Connection: keep-alive
+2026-02-01T07:33:00.7419200Z     -> Content-Length: 32
+2026-02-01T07:33:00.7419510Z     -> Content-Type: text/plain; charset=UTF-8
+2026-02-01T07:33:00.7419840Z     -> Date: Sun, 01 Feb 2026 07:33:00 GMT
+2026-02-01T07:33:00.7420340Z     -> Keep-Alive: timeout=5
+2026-02-01T07:33:00.7420640Z     -> cache-control: no-store
+2026-02-01T07:33:00.7420980Z     BODY Content-Type: text/plain; charset=UTF-8
+2026-02-01T07:33:00.7421330Z     BODY START
+2026-02-01T07:33:00.7421600Z     40{"sid":"Q_xqaV-43ilrJOWWAAAB"}
+2026-02-01T07:33:00.7421860Z     BODY END
+2026-02-01T07:33:00.7422530Z     1769931180693 D Transport polling@1929439163 doRequest GET http://localhost:3000/socket.io/?EIO=4&transport=polling&sid=Seja1HgqfCyOAv0qAAAA response: 200 OK
+2026-02-01T07:33:00.7423400Z     1769931180693 D Transport polling@1929439163 onPollComplete: state OPEN, `40{"sid":"Q_xqaV-43ilrJOWWAAAB"}`
+2026-02-01T07:33:00.7424200Z     1769931180694 D Transport polling@1929439163 onPacket Message(payload=Connect(namespace=/, payload={"sid":"Q_xqaV-43ilrJOWWAAAB"}))
+2026-02-01T07:33:00.7425050Z     1769931180694 D EngineSocket transport on packet Message(payload=Connect(namespace=/, payload={"sid":"Q_xqaV-43ilrJOWWAAAB"}))
+2026-02-01T07:33:00.8931220Z     1769931180694 D EngineSocket onPacket Message(payload=Connect(namespace=/, payload={"sid":"Q_xqaV-43ilrJOWWAAAB"}))
+2026-02-01T07:33:00.8932300Z     1769931180694 D Manager on EngineSocket data class org.hildan.socketio.SocketIOPacket$Connect
+2026-02-01T07:33:00.8933060Z     1769931180694 D Socket onPacket: nsp /, Connect(namespace=/, payload={"sid":"Q_xqaV-43ilrJOWWAAAB"})
+2026-02-01T07:33:00.8933700Z     1769931180694 I Socket onConnect sid Q_xqaV-43ilrJOWWAAAB
+2026-02-01T07:33:00.8934700Z     1769931180694 D Transport polling@1929439163 poll start
+
+
+
+
+
+
+
+
+
+
+
+2026-02-01T07:33:00.8935110Z     1769931180694 I Socket close: connected true
+2026-02-01T07:33:00.8935620Z     1769931180694 D Manager send packets [Message(payload=Disconnect(namespace=/))]
+2026-02-01T07:33:00.8936330Z     1769931180694 D EngineSocket sendPackets: state OPEN, [Message(payload=Disconnect(namespace=/))]
+2026-02-01T07:33:00.8937100Z     1769931180694 D EngineSocket flush: state OPEN, writable true, upgrading false, prevBufferLen 0, writeBuffer.size 1
+2026-02-01T07:33:00.8937730Z     1769931180694 D Transport polling@1929439163 send: state OPEN, 1 packets
+2026-02-01T07:33:00.8938080Z     1769931180694 I Manager destroy
+2026-02-01T07:33:00.8938320Z     1769931180694 I Manager close
+2026-02-01T07:33:00.8938550Z     1769931180694 I Manager cleanUp
+2026-02-01T07:33:00.8938960Z     1769931180694 I EngineSocket close: state OPEN, writeBuffer.size 1, upgrading: false
+2026-02-01T07:33:00.8939480Z     1769931180694 I EngineSocket close waiting drain event
+2026-02-01T07:33:00.8939840Z     1769931180694 I Socket onClose: `io client disconnect`
+
+
+
+
+
+
+
+
+
+
+
+2026-02-01T07:33:00.8940330Z     1769931180695 I Socket open: connected false, io reconnecting false
+2026-02-01T07:33:00.8940690Z     1769931180695 I Socket subEvents: subs 0
+2026-02-01T07:33:00.8941190Z     1769931180695 I Manager open, state CLOSED, uri http://localhost:3000/
+2026-02-01T07:33:00.8941610Z     1769931180695 I EngineSocket open: state INIT
+2026-02-01T07:33:00.8941990Z     1769931180695 I EngineSocket createTransport polling
+2026-02-01T07:33:00.8942450Z     1769931180695 I EngineSocket setTransport polling
+2026-02-01T07:33:00.8942900Z     1769931180695 D Transport polling@2125549749 open
+2026-02-01T07:33:00.8943350Z     1769931180695 D Transport polling@2125549749 poll start
+2026-02-01T07:33:00.8944260Z     1769931180695 D Transport polling@2125549749 doRequest GET http://localhost:3000/socket.io/?EIO=4&transport=polling, data null, headers {Accept=[*/*]}
+2026-02-01T07:33:00.8945590Z     1769931180696 D Transport polling@1929439163 doRequest GET http://localhost:3000/socket.io/?EIO=4&transport=polling&sid=Seja1HgqfCyOAv0qAAAA, data null, headers {Accept=[*/*]}
+2026-02-01T07:33:00.8947250Z     1769931180696 D Transport polling@1929439163 doRequest POST http://localhost:3000/socket.io/?EIO=4&transport=polling&sid=Seja1HgqfCyOAv0qAAAA, data 41, headers {Content-type=[text/plain;charset=UTF-8], Accept=[*/*]}
+2026-02-01T07:33:00.8948530Z     1769931180696 I Net REQUEST: http://localhost:3000/socket.io/?EIO=4&transport=polling&sid=Seja1HgqfCyOAv0qAAAA
+2026-02-01T07:33:00.8949270Z     METHOD: GET
+2026-02-01T07:33:00.8949450Z     COMMON HEADERS
+2026-02-01T07:33:00.8949640Z     -> Accept: */*
+2026-02-01T07:33:00.8949840Z     -> Accept-Charset: UTF-8
+2026-02-01T07:33:00.8950060Z     CONTENT HEADERS
+2026-02-01T07:33:00.8950300Z     -> Content-Length: 0
+2026-02-01T07:33:00.8950520Z     BODY Content-Type: null
+2026-02-01T07:33:00.8950740Z     BODY START
+2026-02-01T07:33:00.8950850Z 
+2026-02-01T07:33:00.8950920Z     BODY END
+2026-02-01T07:33:00.8951460Z     1769931180697 I Net REQUEST: http://localhost:3000/socket.io/?EIO=4&transport=polling&sid=Seja1HgqfCyOAv0qAAAA
+2026-02-01T07:33:00.8951970Z     METHOD: POST
+2026-02-01T07:33:00.8952140Z     COMMON HEADERS
+2026-02-01T07:33:00.8952320Z     -> Accept: */*
+2026-02-01T07:33:00.8952520Z     -> Accept-Charset: UTF-8
+2026-02-01T07:33:00.8952850Z     CONTENT HEADERS
+2026-02-01T07:33:00.8953050Z     -> Content-Length: 2
+2026-02-01T07:33:00.8953340Z     -> Content-Type: text/plain; charset=UTF-8
+2026-02-01T07:33:00.8953700Z     BODY Content-Type: text/plain; charset=UTF-8
+2026-02-01T07:33:00.8953970Z     BODY START
+2026-02-01T07:33:00.8954130Z     41
+2026-02-01T07:33:00.8954280Z     BODY END
+2026-02-01T07:33:00.8954620Z     1769931180698 I Transport websocket@260110639 onOpen, state OPENING
+2026-02-01T07:33:00.8955190Z     1769931180698 I EngineSocket probe transport websocket opened, failed: false
+2026-02-01T07:33:00.8955950Z     1769931180698 D Transport websocket@260110639 send: state OPEN, 1 packets
+2026-02-01T07:33:00.8956520Z     1769931180698 D Transport websocket@260110639 doSend 1 packets start
+2026-02-01T07:33:00.8957110Z     1769931180698 D Transport websocket@260110639 doSend: Ping(payload=probe), `2probe`
+2026-02-01T07:33:00.8957770Z     1769931180699 I Net REQUEST: http://localhost:3000/socket.io/?EIO=4&transport=polling
+2026-02-01T07:33:00.8958200Z     METHOD: GET
+2026-02-01T07:33:00.8958370Z     COMMON HEADERS
+2026-02-01T07:33:00.8958560Z     -> Accept: */*
+2026-02-01T07:33:00.8958750Z     -> Accept-Charset: UTF-8
+2026-02-01T07:33:00.8958970Z     CONTENT HEADERS
+2026-02-01T07:33:00.8959170Z     -> Content-Length: 0
+2026-02-01T07:33:00.8959380Z     BODY Content-Type: null
+2026-02-01T07:33:00.8959590Z     BODY START
+2026-02-01T07:33:00.8959700Z 
+2026-02-01T07:33:00.8959770Z     BODY END
+2026-02-01T07:33:00.8960050Z     1769931180699 I Net RESPONSE: 101 Switching Protocols
+2026-02-01T07:33:00.8960340Z     METHOD: GET
+2026-02-01T07:33:00.8960790Z     FROM: ws://localhost:3000/socket.io/?EIO=4&transport=websocket&sid=Seja1HgqfCyOAv0qAAAA
+2026-02-01T07:33:00.8961220Z     COMMON HEADERS
+2026-02-01T07:33:00.8961410Z     -> Connection: Upgrade
+2026-02-01T07:33:00.8961760Z     -> Sec-WebSocket-Accept: qTvE3g1lVYQ+i9N8oTZY+/9ZuhY=
+2026-02-01T07:33:00.8962080Z     -> Upgrade: websocket
+2026-02-01T07:33:00.8962310Z     BODY Content-Type: null
+2026-02-01T07:33:00.8962510Z     BODY START
+2026-02-01T07:33:00.8962620Z 
+2026-02-01T07:33:00.8962680Z     BODY END
+2026-02-01T07:33:00.8962920Z     1769931180700 I Net RESPONSE: 200 OK
+2026-02-01T07:33:00.8963170Z     METHOD: GET
+2026-02-01T07:33:00.8963610Z     FROM: http://localhost:3000/socket.io/?EIO=4&transport=polling&sid=Seja1HgqfCyOAv0qAAAA
+2026-02-01T07:33:00.8964050Z     COMMON HEADERS
+2026-02-01T07:33:00.8964240Z     -> Connection: keep-alive
+2026-02-01T07:33:00.8964480Z     -> Content-Length: 28
+2026-02-01T07:33:00.8964770Z     -> Content-Type: text/plain; charset=UTF-8
+2026-02-01T07:33:00.8965100Z     -> Date: Sun, 01 Feb 2026 07:33:00 GMT
+2026-02-01T07:33:00.8965380Z     -> Keep-Alive: timeout=5
+2026-02-01T07:33:00.8965650Z     -> cache-control: no-store
+2026-02-01T07:33:00.8965970Z     BODY Content-Type: text/plain; charset=UTF-8
+2026-02-01T07:33:00.8966240Z     BODY START
+2026-02-01T07:33:00.8966460Z     42["message","hello client"]
+2026-02-01T07:33:00.8966680Z     BODY END
+2026-02-01T07:33:00.8967440Z     1769931180702 D Transport polling@1929439163 doRequest GET http://localhost:3000/socket.io/?EIO=4&transport=polling&sid=Seja1HgqfCyOAv0qAAAA response: 200 OK
+2026-02-01T07:33:00.8968520Z     1769931180702 D Transport websocket@260110639 Receive frame: Frame TEXT (fin=true, buffer len = 6)
+2026-02-01T07:33:00.8969160Z     1769931180702 D Transport websocket@260110639 onWsText: `3probe`
+2026-02-01T07:33:00.8969720Z     1769931180702 D Transport websocket@260110639 onPacket Pong(payload=probe)
+2026-02-01T07:33:00.8970250Z     1769931180702 I EngineSocket probe transport websocket pong
+2026-02-01T07:33:00.8970750Z     1769931180702 I EngineSocket pausing current transport polling
+2026-02-01T07:33:00.8971200Z     1769931180702 I Transport polling@1929439163 pause
+2026-02-01T07:33:00.8971650Z     1769931180702 I Transport polling@1929439163 pause: wait polling
+2026-02-01T07:33:00.8972170Z     1769931180702 I Transport polling@1929439163 pause: wait writing
+2026-02-01T07:33:00.8972850Z     1769931180703 D Transport polling@1929439163 onPollComplete: state PAUSED, `42["message","hello client"]`
+2026-02-01T07:33:00.8973860Z     1769931180703 D Transport polling@1929439163 onPacket Message(payload=Event(namespace=/, ackId=null, payload=["message","hello client"]))
+2026-02-01T07:33:00.8974940Z     1769931180703 D EngineSocket transport on packet Message(payload=Event(namespace=/, ackId=null, payload=["message","hello client"]))
+2026-02-01T07:33:00.8975970Z     1769931180703 D EngineSocket onPacket Message(payload=Event(namespace=/, ackId=null, payload=["message","hello client"]))
+2026-02-01T07:33:00.8976810Z     1769931180703 I Transport polling@1929439163 pause: pre-pause polling complete
+2026-02-01T07:33:00.8977480Z     1769931180703 I Transport polling@1929439163 onPollComplete ignore poll, state PAUSED
+2026-02-01T07:33:00.8978300Z     1769931180703 I TestConnection SERVER ERR: 2026-02-01T07:33:00.701Z socket.io:socket got packet {"type":1,"nsp":"/"}
+2026-02-01T07:33:00.8979180Z     1769931180703 I TestConnection SERVER ERR: 2026-02-01T07:33:00.701Z socket.io:socket got disconnect packet
+2026-02-01T07:33:00.8980160Z     1769931180703 I TestConnection SERVER ERR: 2026-02-01T07:33:00.701Z socket.io:socket closing socket - reason client namespace disconnect
+2026-02-01T07:33:00.8980890Z     1769931180703 I TestConnection SERVER OUT: disconnect
+2026-02-01T07:33:00.8981240Z     1769931180704 I Net RESPONSE: 200 OK
+2026-02-01T07:33:00.8981480Z     METHOD: POST
+2026-02-01T07:33:00.8981940Z     FROM: http://localhost:3000/socket.io/?EIO=4&transport=polling&sid=Seja1HgqfCyOAv0qAAAA
+2026-02-01T07:33:00.8982360Z     COMMON HEADERS
+2026-02-01T07:33:00.8982570Z     -> Connection: keep-alive
+2026-02-01T07:33:00.8982810Z     -> Content-Length: 2
+2026-02-01T07:33:00.8983060Z     -> Content-Type: text/html
+2026-02-01T07:33:00.8983340Z     -> Date: Sun, 01 Feb 2026 07:33:00 GMT
+2026-02-01T07:33:00.8983640Z     -> Keep-Alive: timeout=5
+2026-02-01T07:33:00.8983980Z     -> cache-control: no-store
+2026-02-01T07:33:00.8984370Z     BODY Content-Type: text/html
+2026-02-01T07:33:00.8984690Z     BODY START
+2026-02-01T07:33:00.8984940Z     ok
+2026-02-01T07:33:00.8985230Z     BODY END
+2026-02-01T07:33:00.8986100Z     1769931180704 D Transport polling@1929439163 doRequest POST http://localhost:3000/socket.io/?EIO=4&transport=polling&sid=Seja1HgqfCyOAv0qAAAA response: 200 OK
+2026-02-01T07:33:00.8987160Z     1769931180705 D EngineSocket onDrain: prevBufferLen 1, writeBuffer.size 1, len 1
+2026-02-01T07:33:00.8987750Z     1769931180705 D EngineSocket onDrain fire socket drain event
+2026-02-01T07:33:00.8988240Z     1769931180705 I EngineSocket close waiting drain success
+2026-02-01T07:33:00.8988660Z     1769931180705 I EngineSocket close waiting upgrade
+2026-02-01T07:33:00.8989170Z     1769931180705 I Transport polling@1929439163 pause: pre-pause writing complete
+2026-02-01T07:33:00.8989640Z     1769931180705 I Transport polling@1929439163 paused
+2026-02-01T07:33:00.8990090Z     1769931180705 I EngineSocket changing transport and sending upgrade packet
+2026-02-01T07:33:00.8990640Z     1769931180705 D Transport websocket@260110639 send: state OPEN, 1 packets
+2026-02-01T07:33:00.8991280Z     1769931180705 D Transport websocket@260110639 doSend 1 packets start
+2026-02-01T07:33:00.8991800Z     1769931180705 D Transport websocket@260110639 doSend: Upgrade, `5`
+2026-02-01T07:33:00.9001220Z     1769931180705 D Transport websocket@260110639 doSend 1 packets finish
+2026-02-01T07:33:00.9001680Z     1769931180705 I EngineSocket upgrade packet send success
+2026-02-01T07:33:00.9002110Z     1769931180705 I EngineSocket close waiting upgrade success
+2026-02-01T07:33:00.9002600Z     1769931180705 I EngineSocket socket closing - telling transport to close
+2026-02-01T07:33:00.9003040Z     1769931180705 I EngineSocket onClose force close
+2026-02-01T07:33:00.9003450Z     1769931180705 I Transport polling@1929439163 close, state PAUSED
+2026-02-01T07:33:00.9003870Z     1769931180705 I EngineSocket setTransport websocket
+2026-02-01T07:33:00.9004290Z     1769931180705 I EngineSocket clearing existing transport polling
+2026-02-01T07:33:00.9004990Z     1769931180705 D EngineSocket flush: state CLOSED, writable true, upgrading false, prevBufferLen 0, writeBuffer.size 0
+2026-02-01T07:33:00.9005960Z     1769931180705 I EngineSocket flush ignored: state CLOSED, transport.writable true, upgrading false, writeBuffer.size 0, prevBufferLen 0
+2026-02-01T07:33:00.9006570Z     1769931180709 I Net RESPONSE: 200 OK
+2026-02-01T07:33:00.9006810Z     METHOD: GET
+2026-02-01T07:33:00.9007120Z     FROM: http://localhost:3000/socket.io/?EIO=4&transport=polling
+2026-02-01T07:33:00.9007430Z     COMMON HEADERS
+2026-02-01T07:33:00.9007750Z     -> Connection: keep-alive
+2026-02-01T07:33:00.9007970Z     -> Content-Length: 117
+2026-02-01T07:33:00.9008250Z     -> Content-Type: text/plain; charset=UTF-8
+2026-02-01T07:33:00.9008530Z     -> Date: Sun, 01 Feb 2026 07:33:00 GMT
+2026-02-01T07:33:00.9008750Z     -> Keep-Alive: timeout=5
+2026-02-01T07:33:00.9008990Z     -> cache-control: no-store
+2026-02-01T07:33:00.9009250Z     BODY Content-Type: text/plain; charset=UTF-8
+2026-02-01T07:33:00.9009480Z     BODY START
+2026-02-01T07:33:00.9009970Z     0{"sid":"dmV9BCqOzfrS4jISAAAC","upgrades":["websocket"],"pingInterval":2000,"pingTimeout":20000,"maxPayload":1000000}
+2026-02-01T07:33:00.9010420Z     BODY END
+2026-02-01T07:33:00.9010960Z     1769931180709 D Transport polling@2125549749 doRequest GET http://localhost:3000/socket.io/?EIO=4&transport=polling response: 200 OK
+2026-02-01T07:33:00.9012090Z     1769931180710 D Transport polling@2125549749 onPollComplete: state OPENING, `0{"sid":"dmV9BCqOzfrS4jISAAAC","upgrades":["websocket"],"pingInterval":2000,"pingTimeout":20000,"maxPayload":1000000}`
+2026-02-01T07:33:00.9013180Z     1769931180710 I TestConnection SERVER ERR: 2026-02-01T07:33:00.707Z socket.io:server incoming connection with id dmV9BCqOzfrS4jISAAAC
+2026-02-01T07:33:00.9013810Z     1769931180710 I Transport polling@2125549749 onOpen, state OPENING
+2026-02-01T07:33:00.9014750Z     1769931180710 D Transport polling@2125549749 onPacket Open(sid=dmV9BCqOzfrS4jISAAAC, upgrades=[websocket], pingInterval=2000, pingTimeout=20000, maxPayload=1000000)
+2026-02-01T07:33:00.9015870Z     1769931180710 D EngineSocket transport on packet Open(sid=dmV9BCqOzfrS4jISAAAC, upgrades=[websocket], pingInterval=2000, pingTimeout=20000, maxPayload=1000000)
+2026-02-01T07:33:00.9016920Z     1769931180710 D EngineSocket onPacket Open(sid=dmV9BCqOzfrS4jISAAAC, upgrades=[websocket], pingInterval=2000, pingTimeout=20000, maxPayload=1000000)
+2026-02-01T07:33:00.9017520Z     1769931180710 I EngineSocket onOpen
+2026-02-01T07:33:00.9017820Z     1769931180710 I Manager onOpen, state OPENING
+2026-02-01T07:33:00.9018090Z     1769931180710 I Manager cleanUp
+2026-02-01T07:33:00.9018330Z     1769931180710 I Socket onOpen
+2026-02-01T07:33:00.9018770Z     1769931180710 D Manager send packets [Message(payload=Connect(namespace=/, payload=null))]
+2026-02-01T07:33:00.9019470Z     1769931180710 D EngineSocket sendPackets: state OPEN, [Message(payload=Connect(namespace=/, payload=null))]
+2026-02-01T07:33:00.9020240Z     1769931180710 D EngineSocket flush: state OPEN, writable true, upgrading false, prevBufferLen 0, writeBuffer.size 1
+2026-02-01T07:33:00.9021100Z     1769931180710 D Transport polling@2125549749 send: state OPEN, 1 packets
+2026-02-01T07:33:00.9021510Z     1769931180710 I EngineSocket starting upgrade probes
+2026-02-01T07:33:00.9021880Z     1769931180710 I EngineSocket probing transport 'websocket'
+2026-02-01T07:33:00.9022280Z     1769931180710 I EngineSocket createTransport websocket
+2026-02-01T07:33:00.9023260Z     1769931180710 D Transport polling@2125549749 doRequest POST http://localhost:3000/socket.io/?EIO=4&transport=polling&sid=dmV9BCqOzfrS4jISAAAC, data 40, headers {Content-type=[text/plain;charset=UTF-8], Accept=[*/*]}
+2026-02-01T07:33:00.9024100Z     1769931180710 D Transport websocket@897766716 open
+2026-02-01T07:33:00.9024790Z     1769931180710 I Transport websocket@897766716 doOpen ws://localhost:3000/socket.io/?EIO=4&transport=websocket&sid=dmV9BCqOzfrS4jISAAAC
+2026-02-01T07:33:00.9025400Z     1769931180710 D Transport polling@2125549749 poll start
+2026-02-01T07:33:00.9026220Z     1769931180710 D Transport polling@2125549749 doRequest GET http://localhost:3000/socket.io/?EIO=4&transport=polling&sid=dmV9BCqOzfrS4jISAAAC, data null, headers {Accept=[*/*]}
+2026-02-01T07:33:00.9027160Z     1769931180711 I Net REQUEST: http://localhost:3000/socket.io/?EIO=4&transport=polling&sid=dmV9BCqOzfrS4jISAAAC
+2026-02-01T07:33:00.9027590Z     METHOD: POST
+2026-02-01T07:33:00.9027740Z     COMMON HEADERS
+2026-02-01T07:33:00.9027890Z     -> Accept: */*
+2026-02-01T07:33:00.9028140Z     -> Accept-Charset: UTF-8
+2026-02-01T07:33:00.9028340Z     CONTENT HEADERS
+2026-02-01T07:33:00.9028510Z     -> Content-Length: 2
+2026-02-01T07:33:00.9028760Z     -> Content-Type: text/plain; charset=UTF-8
+2026-02-01T07:33:00.9029060Z     BODY Content-Type: text/plain; charset=UTF-8
+2026-02-01T07:33:00.9029300Z     BODY START
+2026-02-01T07:33:00.9029440Z     40
+2026-02-01T07:33:00.9029560Z     BODY END
+2026-02-01T07:33:00.9030020Z     1769931180711 I Net REQUEST: http://localhost:3000/socket.io/?EIO=4&transport=polling&sid=dmV9BCqOzfrS4jISAAAC
+2026-02-01T07:33:00.9030440Z     METHOD: GET
+2026-02-01T07:33:00.9030590Z     COMMON HEADERS
+2026-02-01T07:33:00.9030730Z     -> Accept: */*
+2026-02-01T07:33:00.9030900Z     -> Accept-Charset: UTF-8
+2026-02-01T07:33:00.9031090Z     CONTENT HEADERS
+2026-02-01T07:33:00.9031260Z     -> Content-Length: 0
+2026-02-01T07:33:00.9031450Z     BODY Content-Type: null
+2026-02-01T07:33:00.9031620Z     BODY START
+2026-02-01T07:33:00.9031710Z 
+2026-02-01T07:33:00.9031770Z     BODY END
+2026-02-01T07:33:00.9032230Z     1769931180711 I Net REQUEST: ws://localhost:3000/socket.io/?EIO=4&transport=websocket&sid=dmV9BCqOzfrS4jISAAAC
+2026-02-01T07:33:00.9032650Z     METHOD: GET
+2026-02-01T07:33:00.9032790Z     COMMON HEADERS
+2026-02-01T07:33:00.9033030Z     -> Accept: */*
+2026-02-01T07:33:00.9033200Z     -> Accept-Charset: UTF-8
+2026-02-01T07:33:00.9033380Z     CONTENT HEADERS
+2026-02-01T07:33:00.9033560Z     -> Connection: Upgrade
+2026-02-01T07:33:00.9033840Z     -> Sec-WebSocket-Key: Y2EyNTQ0MDUxY2Q2YWU5Yg==
+2026-02-01T07:33:00.9034130Z     -> Sec-WebSocket-Version: 13
+2026-02-01T07:33:00.9034340Z     -> Upgrade: websocket
+2026-02-01T07:33:00.9034530Z     BODY Content-Type: null
+2026-02-01T07:33:00.9034720Z     BODY START
+2026-02-01T07:33:00.9034810Z 
+2026-02-01T07:33:00.9034880Z     BODY END
+2026-02-01T07:33:00.9035180Z     1769931180712 D Transport websocket@260110639 doSend 1 packets finish
+2026-02-01T07:33:00.9035700Z     1769931180712 D EngineSocket onDrain: prevBufferLen 0, writeBuffer.size 0, len 1
+2026-02-01T07:33:00.9035980Z 
+2026-02-01T07:33:00.9036220Z ConnectionTest[jvm] > reconnectManually[jvm] STANDARD_ERROR
+2026-02-01T07:33:00.9036890Z     Exception in thread "DefaultDispatcher-worker-10 @coroutine#1018" java.util.NoSuchElementException: ArrayDeque is empty.
+2026-02-01T07:33:00.9037580Z     	at kotlin.collections.ArrayDeque.removeFirst(ArrayDeque.kt:146)
+2026-02-01T07:33:00.9038120Z     	at com.piasy.kmp.socketio.engineio.EngineSocket.onDrain(EngineSocket.kt:280)
+2026-02-01T07:33:00.9038800Z     	at com.piasy.kmp.socketio.engineio.EngineSocket.access$onDrain(EngineSocket.kt:17)
+2026-02-01T07:33:00.9039430Z     	at com.piasy.kmp.socketio.engineio.EngineSocket$setTransport$1.call(EngineSocket.kt:246)
+2026-02-01T07:33:00.9040020Z     	at com.piasy.kmp.socketio.emitter.Emitter.emit$lambda$0$0(Emitter.kt:128)
+2026-02-01T07:33:00.9040500Z     	at com.piasy.kmp.socketio.emitter.Emitter.emit(Emitter.kt:136)
+2026-02-01T07:33:00.9041100Z     	at com.piasy.kmp.socketio.engineio.transports.WebSocket$doSend$2$3.invokeSuspend(WebSocket.kt:172)
+2026-02-01T07:33:00.9041800Z     	at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:34)
+2026-02-01T07:33:00.9042380Z     	at kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:100)
+2026-02-01T07:33:00.9042960Z     	at kotlinx.coroutines.internal.LimitedDispatcher$Worker.run(LimitedDispatcher.kt:124)
+2026-02-01T07:33:00.9043480Z     	at kotlinx.coroutines.scheduling.TaskImpl.run(Tasks.kt:89)
+2026-02-01T07:33:00.9044050Z     	at kotlinx.coroutines.scheduling.CoroutineScheduler.runSafely(CoroutineScheduler.kt:586)
+2026-02-01T07:33:00.9044770Z     	at kotlinx.coroutines.scheduling.CoroutineScheduler$Worker.executeTask(CoroutineScheduler.kt:829)
+2026-02-01T07:33:00.9045500Z     	at kotlinx.coroutines.scheduling.CoroutineScheduler$Worker.runWorker(CoroutineScheduler.kt:717)
+2026-02-01T07:33:00.9046190Z     	at kotlinx.coroutines.scheduling.CoroutineScheduler$Worker.run(CoroutineScheduler.kt:704)
+2026-02-01T07:33:00.9047230Z     	Suppressed: kotlinx.coroutines.internal.DiagnosticCoroutineContextException: [CoroutineId(1018), "coroutine#1018":StandaloneCoroutine{Cancelling}@21fcd395, siowkr]
+2026-02-01T07:33:00.9047840Z 
+2026-02-01T07:33:00.9048090Z ConnectionTest[jvm] > reconnectManually[jvm] STANDARD_OUT
+2026-02-01T07:33:00.9048470Z     1769931180719 I Net RESPONSE: 101 Switching Protocols
+2026-02-01T07:33:00.9048720Z     METHOD: GET
+2026-02-01T07:33:00.9049110Z     FROM: ws://localhost:3000/socket.io/?EIO=4&transport=websocket&sid=dmV9BCqOzfrS4jISAAAC
+2026-02-01T07:33:00.9049480Z     COMMON HEADERS
+2026-02-01T07:33:00.9049660Z     -> Connection: Upgrade
+2026-02-01T07:33:00.9049960Z     -> Sec-WebSocket-Accept: Gl5wjD1ueqsgyaQv5J8q6c8Rowo=
+2026-02-01T07:33:00.9050230Z     -> Upgrade: websocket
+2026-02-01T07:33:00.9050430Z     BODY Content-Type: null
+2026-02-01T07:33:00.9050600Z     BODY START
+2026-02-01T07:33:00.9050690Z 
+2026-02-01T07:33:00.9050740Z     BODY END
+2026-02-01T07:33:00.9051230Z     1769931180721 I TestConnection SERVER ERR: 2026-02-01T07:33:00.716Z socket.io:client connecting to namespace /
+2026-02-01T07:33:00.9051980Z     1769931180721 I TestConnection SERVER ERR: 2026-02-01T07:33:00.716Z socket.io:namespace adding socket to nsp /
+2026-02-01T07:33:00.9052750Z     1769931180721 I TestConnection SERVER ERR: 2026-02-01T07:33:00.716Z socket.io:socket socket connected - writing packet
+2026-02-01T07:33:00.9053510Z     1769931180721 I TestConnection SERVER ERR: 2026-02-01T07:33:00.716Z socket.io:socket join room N11GQoFftXqh9245AAAD
+2026-02-01T07:33:00.9054020Z     1769931180721 I Net RESPONSE: 200 OK
+2026-02-01T07:33:00.9054220Z     METHOD: GET
+2026-02-01T07:33:00.9054600Z     FROM: http://localhost:3000/socket.io/?EIO=4&transport=polling&sid=dmV9BCqOzfrS4jISAAAC
+2026-02-01T07:33:00.9054960Z     COMMON HEADERS
+2026-02-01T07:33:00.9055140Z     -> Connection: keep-alive
+2026-02-01T07:33:00.9055340Z     -> Content-Length: 32
+2026-02-01T07:33:00.9055580Z     -> Content-Type: text/plain; charset=UTF-8
+2026-02-01T07:33:00.9055880Z     -> Date: Sun, 01 Feb 2026 07:33:00 GMT
+2026-02-01T07:33:00.9056110Z     -> Keep-Alive: timeout=5
+2026-02-01T07:33:00.9056340Z     -> cache-control: no-store
+2026-02-01T07:33:00.9056620Z     BODY Content-Type: text/plain; charset=UTF-8
+2026-02-01T07:33:00.9056850Z     BODY START
+2026-02-01T07:33:00.9057060Z     40{"sid":"N11GQoFftXqh9245AAAD"}
+2026-02-01T07:33:00.9057260Z     BODY END
+2026-02-01T07:33:00.9057910Z     1769931180721 D Transport polling@2125549749 doRequest GET http://localhost:3000/socket.io/?EIO=4&transport=polling&sid=dmV9BCqOzfrS4jISAAAC response: 200 OK
+2026-02-01T07:33:00.9058590Z     1769931180722 I Net RESPONSE: 200 OK
+2026-02-01T07:33:00.9058810Z     METHOD: POST
+2026-02-01T07:33:00.9059190Z     FROM: http://localhost:3000/socket.io/?EIO=4&transport=polling&sid=dmV9BCqOzfrS4jISAAAC
+2026-02-01T07:33:00.9059560Z     COMMON HEADERS
+2026-02-01T07:33:00.9059720Z     -> Connection: keep-alive
+2026-02-01T07:33:00.9059940Z     -> Content-Length: 2
+2026-02-01T07:33:00.9060170Z     -> Content-Type: text/html
+2026-02-01T07:33:00.9060410Z     -> Date: Sun, 01 Feb 2026 07:33:00 GMT
+2026-02-01T07:33:00.9060650Z     -> Keep-Alive: timeout=5
+2026-02-01T07:33:00.9060880Z     -> cache-control: no-store
+2026-02-01T07:33:00.9061110Z     BODY Content-Type: text/html
+2026-02-01T07:33:00.9061310Z     BODY START
+2026-02-01T07:33:00.9061440Z     ok
+2026-02-01T07:33:00.9061580Z     BODY END
+2026-02-01T07:33:00.9062220Z     1769931180723 D Transport polling@2125549749 doRequest POST http://localhost:3000/socket.io/?EIO=4&transport=polling&sid=dmV9BCqOzfrS4jISAAAC response: 200 OK
+2026-02-01T07:33:00.9062910Z     1769931180723 I TestConnection SERVER OUT: on connection
+2026-02-01T07:33:02.8069430Z     1769931182680 D Transport websocket@260110639 Receive frame: Frame TEXT (fin=true, buffer len = 1)
+2026-02-01T07:33:07.9015420Z     1769931187766 I TestConnection Stopping server ...
+2026-02-01T07:33:07.9016240Z     1769931187772 E Transport websocket@260110639 Receive error while reading websocket frame: `Channel was closed`
+2026-02-01T07:33:07.9017610Z     1769931187773 E Transport websocket@897766716 Receive error while reading websocket frame: `Channel was closed`
+2026-02-01T07:33:07.9018120Z 
+2026-02-01T07:33:07.9018470Z ConnectionTest[jvm] > reconnectManually[jvm] FAILED
+2026-02-01T07:33:07.9019060Z     org.junit.runners.model.TestTimedOutException: test timed out after 7000 milliseconds
+2026-02-01T07:33:07.9019700Z         at java.base@17.0.17/jdk.internal.misc.Unsafe.park(Native Method)
+2026-02-01T07:33:07.9020350Z         at java.base@17.0.17/java.util.concurrent.locks.LockSupport.park(LockSupport.java:341)
+2026-02-01T07:33:07.9021190Z         at java.base@17.0.17/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionNode.block(AbstractQueuedSynchronizer.java:506)
+2026-02-01T07:33:07.9022050Z         at java.base@17.0.17/java.util.concurrent.ForkJoinPool.unmanagedBlock(ForkJoinPool.java:3465)
+2026-02-01T07:33:07.9022840Z         at java.base@17.0.17/java.util.concurrent.ForkJoinPool.managedBlock(ForkJoinPool.java:3436)
+2026-02-01T07:33:07.9023750Z         at java.base@17.0.17/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:1630)
+2026-02-01T07:33:07.9024630Z         at java.base@17.0.17/java.util.concurrent.LinkedBlockingQueue.take(LinkedBlockingQueue.java:435)
+2026-02-01T07:33:07.9025360Z         at app//io.socket.client.ConnectionTest.reconnectManually(ConnectionTest.java:379)
+2026-02-01T07:33:07.9025790Z 
