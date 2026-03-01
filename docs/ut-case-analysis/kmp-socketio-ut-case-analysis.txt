@@ -1,0 +1,75 @@
+good
+
+   polling@709407350    709407350   第一次连接的主 transport
+         创建 → 连接 → 连接成功，poll 到 Open 包，含 upgrade → 发送 Connect 包 → poll 到 Connect 包 → emit EVENT_CONNECT → 关闭 → 发送 Disconnect 包 → emit EVENT_DISCONNECT → 发送 Disconnect 包完成 → poll 到 Event 包（hello client），且不再继续 poll → 发送 Close 包 → 关闭完成
+   websocket@2087361714   2087361714    第一次连接的 probe transport
+         创建 → 连接 → 连接成功 → 发送 Ping 包（probe） → 发送成功 → 关闭 → 收到 Pong 包（probe） → 读报错，ws 关闭 → 关闭完成
+         ws 在收到 Pong 包之前就关闭了，没出问题
+
+   polling@969147974    969147974   第二次连接（reconnect）的 transport   在第一次连接关闭后创建
+   websocket@590078241   590078241    第二次连接的 probe transport          创建 → probe 成功 → 发送 upgrade packet → 问题源
+
+
+err
+
+   polling@1929439163    1929439163   第一次连接的主 transport
+         创建 → 连接 → 连接成功，poll 到 Open 包，含 upgrade → 发送 Connect 包 → poll 到 Connect 包 → emit EVENT_CONNECT → 关闭 → 发送 Disconnect 包 → emit EVENT_DISCONNECT → pause → poll 到 Event 包（hello client），且不再继续 poll → 发送 Disconnect 包完成 → pause 完成 → 发送 close 包 → 关闭完成
+   websocket@260110639   260110639    第一次连接的 probe transport
+         创建 → 连接 → 连接成功 → 发送 Ping 包（probe） → 发送成功 → 收到 Pong 包（probe） → 发送 Upgrade 包 → 发送 Upgrade 包成功，触发 EVENT_DRAIN → onDrain: prevBufferLen 0, writeBuffer.size 0, len 1，触发问题！
+         ws 关闭前先收到 Pong 包、进行 upgrade，Upgrade 包的 EVENT_DRAIN 引发了问题。
+         先收到了 polling 的 Disconnect 包的 EVENT_DRAIN，后收到 ws Upgrade 包的 EVENT_DRAIN。
+   
+   polling@2125549749    2125549749   第二次连接（reconnect）的 transport   在第一次连接关闭后创建
+
+close 时，先发 Disconnect 包，如果是 polling 还要发 Close 包。
+probe 时，先 ws 连接，成功后发送 Ping，收到 Pong 后，pause polling，再发送 Upgrade 包，发送成功（EVENT_DRAIN）后把 EngineSocket 的 transport 切换为 ws。
+
+出问题时：
+   ws 连接
+   EngineSocket close，但要等 EngineSocket 的 EVENT_DRAIN（Disconnect 待发送）
+   polling 发 Disconnect
+   ws 连接成功
+   ws 发 Ping
+   ws 收到 Pong
+   polling pause，但要等 poll 和 write (Disconnect)
+   polling poll 完成，且不再继续 poll
+   polling write 完成，触发 polling 的 EVENT_DRAIN，进而触发 EngineSocket 的 EVENT_DRAIN
+   EngineSocket 正常处理 EVENT_DRAIN
+   EngineSocket close 等到了 drain，但还要等 upgrade
+   polling pause 完成
+   监听 ws 的 EVENT_DRAIN，用于切换 transport
+   ws 发 Upgrade
+   ws 发 Ping 完成，触发 ws 的 EVENT_DRAIN
+   把 EngineSocket 的 transport 切换为 ws
+   ws 发 Upgrade 完成，再次触发 ws 的 EVENT_DRAIN，进而触发 EngineSocket 的 EVENT_DRAIN
+   EngineSocket 处理 EVENT_DRAIN 时报错！
+
+   *两个 ws 的 EVENT_DRAIN，不一定是 Ping 的先还是 Upgrade 的先，总之先监听（用于切换 transport），后来了两个 EVENT_DRAIN，第二个引发了问题。
+
+问题关键在于 ws 的 Ping 和 Upgrade 会连续发送，而两次 EVENT_DRAIN 的顺序和「监听 ws 的 EVENT_DRAIN 用于切换 transport」的顺序无法保证。
+   Ping (probe) 需要 EVENT_DRAIN 吗？不触发 EVENT_DRAIN 可以规避此问题。
+   改成监听 Ping & Upgrade 的 drain 同时满足，也能解决此问题。
+
+此外，这个用例只是同一个 Socket 实例，close 后立马 open，但 EngineSocket 实例是两个，不会有干扰。
+
+==============================================================================
+下面是逐步问不靠谱的 Kimi 的对话
+==============================================================================
+
+帮我排查一下 kmp-socketio 这个项目一个偶现的 ut 失败问题，其中 good.log 是 ut case 通过时的完整日志，err.log 则是这个 case 失败时打印的日志
+
+我觉得你的分析不严谨，我需要你细致分析日志里面关于 transport 实例、行为的过程，Transport polling@ 和 Transport polling@ 开头的日志，@ 后面跟着的是 transport 实例的 hash 值，不同的 hash 值表明是不同的实例，请严谨地分析日志内容，以及代码里打印对应日志的逻辑，帮我彻底梳理确认整个测试用例的执行过程，以及 transport 状态的变化。
+
+项目的代码逻辑我有些记不清了，你可以帮我分析总结一下连接、probe、upgrade 的逻辑吗？并且要结合上面你分析的问题原因的过程。注意只做分析，不要进行修复。
+
+你分析的 T1~T12 是按先后顺序的吗？
+
+==============================================================================
+下面是考 AI 的提问
+==============================================================================
+
+帮我排查一下 kmp-socketio 这个项目一个偶现的 ut 失败问题，其中 good.log 是 ut case 通过时的完整日志，err.log 则是这个 case 失败时打印的日志。
+我需要你细致分析日志里面关于 transport 实例、行为的过程，Transport polling@ 和 Transport websocket@ 开头的日志，@ 后面跟着的是 transport 实例的 hash 值，不同的 hash 值表明是不同的实例，请严谨地分析日志内容，以及代码里打印对应日志的逻辑，帮我彻底梳理确认整个测试用例的执行过程，以及 transport 状态的变化。
+注意只做分析，不要进行修复。
+
+==============================================================================

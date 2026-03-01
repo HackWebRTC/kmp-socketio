@@ -1,5 +1,6 @@
 package com.piasy.kmp.socketio.engineio.transports
 
+import com.piasy.kmp.socketio.engineio.EngineSocket
 import com.piasy.kmp.socketio.engineio.IoThread
 import com.piasy.kmp.socketio.engineio.State
 import com.piasy.kmp.socketio.engineio.Transport
@@ -136,6 +137,11 @@ open class WebSocket(
         logD { "doSend ${packets.size} packets start" }
         writable = false
 
+        // Check if this is a probe ping - if so, skip drain event to avoid race condition
+        val isProbePing = packets.size == 1
+            && packets[0] is EngineIOPacket.Ping
+            && (packets[0] as EngineIOPacket.Ping).payload == EngineSocket.PROBE
+
         ioScope.launch {
             for (pkt in packets) {
                 if (state != State.OPEN) {
@@ -169,7 +175,11 @@ open class WebSocket(
             scope.launch {
                 logD { "doSend ${packets.size} packets finish" }
                 writable = true
-                emit(EVENT_DRAIN, packets.size)
+                // Skip drain event for probe ping to avoid race condition between
+                // probe ping drain and upgrade drain - see docs/ut-case-analysis/
+                if (!isProbePing) {
+                    emit(EVENT_DRAIN, packets.size)
+                }
             }
         }
     }

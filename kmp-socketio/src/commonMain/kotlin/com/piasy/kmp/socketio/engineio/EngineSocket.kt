@@ -415,8 +415,7 @@ class EngineSocket(
                     return
                 }
 
-                val ping = EngineIOPacket.Ping(PROBE)
-                transport.send(listOf(ping))
+                transport.send(listOf(EngineIOPacket.Ping(PROBE)))
                 transport.once(Transport.EVENT_PACKET, object : Listener {
                     override fun call(vararg args: Any) {
                         if (failed) {
