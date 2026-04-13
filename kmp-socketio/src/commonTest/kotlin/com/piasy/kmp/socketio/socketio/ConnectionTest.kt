@@ -77,6 +77,31 @@ abstract class ConnectionTest {
     }
 
     @Test
+    fun shouldExposeConnectionState() = doTest {
+        val isConnectedBeforeOpen = CompletableDeferred<Boolean>()
+        val isConnectedWhenConnectedEvent = CompletableDeferred<Boolean>()
+        val isConnectedWhenDisconnectedEvent = CompletableDeferred<Boolean>()
+
+        val opt = IO.Options()
+        opt.transports = listOf(WebSocket.NAME)
+        client(opt = opt) { socket ->
+            isConnectedBeforeOpen.complete(socket.connected)
+            socket.on(Socket.EVENT_CONNECT) {
+                isConnectedWhenConnectedEvent.complete(socket.connected)
+                socket.close()
+            }.on(Socket.EVENT_DISCONNECT) {
+                isConnectedWhenDisconnectedEvent.complete(socket.connected)
+            }
+
+            socket.open()
+        }
+
+        assertFalse(isConnectedBeforeOpen.await())
+        assertTrue(isConnectedWhenConnectedEvent.await())
+        assertFalse(isConnectedWhenDisconnectedEvent.await())
+    }
+
+    @Test
     open fun shouldConnectUntrusted() = doTest {
         val trustAllCertsHttpClientFactory = DefaultHttpClientFactory(
             trustAllCerts = true,

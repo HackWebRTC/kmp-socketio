@@ -17,7 +17,11 @@ class Socket(
     private val auth: Map<String, String>,
     private val scope: CoroutineScope,
 ) : Emitter() {
-    private var connected = false
+    /**
+     * Whether this socket namespace is currently connected.
+     */
+    var connected = false
+        private set
     private val subs = ArrayList<On.Handle>()
     private val ack = HashMap<Int, Ack>()
     private var ackId = 0
