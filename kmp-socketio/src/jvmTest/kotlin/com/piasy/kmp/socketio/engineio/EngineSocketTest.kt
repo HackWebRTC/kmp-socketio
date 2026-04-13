@@ -3,8 +3,10 @@ package com.piasy.kmp.socketio.engineio
 import com.piasy.kmp.socketio.engineio.transports.PollingXHR
 import com.piasy.kmp.socketio.engineio.transports.TransportFactory
 import com.piasy.kmp.socketio.engineio.transports.WebSocket
+import io.ktor.client.HttpClient
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.spyk
 import io.mockk.verify
 import kotlinx.coroutines.*
@@ -19,6 +21,7 @@ import org.hildan.socketio.SocketIOPacket
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertSame
 
 class EngineSocketTest : BaseTest() {
 
@@ -114,6 +117,25 @@ class EngineSocketTest : BaseTest() {
         verifyOn(sock.transport, Transport.EVENT_CLOSE)
 
         assertEquals(listOf(EngineSocket.EVENT_TRANSPORT), sock.events)
+    }
+
+    @Test
+    fun openWithExternalHttpClient() = runTest {
+        val opt = EngineSocket.Options()
+        opt.transports = listOf(PollingXHR.NAME)
+        val externalHttpClient = mockk<HttpClient>(relaxed = true)
+        opt.httpClient = externalHttpClient
+
+        val transport = spyk(TestTransport(Transport.Options(), this, PollingXHR.NAME))
+        val factory = mockk<TransportFactory>()
+        val transportOpt = slot<Transport.Options>()
+        every { factory.create(any(), capture(transportOpt), any(), any()) } returns transport
+
+        val socket = EngineSocket("http://localhost", opt, this, factory)
+        socket.open()
+        advanceUntilIdle()
+
+        assertSame(externalHttpClient, transportOpt.captured.httpClient)
     }
 
     @Test

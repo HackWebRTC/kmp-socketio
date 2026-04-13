@@ -23,7 +23,10 @@ open class WebSocket(
     opt: Options,
     scope: CoroutineScope,
     private val ioScope: CoroutineScope = CoroutineScope(Dispatchers.Default),
-    private val factory: HttpClientFactory = DefaultHttpClientFactory(trustAllCerts = opt.trustAllCerts),
+    private val factory: HttpClientFactory = DefaultHttpClientFactory(
+        externalHttpClient = opt.httpClient,
+        trustAllCerts = opt.trustAllCerts,
+    ),
     rawMessage: Boolean,
 ) : Transport(opt, scope, NAME, rawMessage) {
     private var ws: WebSocketSession? = null

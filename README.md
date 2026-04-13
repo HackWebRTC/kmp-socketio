@@ -39,6 +39,7 @@ kotlin {
 ```kotlin
 val opt = IO.Options()
 // opt.trustAllCerts = true
+// opt.httpClient = yourSharedHttpClient
 IO.socket("http://localhost:3000", opt) { socket ->
     socket.on(Socket.EVENT_CONNECT) { args ->
         println("on connect ${args.joinToString()}")
@@ -52,6 +53,10 @@ IO.socket("http://localhost:3000", opt) { socket ->
     socket.open()
 }
 ```
+
+If you set `opt.httpClient`, kmp-socketio will reuse this externally managed Ktor `HttpClient`
+for both polling and websocket transports.
+When websocket transport is enabled, make sure your shared client installs the Ktor `WebSockets` plugin.
 
 Most of the APIs are the same as socket.io-client-java, here are some differences:
 
