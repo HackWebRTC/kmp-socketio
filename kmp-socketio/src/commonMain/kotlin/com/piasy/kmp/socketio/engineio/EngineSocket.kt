@@ -218,6 +218,7 @@ class EngineSocket(
         opts.timestampParam = options?.timestampParam ?: opt.timestampParam
         opts.extraHeaders = opt.extraHeaders
         opts.trustAllCerts = opt.trustAllCerts
+        opts.httpClient = options?.httpClient ?: opt.httpClient
 
         val transport = factory.create(name, opts, scope, rawMessage)
         emit(EVENT_TRANSPORT, transport)

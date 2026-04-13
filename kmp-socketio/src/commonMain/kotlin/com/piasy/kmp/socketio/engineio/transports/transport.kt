@@ -60,21 +60,24 @@ interface HttpClientFactory {
 }
 
 class DefaultHttpClientFactory(
+    externalHttpClient: HttpClient? = null,
     trustAllCerts: Boolean = false,
 ): HttpClientFactory {
-    private val wsClient = httpClient(
-        trustAllCerts = trustAllCerts,
-    ) {
-        install(Logging) {
-            logger = object : Logger {
-                override fun log(message: String) {
-                    com.piasy.kmp.xlog.Logging.info("Net", message)
+    private val wsClient = externalHttpClient ?: run {
+        httpClient(
+            trustAllCerts = trustAllCerts,
+        ) {
+            install(Logging) {
+                logger = object : Logger {
+                    override fun log(message: String) {
+                        com.piasy.kmp.xlog.Logging.info("Net", message)
+                    }
                 }
+                level = LogLevel.ALL
             }
-            level = LogLevel.ALL
-        }
-        install(WebSockets) {
-            pingIntervalMillis = 20_000
+            install(WebSockets) {
+                pingIntervalMillis = 20_000
+            }
         }
     }
     // Linux curl engine doesn't work for simultaneous websocket and http request.

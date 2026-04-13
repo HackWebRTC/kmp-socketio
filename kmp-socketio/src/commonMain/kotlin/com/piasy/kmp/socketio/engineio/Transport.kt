@@ -3,6 +3,7 @@ package com.piasy.kmp.socketio.engineio
 import com.piasy.kmp.socketio.emitter.Emitter
 import com.piasy.kmp.xlog.Logging
 import com.piasy.kmp.socketio.parseqs.ParseQS
+import io.ktor.client.HttpClient
 import io.ktor.util.date.*
 import kotlinx.coroutines.CoroutineScope
 import org.hildan.socketio.EngineIOPacket
@@ -42,6 +43,12 @@ abstract class Transport(
 
         @JvmField
         var trustAllCerts: Boolean = false
+
+        /**
+         * Optional externally managed ktor HttpClient to reuse.
+         */
+        @JvmField
+        var httpClient: HttpClient? = null
     }
 
     protected var state = State.INIT
